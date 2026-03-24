@@ -1,0 +1,24 @@
+.env
+data/
+*.db
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+venv/
+node_modules/
+# Keep screenshots if desired, or ignore them
+# data/screenshots/
+*.png
+*.webp
+tmp_*.py
+verify_*.py
+tests/test_*.py
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\task.md
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\implementation_plan.md
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\walkthrough.md
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\enhancement_roadmap.md
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\google_maps_research_1774370102090.webp
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\google_maps_refine_selectors_1774370776458.webp
+C:\Users\sagar\.gemini\antigravity\brain\7c93a0cb-6d3f-4274-9d41-1c423e82f9ed\media__1774370466227.png
