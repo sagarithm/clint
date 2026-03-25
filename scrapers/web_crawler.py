@@ -90,8 +90,14 @@ class WebCrawler:
                         """, pattern)
                         if links: social_links[platform] = links[0]
                     
-                    # Deep Founder Search
-                    about_info = await self.extract_about_info(page)
+                    # Smart Crawl Check: If we have emails and socials on the home page, skip the deep crawl
+                    about_info = ""
+                    if emails and social_links:
+                        logger.info(f"Smart Crawl: Essential info found on home page. Skipping deep 'About' crawl.")
+                        about_info = text_content[:1500] # Use home page content for AI context
+                    else:
+                        # Deep Founder Search
+                        about_info = await self.extract_about_info(page)
                     
                     logger.info(f"Crawled [cyan]{url}[/cyan]: Metadata extracted.")
                     
