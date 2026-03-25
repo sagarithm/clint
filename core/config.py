@@ -22,9 +22,12 @@ class Settings(BaseSettings):
 
     # Sender Personalization
     SENDER_NAME: str = os.getenv("SENDER_NAME", "Senior Business Development Manager")
-    SENDER_TITLE: str = os.getenv("SENDER_TITLE", "Pixartual Studio")
+    SENDER_TITLE: str = os.getenv("SENDER_TITLE", "Founder")
     SENDER_CONTACT: str = os.getenv("SENDER_CONTACT", "")
-    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")
+    SENDER_SITE: str = os.getenv("SENDER_SITE", "pixartual.studio")
+    SENDER_SUPPORT: str = os.getenv("SENDER_SUPPORT", "support@pixartual.studio")
+    SENDER_TAGLINE: str = os.getenv("SENDER_TAGLINE", "Where Brands Evolve Into Power.")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "hello@pixartual.studio")
 
     class Config:
         case_sensitive = True

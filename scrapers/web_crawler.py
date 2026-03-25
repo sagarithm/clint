@@ -1,6 +1,7 @@
 import asyncio
 import httpx
 import re
+import os
 from bs4 import BeautifulSoup
 from typing import Set, Dict
 from core.logger import logger
@@ -17,7 +18,7 @@ class WebCrawler:
             "twitter": r'twitter\.com/[^/"]+'
         }
 
-    async def crawl(self, url: str, lead_name: str = "Unassigned") -> Dict:
+    async def crawl(self, url: str, lead_name: str = "Unassigned", output_folder: str = "data/screenshots") -> Dict:
         if not url:
             return {}
         
@@ -25,8 +26,9 @@ class WebCrawler:
             url = f"https://{url}"
 
         # Setup paths
+        os.makedirs(output_folder, exist_ok=True)
         safe_name = re.sub(r'[^a-zA-Z0-9]', '_', lead_name)
-        screenshot_filename = f"data/screenshots/{safe_name}_{int(asyncio.get_event_loop().time())}.png"
+        screenshot_filename = os.path.join(output_folder, f"{safe_name}_{int(asyncio.get_event_loop().time())}.png")
         
         from playwright.async_api import async_playwright
         

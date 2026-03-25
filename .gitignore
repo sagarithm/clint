@@ -6,6 +6,7 @@ venv/
 
 # Data and Logs
 data/
+data/whatsapp_session/
 *.db
 *.log
 __pycache__/

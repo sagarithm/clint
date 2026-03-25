@@ -29,9 +29,9 @@ class Proposer:
     async def generate_proposal(self, lead_name: str, audit_summary: str, channel: str = "email", 
                                 rating: float = 0.0, reviews_count: int = 0, business_category: str = None,
                                 has_website: bool = True, about_us_info: str = None,
-                                is_reminder: bool = False) -> str:
+                                is_reminder: bool = False) -> tuple:
         if not self.api_key:
-            return f"Draft: Hi {lead_name}, Following up on my previous message regarding your {'website' if has_website else 'digital presence'}..."
+            return ("Outreach", f"Draft: Hi {lead_name}, Following up on my previous message regarding your {'website' if has_website else 'digital presence'}...")
 
         channel_context = "Keep it concise (150 words max), professional, and conversational." if channel == "email" else "Keep it very short (50 words max), friendly, and direct for WhatsApp."
         
@@ -46,11 +46,9 @@ class Proposer:
             specific_task = "- Mention that you're following up on the audit findings shared previously. Keep the tone helpful and curious."
         elif has_website:
             goal = "Pitch a Website Redesign by highlighting issues found in the audit."
-            # context = f"Website Audit Summary: {audit_summary}" # Removed as it's not used in the new prompt structure
             specific_task = "- Refer specifically to the audit findings and suggest how a redesign will fix them."
         else:
             goal = "Pitch a New Website Development since the lead has no online presence."
-            # context = "Lead has NO website found on Google Maps." # Removed as it's not used in the new prompt structure
             specific_task = "- Focus on the benefits of having a digital platform for trust and visibility."
 
         prompt = f"""
@@ -65,31 +63,35 @@ class Proposer:
         Goal: {goal}
         Channel: {channel}
         
-        Task: Write a highly personalized {'FOLLOW-UP' if is_reminder else 'Initial Outreach'} from Pixartual Studio. 
+        Task: Write a highly personalized, warm, and human {'FOLLOW-UP' if is_reminder else 'Initial Outreach'} from Pixartual Studio. 
         {specific_task}
+        - Use a warm, non-corporate tone. Avoid being 'salesy'.
         - If 'Company Background' is available, pick a specific detail to mention.
         - If the lead has good reviews, MENTION IT to build rapport.
-        - Style: High-end, futuristic, and professional.
+        - Style: High-end, futuristic, yet remarkably human and curious.
         
         CRITICAL CONSTRAINTS:
-        1. NO PLACEHOLDERS: Never use [Recipient's Name], [Your Name], or any brackets. If a person's name is unknown, use "Dear {lead_name} Team," or "To the Leadership at {lead_name},".
+        1. NO PLACEHOLDERS: Never use [Recipient's Name], [Your Name], or any brackets. If a person's name is unknown, use "Dear {lead_name} Team," or "To the {lead_name} leadership,".
         2. NO MARKDOWN: This is for a plain-text email. Do NOT use **bolding**, # headers, or list characters like *. Use standard capitalization or spacing for emphasis.
-        3. SIGNATURE: End with the exact signature below. Use the provided Sender Name and Title.
+        3. SUBJECT LINE (Email Only): Generate a short, human subject line (e.g., "Quick question about {lead_name}" or "Thought for {lead_name}"). Do NOT use "Growth Opportunity".
+        4. SIGNATURE: End with the exact signature below. 
         
         Ending: Use the following signature format (strictly no placeholders):
           Warm regards,
           
           {settings.SENDER_NAME}
           {settings.SENDER_TITLE}
-          Pixartual Studio
-          {settings.SENDER_CONTACT}
+          📞 {settings.SENDER_CONTACT}
+          🌐 {settings.SENDER_SITE}
+          ✨ {settings.SENDER_TAGLINE}
           
         - Ask for a 10-minute call.
+        
+        FORMAT: 
+        SUBJECT: [Your generated subject]
+        BODY: [Your generated message]
         """
         
-        if not has_website and not is_reminder:
-            prompt = prompt.replace("Website Audit Summary", "Note: Lead has no website.")
-
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -106,15 +108,24 @@ class Proposer:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    proposal = data['choices'][0]['message']['content'].strip()
+                    raw_content = data['choices'][0]['message']['content'].strip()
+                    
+                    subject = "Introduction: Pixartual Studio"
+                    body = raw_content
+                    
+                    if "SUBJECT:" in raw_content and "BODY:" in raw_content:
+                        parts = raw_content.split("BODY:", 1)
+                        subject = parts[0].replace("SUBJECT:", "").strip()
+                        body = parts[1].strip()
+                    
                     logger.info(f"Proposal Generated for [bold cyan]{lead_name}[/bold cyan] ({channel})")
-                    return proposal
+                    return (subject, body)
                 else:
-                    return f"Error generating proposal: {response.text}"
+                    return ("Outreach Error", f"Error generating proposal: {response.text}")
 
         except Exception as e:
             logger.error(f"Proposal Exception: {e}")
-            return f"Exception in proposal generation: {e}"
+            return ("Outreach Exception", f"Exception in proposal generation: {e}")
 
 if __name__ == "__main__":
     proposer = Proposer()

@@ -37,6 +37,14 @@ class MapsScraper:
             except:
                 pass
             
+            # Check for "No results found" and try expansion
+            if await page.query_selector('text="No results found"') or not await page.query_selector('a.hfpxzc'):
+                logger.warning(f"No results found for '{query}'. Trying expanded search...")
+                expanded_query = f"{query} near me" if "near" not in query.lower() else query
+                search_url = f"https://www.google.com/maps/search/{expanded_query.replace(' ', '+')}"
+                await page.goto(search_url, wait_until="domcontentloaded")
+                await asyncio.sleep(5)
+
             results_found = 0
             scraped_names = set()
 
@@ -165,11 +173,7 @@ class MapsScraper:
                         if address_el:
                             address = await address_el.inner_text()
 
-                        # FINAL CHECK: If no website and no phone, it's a weak lead, but we keep it if name is good
-                        if not website and not phone:
-                            logger.debug(f"Skipping {name} - no website or phone.")
-                            continue
-
+                        # Collect all leads as requested by user
                         logger.info(f"[[{results_found+1}/{max_results}]] Found Lead: [bold green]{name}[/bold green] | Web: {website or 'N/A'} | Phone: {phone or 'N/A'}")
                         
                         await self.save_lead({

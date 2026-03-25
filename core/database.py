@@ -22,6 +22,7 @@ async def init_db():
                 email TEXT,
                 social_links TEXT,
                 audit_summary TEXT,
+                score INTEGER,
                 status TEXT DEFAULT 'new', -- new, audit_pending, draft_ready, pending_review, approved, sent, failed
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
