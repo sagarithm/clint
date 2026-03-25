@@ -1423,6 +1423,8 @@
                             <tr>
                                 <th>Entity</th>
                                 <th>Category</th>
+                                <th>Score</th>
+                                <th>Step</th>
                                 <th>Reputation</th>
                                 <th>Contact</th>
                                 <th>Preview</th>
@@ -2067,11 +2069,13 @@
         function renderDiscovery(leads) {
             const tbody = document.getElementById('disc-tbody');
             document.getElementById('disc-lead-count').textContent = `${leads.length} lead${leads.length !== 1 ? 's' : ''}`;
-            if (!leads.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty"><div class="empty-icon">🎯</div>No leads. Start a pipeline!</td></tr>'; return; }
+            if (!leads.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty"><div class="empty-icon">🎯</div>No leads. Start a pipeline!</td></tr>'; return; }
             const statusMap = { new: 'chip-new', sent: 'chip-sent', reminder_sent: 'chip-reminder', pending_review: 'chip-audit', failed: 'chip-pending' };
             tbody.innerHTML = leads.map(l => `<tr class="data-row" onclick="selectLead(${l.id});navigate('dashboard')">
         <td><div class="lead-name">${l.name}</div><div class="lead-addr">${l.address || '—'}</div></td>
-        <td>${l.business_category ? `<span class="cat-tag">${l.business_category}</span>` : '—'}</td>
+        <td>${l.category ? `<span class="cat-tag">${l.category}</span>` : '—'}</td>
+        <td><span class="badge ${l.score >= 7 ? 'green' : (l.score >= 4 ? 'yellow' : 'pink')}">${l.score || 0}</span></td>
+        <td><span class="badge">${l.outreach_step || 0}</span></td>
         <td>${l.rating ? `<div class="rating"><span class="star">★</span>${l.rating} <span style="color:var(--t3);font-weight:400">(${(l.reviews_count || 0).toLocaleString()})</span></div>` : '—'}</td>
         <td><div style="font-size:12px;">${l.email ? `<div>✉️ ${l.email.split(',')[0].substring(0, 25)}...</div>` : '<span style="color:var(--t3)">No email</span>'}${l.phone ? `<div style="color:var(--green);">📱 ${l.phone}</div>` : ''}</div></td>
         <td><div class="thumb" title="${l.screenshot_path ? 'Has screenshot' : 'No screenshot'}">${l.screenshot_path ? '🖥️' : '📷'}</div></td>
@@ -2125,14 +2129,19 @@
         async function outreachGenerate() {
             if (!outreachLead) return toast('Select a lead first', 'warn');
             const channel = document.getElementById('outreach-channel').value;
-            const isReminder = document.getElementById('outreach-is-reminder').checked;
+            const targetStep = (outreachLead.outreach_step || 0) + 1;
             const ta = document.getElementById('outreach-text');
             ta.value = 'Generating...';
             try {
-                const r = await fetch(API + '/api/generate-proposal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lead_id: outreachLead.id, channel, is_reminder: isReminder }) });
+                const r = await fetch(API + '/api/generate-proposal', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ lead_id: outreachLead.id, channel, outreach_step: targetStep }) 
+                });
                 const d = await r.json();
                 ta.value = d.proposal;
-                toast('Proposal generated ✦');
+                outreachLead.next_step = d.next_step;
+                toast(`Step ${d.next_step} generated ✦`);
             } catch { ta.value = 'Error — is server running?'; }
         }
 
@@ -2140,11 +2149,16 @@
             if (!outreachLead) return;
             const channel = document.getElementById('outreach-channel').value;
             const content = document.getElementById('outreach-text').value.trim();
+            const step = outreachLead.next_step || (outreachLead.outreach_step || 0) + 1;
             if (!content) return toast('No content to send', 'warn');
             const btn = document.getElementById('outreach-send-btn');
             btn.disabled = true; btn.textContent = 'Sending...';
             try {
-                const r = await fetch(API + '/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lead_id: outreachLead.id, channel, content }) });
+                const r = await fetch(API + '/api/send', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ lead_id: outreachLead.id, channel, content, step: step }) 
+                });
                 const d = await r.json();
                 d.success ? toast('Message sent! ✅') : toast('Send failed — check server logs', 'error');
                 if (d.success) await loadOutreachLeads();

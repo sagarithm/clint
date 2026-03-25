@@ -33,3 +33,8 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 settings = Settings()
+
+# Runtime validation
+if not settings.OPENROUTER_API_KEY:
+    from core.logger import logger
+    logger.error("[bold red]CRITICAL: OPENROUTER_API_KEY is missing![/bold red] AI features will not work.")

@@ -91,7 +91,7 @@ async def get_history(limit: int = 20):
 class ProposalRequest(BaseModel):
     lead_id: int
     channel: str = "email"
-    is_reminder: bool = False
+    outreach_step: Optional[int] = None
 
 @app.post("/api/generate-proposal")
 async def generate_proposal(req: ProposalRequest):
@@ -103,6 +103,10 @@ async def generate_proposal(req: ProposalRequest):
         raise HTTPException(status_code=404, detail="Lead not found")
     
     lead = dict(lead)
+    
+    # If no step provided, use lead's current step + 1
+    step = req.outreach_step if req.outreach_step is not None else (lead.get('outreach_step') or 0) + 1
+    
     text = await proposer.generate_proposal(
         lead['name'], lead.get('audit_summary', ''), req.channel,
         rating=lead.get('rating') or 0.0,
@@ -110,15 +114,16 @@ async def generate_proposal(req: ProposalRequest):
         business_category=lead.get('business_category'),
         has_website=bool(lead.get('website')),
         about_us_info=lead.get('about_us_info'),
-        is_reminder=req.is_reminder
+        outreach_step=step
     )
-    return {"proposal": text, "lead": lead}
+    return {"proposal": text, "lead": lead, "next_step": step}
 
 # ── SEND PROPOSAL ──
 class SendRequest(BaseModel):
     lead_id: int
     channel: str
     content: str
+    step: int
 
 @app.post("/api/send")
 async def send_proposal(req: SendRequest):
@@ -134,7 +139,7 @@ async def send_proposal(req: SendRequest):
     if req.channel == "email" and lead.get("email"):
         success = await email_op.send(
             lead['email'].split(",")[0],
-            f"Quick Idea for {lead['name']}",
+            f"Regarding {lead['name']}",
             req.content
         )
     elif req.channel == "whatsapp" and lead.get("phone"):
@@ -142,14 +147,18 @@ async def send_proposal(req: SendRequest):
     else:
         raise HTTPException(status_code=400, detail="No contact info for selected channel")
 
-    async with aiosqlite.connect(settings.DB_PATH) as db:
-        await db.execute("""
-            INSERT INTO outreach_history (lead_id, channel, content, status)
-            VALUES (?, ?, ?, ?)
-        """, (req.lead_id, req.channel, req.content, 'sent' if success else 'failed'))
-        if success:
-            await db.execute("UPDATE leads SET status = 'sent' WHERE id = ?", (req.lead_id,))
-        await db.commit()
+    if success:
+        async with aiosqlite.connect(settings.DB_PATH) as db:
+            await db.execute("""
+                UPDATE leads 
+                SET status = 'sent', outreach_step = ?, last_outreach = datetime('now') 
+                WHERE id = ?
+            """, (req.step, req.lead_id))
+            await db.execute("""
+                INSERT INTO outreach_history (lead_id, channel, content, status)
+                VALUES (?, ?, ?, ?)
+            """, (req.lead_id, req.channel, req.content, 'sent'))
+            await db.commit()
 
     return {"success": success}
 

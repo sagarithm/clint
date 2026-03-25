@@ -29,7 +29,7 @@ class Proposer:
     async def generate_proposal(self, lead_name: str, audit_summary: str, channel: str = "email", 
                                 rating: float = 0.0, reviews_count: int = 0, business_category: str = None,
                                 has_website: bool = True, about_us_info: str = None,
-                                is_reminder: bool = False) -> tuple:
+                                outreach_step: int = 1) -> tuple:
         if not self.api_key:
             return ("Outreach", f"Draft: Hi {lead_name}, Following up on my previous message regarding your {'website' if has_website else 'digital presence'}...")
 
@@ -41,16 +41,21 @@ class Proposer:
         if reviews_count > 0: deep_knowledge += f"Reviews: {reviews_count} reviews\n"
         if about_us_info: deep_knowledge += f"Company Background (Crawl): {about_us_info[:500]}\n"
 
-        if is_reminder:
-            goal = "Send a gentle follow-up/reminder. Refer to the previous audit/proposal and ask if they had time to review it. Keep it low-pressure but professional."
-            specific_task = "- Mention that you're following up on the audit findings shared previously. Keep the tone helpful and curious."
-        elif has_website:
-            goal = "Pitch a Website Redesign by highlighting issues found in the audit."
-            specific_task = "- Refer specifically to the audit findings and suggest how a redesign will fix them."
+        if outreach_step == 1:
+            if has_website:
+                goal = "Pitch a Website Redesign by highlighting issues found in the audit."
+                specific_task = "- Refer specifically to the audit findings and suggest how a redesign will fix them."
+            else:
+                goal = "Pitch a New Website Development since the lead has no online presence."
+                specific_task = "- Focus on the benefits of having a digital platform for trust and visibility."
+        elif outreach_step == 2:
+            goal = "Soft Follow-up: Check if they saw the previous email/audit. Keep it helpful, not pushy."
+            specific_task = "- Mention you shared some thoughts a few days ago and wanted to ensure they reached the right person. Re-emphasize you are here to help."
         else:
-            goal = "Pitch a New Website Development since the lead has no online presence."
-            specific_task = "- Focus on the benefits of having a digital platform for trust and visibility."
+            goal = "Final Re-engagement: Offer a quick value-add or a very short 5-min chat. Last attempt."
+            specific_task = "- Keep it extremely brief. Ask if they are still the right person to talk to about digital strategy."
 
+        is_reminder = outreach_step > 1
         prompt = f"""
         Role: {settings.SENDER_TITLE} at Pixartual Studio.
         Sender Name: {settings.SENDER_NAME}

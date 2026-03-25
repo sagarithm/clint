@@ -23,159 +23,208 @@ async def interactive_outreach():
     await init_db()
     
     # 1. User Input
-    query = Prompt.ask("[bold cyan]Enter Search Query[/bold cyan] (e.g., 'Schools in Kadi 382715')")
-    target_count = int(Prompt.ask("[bold cyan]How many leads do you need?[/bold cyan]", default="10"))
+    mode = Prompt.ask("[bold cyan]Select Outreach Mode[/bold cyan]", choices=["Initial", "Follow-up"], default="Initial")
+    dry_run = Confirm.ask("[bold yellow]Enable Dry Run?[/bold yellow] (Simulates outreach without sending)", default=False)
     
-    maps_scraper = MapsScraper()
-    web_crawler = WebCrawler()
     auditor = AIAuditor()
     proposer = Proposer()
     email_op = EmailOperator()
     whatsapp_op = WhatsAppOperator()
-    
-    # Session Subfolder Logic
-    base_screenshot_dir = "data/screenshots"
-    os.makedirs(base_screenshot_dir, exist_ok=True)
-    existing_dirs = [d for d in os.listdir(base_screenshot_dir) if os.path.isdir(os.path.join(base_screenshot_dir, d)) and d.startswith("S")]
-    session_num = 1
-    if existing_dirs:
-        try:
-            session_num = max([int(d[1:]) for d in existing_dirs if d[1:].isdigit()]) + 1
-        except: pass
-    session_folder = os.path.join(base_screenshot_dir, f"S{session_num:03d}")
-    os.makedirs(session_folder, exist_ok=True)
 
-    console.print(f"\n[bold yellow]Step 1: Scraping Leads for '{query}'...[/bold yellow]")
-    await maps_scraper.scrape(query, max_results=target_count)
-    
-    # 2. Process & Enrich
-    async with aiosqlite.connect(settings.DB_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        async with db.execute("SELECT * FROM leads WHERE status = 'new' AND category = ? ORDER BY rating DESC", (query,)) as cursor:
-            leads = await cursor.fetchall()
+    if mode == "Initial":
+        query = Prompt.ask("[bold cyan]Enter Search Query[/bold cyan] (e.g., 'Schools in Kadi 382715')")
+        target_count = int(Prompt.ask("[bold cyan]How many leads do you need?[/bold cyan]", default="10"))
+        
+        maps_scraper = MapsScraper()
+        web_crawler = WebCrawler()
+        
+        # Session Subfolder Logic
+        base_screenshot_dir = "data/screenshots"
+        os.makedirs(base_screenshot_dir, exist_ok=True)
+        existing_dirs = [d for d in os.listdir(base_screenshot_dir) if os.path.isdir(os.path.join(base_screenshot_dir, d)) and d.startswith("S")]
+        session_num = 1
+        if existing_dirs:
+            try:
+                session_num = max([int(d[1:]) for d in existing_dirs if d[1:].isdigit()]) + 1
+            except: pass
+        session_folder = os.path.join(base_screenshot_dir, f"S{session_num:03d}")
+        os.makedirs(session_folder, exist_ok=True)
 
-    if not leads:
-        console.print("[bold red]No new leads found in database.[/bold red]")
-        return
+        console.print(f"\n[bold yellow]Step 1: Scraping Leads for '{query}'...[/bold yellow]")
+        await maps_scraper.scrape(query, max_results=target_count)
+        
+        # 2. Process & Enrich
+        async with aiosqlite.connect(settings.DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute("SELECT * FROM leads WHERE status = 'new' AND category = ? ORDER BY rating DESC", (query,)) as cursor:
+                leads = await cursor.fetchall()
 
-    table = Table(title=f"Leads Found for: {query}")
+        if not leads:
+            console.print("[bold red]No new leads found in database.[/bold red]")
+            return
+
+        processed_leads = []
+        console.print("\n[bold yellow]Step 2: Enriching Leads (Finding Emails & Scoring)...[/bold yellow]")
+        
+        leads_to_process = leads[:target_count]
+        for i, lead in enumerate(leads_to_process):
+            lead_data = dict(lead)
+            if lead_data['website']:
+                res = await web_crawler.crawl(lead_data['website'], lead_data['name'], output_folder=session_folder)
+                emails = res.get('emails', [])
+                lead_data['email'] = ",".join(emails) if emails else "N/A"
+                lead_data['social_links'] = str(res.get("social_links", {}))
+                lead_data['screenshot_path'] = res.get("screenshot_path")
+                lead_data['about_us_info'] = res.get("about_us_info")
+            
+            lead_data['score'] = score_lead(lead_data)
+            processed_leads.append(lead_data)
+            
+            # Update DB with enriched data
+            async with aiosqlite.connect(settings.DB_PATH) as db:
+                await db.execute("""
+                    UPDATE leads SET email = ?, social_links = ?, screenshot_path = ?, about_us_info = ?, score = ?
+                    WHERE id = ?
+                """, (lead_data['email'], lead_data['social_links'], lead_data['screenshot_path'], lead_data['about_us_info'], lead_data['score'], lead_data['id']))
+                await db.commit()
+
+        show_lead_table(processed_leads, query)
+        await start_outreach_phase(processed_leads, auditor, proposer, email_op, whatsapp_op, dry_run=dry_run)
+
+    else:
+        # Follow-up Mode Logic
+        console.print("\n[bold yellow]Scanning for leads ready for Follow-up (>3 days)...[/bold yellow]")
+        async with aiosqlite.connect(settings.DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            # Simplified: any lead sent more than 3 days ago
+            await db.execute("UPDATE leads SET status='follow_up_ready' WHERE status='sent' AND last_outreach < datetime('now', '-3 days')")
+            await db.commit()
+            
+            async with db.execute("SELECT * FROM leads WHERE status = 'follow_up_ready' ORDER BY score DESC") as cursor:
+                leads = await cursor.fetchall()
+        
+        if not leads:
+            console.print("[bold red]No leads found ready for follow-up today.[/bold red]")
+            return
+        
+        processed_leads = [dict(l) for l in leads]
+        show_lead_table(processed_leads, "Follow-up Queue")
+        await start_outreach_phase(processed_leads, auditor, proposer, email_op, whatsapp_op, dry_run=dry_run)
+
+def show_lead_table(leads, title):
+    table = Table(title=title)
     table.add_column("No.", justify="right", style="cyan")
     table.add_column("Name", style="white")
     table.add_column("Score", justify="center", style="bold green")
+    table.add_column("Step", justify="center", style="yellow")
     table.add_column("Website", style="blue")
     table.add_column("Email", style="magenta")
-    table.add_column("Phone", style="green")
-
-    processed_leads = []
-    console.print("\n[bold yellow]Step 2: Enriching Leads (Finding Emails & Scoring)...[/bold yellow]")
     
-    leads_to_process = leads[:target_count]
-    for i, lead in enumerate(leads_to_process):
-        lead_data = dict(lead)
-        emails = []
-        
-        if lead_data['website']:
-            res = await web_crawler.crawl(lead_data['website'], lead_data['name'], output_folder=session_folder)
-            emails = res.get('emails', [])
-            lead_data['email'] = ",".join(emails) if emails else "N/A"
-            lead_data['social_links'] = str(res.get("social_links", {}))
-            lead_data['screenshot_path'] = res.get("screenshot_path")
-            lead_data['about_us_info'] = res.get("about_us_info")
-        
-        lead_data['score'] = score_lead(lead_data)
-        processed_leads.append(lead_data)
-        
+    for i, lead in enumerate(leads):
         table.add_row(
             str(i+1),
-            lead_data['name'],
-            str(lead_data['score']),
-            lead_data['website'] or "N/A",
-            lead_data['email'] or "N/A",
-            lead_data['phone'] or "N/A"
+            lead['name'],
+            str(lead.get('score', 0)),
+            str(lead.get('outreach_step', 0)),
+            lead.get('website', 'N/A') or "N/A",
+            lead.get('email', 'N/A') or "N/A"
         )
-        # Update DB with enriched data
-        async with aiosqlite.connect(settings.DB_PATH) as db:
-            await db.execute("""
-                UPDATE leads SET email = ?, social_links = ?, screenshot_path = ?, about_us_info = ?, score = ?
-                WHERE id = ?
-            """, (lead_data['email'], lead_data['social_links'], lead_data['screenshot_path'], lead_data['about_us_info'], lead_data['score'], lead_data['id']))
-            await db.commit()
-
     console.print(table)
 
-    # 3. Overview
-    total = len(processed_leads)
-    has_email = len([l for l in processed_leads if l['email'] and l['email'] != "N/A"])
-    has_phone = len([l for l in processed_leads if l['phone'] and l['phone'] != "N/A"])
-    has_web = len([l for l in processed_leads if l['website']])
-
+async def start_outreach_phase(leads, auditor, proposer, email_op, whatsapp_op, dry_run=False):
+    total = len(leads)
+    has_email = len([l for l in leads if l['email'] and l['email'] != "N/A"])
+    has_phone = len([l for l in leads if l['phone'] and l['phone'] != "N/A"])
+    
     console.print(f"\n[bold green]Overview:[/bold green]")
-    console.print(f"Total Leads: {total}")
-    console.print(f"Emails Found: {has_email}")
-    console.print(f"Phones Found: {has_phone}")
-    console.print(f"Websites Found: {has_web} | Not Found: {total - has_web}")
+    console.print(f"Total Leads: {total} | Emails: {has_email} | Phones: {has_phone}")
 
-    # 4. Outreach Logic Selection
     choice = Prompt.ask("\n[bold cyan]Choose Primary Outreach Channel[/bold cyan]", choices=["Email", "WhatsApp", "None"], default="Email")
 
     if choice == "Email":
-        # Email First Flow
         if has_email > 0:
             if Confirm.ask(f"[bold cyan]Send emails to {has_email} leads?[/bold cyan]"):
-                await send_emails(processed_leads, auditor, proposer, email_op)
+                await send_emails(leads, auditor, proposer, email_op, dry_run=dry_run)
         
-        # Follow up with WA for those without email
-        wa_leads = [l for l in processed_leads if l['phone'] and l['phone'] != "N/A" and (not l['email'] or l['email'] == "N/A")]
+        wa_leads = [l for l in leads if l['phone'] and l['phone'] != "N/A" and (not l['email'] or l['email'] == "N/A")]
         if wa_leads:
             console.print(f"\n[bold yellow]Leads with Phone but NO Email: {len(wa_leads)}[/bold yellow]")
             if Confirm.ask("[bold cyan]Send WhatsApp messages to these leads?[/bold cyan]"):
-                await send_whatsapp(wa_leads, proposer, whatsapp_op)
+                await send_whatsapp(wa_leads, proposer, whatsapp_op, dry_run=dry_run)
 
     elif choice == "WhatsApp":
-        # WhatsApp First Flow
         if has_phone > 0:
             if Confirm.ask(f"[bold cyan]Send WhatsApp messages to {has_phone} leads?[/bold cyan]"):
-                await send_whatsapp(processed_leads, proposer, whatsapp_op)
+                await send_whatsapp(leads, proposer, whatsapp_op, dry_run=dry_run)
         
-        # Follow up with Email for those without phone
-        email_leads = [l for l in processed_leads if l['email'] and l['email'] != "N/A" and (not l['phone'] or l['phone'] == "N/A")]
+        email_leads = [l for l in leads if l['email'] and l['email'] != "N/A" and (not l['phone'] or l['phone'] == "N/A")]
         if email_leads:
             console.print(f"\n[bold yellow]Leads with Email but NO Phone: {len(email_leads)}[/bold yellow]")
             if Confirm.ask("[bold cyan]Send emails to these leads?[/bold cyan]"):
-                await send_emails(email_leads, auditor, proposer, email_op)
+                await send_emails(email_leads, auditor, proposer, email_op, dry_run=dry_run)
 
     console.print("\n[bold green]Outreach Session Complete![/bold green]")
 
-async def send_emails(leads, auditor, proposer, email_op):
+async def send_emails(leads, auditor, proposer, email_op, dry_run=False):
     sent_emails = 0
     for lead in [l for l in leads if l['email'] and l['email'] != "N/A"]:
         console.print(f"Processing Email for: {lead['name']}...")
         audit = await auditor.audit_website(lead['name'], lead)
-        subject, body = await proposer.generate_proposal(lead['name'], audit, 'email', lead['rating'], lead['reviews_count'], lead['business_category'], bool(lead['website']), lead['about_us_info'])
         
+        # Increment step for proposal generation
+        current_step = lead.get('outreach_step', 0) + 1
+        
+        subject, body = await proposer.generate_proposal(
+            lead['name'], audit, 'email', 
+            lead.get('rating', 0.0), lead.get('reviews_count', 0), 
+            lead.get('business_category'), bool(lead.get('website')), 
+            lead.get('about_us_info'), current_step
+        )
+        
+        if dry_run:
+            logger.info(f"[bold yellow][DRY RUN][/bold yellow] Would send email to {lead['name']} ({lead['email']})")
+            continue
+
         email_to = lead['email'].split(',')[0]
         success = await email_op.send(email_to, subject, body)
         
         if success:
             sent_emails += 1
             async with aiosqlite.connect(settings.DB_PATH) as db:
-                await db.execute("UPDATE leads SET status = 'sent' WHERE id = ?", (lead['id'],))
+                await db.execute("""
+                    UPDATE leads SET status = 'sent', outreach_step = ?, last_outreach = datetime('now') 
+                    WHERE id = ?
+                """, (current_step, lead['id']))
                 await db.execute("INSERT INTO outreach_history (lead_id, channel, content, status) VALUES (?, 'email', ?, 'sent')", (lead['id'], body))
                 await db.commit()
     console.print(f"[bold green]Successfully sent {sent_emails} emails.[/bold green]")
 
-async def send_whatsapp(leads, proposer, whatsapp_op):
+async def send_whatsapp(leads, proposer, whatsapp_op, dry_run=False):
     sent_wa = 0
     for lead in [l for l in leads if l['phone'] and l['phone'] != "N/A"]:
         console.print(f"Processing WhatsApp for: {lead['name']}...")
         audit = "Focused on digital presence and local growth."
-        subject, body = await proposer.generate_proposal(lead['name'], audit, 'whatsapp', lead['rating'], lead['reviews_count'], lead['business_category'], bool(lead['website']), lead['about_us_info'])
         
+        current_step = lead.get('outreach_step', 0) + 1
+        subject, body = await proposer.generate_proposal(
+            lead['name'], audit, 'whatsapp', 
+            lead.get('rating', 0.0), lead.get('reviews_count', 0), 
+            lead.get('business_category'), bool(lead.get('website')), 
+            lead.get('about_us_info'), current_step
+        )
+        
+        if dry_run:
+            logger.info(f"[bold yellow][DRY RUN][/bold yellow] Would send WhatsApp to {lead['name']} ({lead['phone']})")
+            continue
+
         success = await whatsapp_op.send(lead['phone'], body)
         if success:
             sent_wa += 1
             async with aiosqlite.connect(settings.DB_PATH) as db:
-                await db.execute("UPDATE leads SET status = 'sent' WHERE id = ?", (lead['id'],))
+                await db.execute("""
+                    UPDATE leads SET status = 'sent', outreach_step = ?, last_outreach = datetime('now') 
+                    WHERE id = ?
+                """, (current_step, lead['id']))
                 await db.execute("INSERT INTO outreach_history (lead_id, channel, content, status) VALUES (?, 'whatsapp', ?, 'sent')", (lead['id'], body))
                 await db.commit()
     console.print(f"[bold green]Successfully sent {sent_wa} WhatsApp messages.[/bold green]")

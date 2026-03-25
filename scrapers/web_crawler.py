@@ -2,10 +2,12 @@ import asyncio
 import httpx
 import re
 import os
+import random
 from bs4 import BeautifulSoup
 from typing import Set, Dict
 from core.logger import logger
 from urllib.parse import urljoin, urlparse
+from playwright.async_api import async_playwright
 
 class WebCrawler:
     def __init__(self):
@@ -30,66 +32,82 @@ class WebCrawler:
         safe_name = re.sub(r'[^a-zA-Z0-9]', '_', lead_name)
         screenshot_filename = os.path.join(output_folder, f"{safe_name}_{int(asyncio.get_event_loop().time())}.png")
         
-        from playwright.async_api import async_playwright
-        
         try:
             async with async_playwright() as p:
+                # Stealth Setup
+                user_agents = [
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
+                ]
                 browser = await p.chromium.launch(headless=True)
-                page = await browser.new_page(viewport={'width': 1280, 'height': 800})
-                
-                # Load Page
-                logger.info(f"Navigating to [cyan]{url}[/cyan]...")
                 try:
-                    await page.goto(url, wait_until="domcontentloaded", timeout=45000)
-                    await page.wait_for_timeout(3000) # Give time for animations to settle
-                except Exception as e:
-                    logger.warning(f"Resilient loading: Page.goto timed out or failed for {url}, proceeding with partial content: {e}")
-                
-                # Screenshot
-                await page.screenshot(path=screenshot_filename)
-                
-                # Content Extraction
-                html = await page.content()
-                soup = BeautifulSoup(html, 'html.parser')
-                text_content = await page.evaluate("() => document.body.innerText")
-                
-                # General Audit Info
-                audit_info = {
-                    "title": await page.title(),
-                    "has_og_image": bool(soup.find("meta", property="og:image")),
-                    "is_responsive": "viewport" in html.lower(),
-                    "has_modern_framework": any(kw in html.lower() for kw in ["next.js", "react", "tailwind", "webflow", "framer"]),
-                    "text_content": text_content[:2000]
-                }
-                
-                # Extract Emails & Socials
-                emails = set(self.email_regex.findall(html))
-                social_links = {}
-                for platform, pattern in self.social_patterns.items():
-                    links = await page.evaluate(f"""
-                        (patternStr) => {{
-                            const reg = new RegExp(patternStr);
-                            return Array.from(document.querySelectorAll('a'))
-                                .map(a => a.href)
-                                .filter(href => reg.test(href));
-                        }}
-                    """, pattern)
-                    if links: social_links[platform] = links[0]
-                
-                # Deep Founder Search
-                about_info = await self.extract_about_info(page)
-                
-                await browser.close()
-                
-                logger.info(f"Crawled [cyan]{url}[/cyan]: Screenshot saved to {screenshot_filename}")
-                
-                return {
-                    "emails": list(emails),
-                    "social_links": social_links,
-                    "audit_info": audit_info,
-                    "screenshot_path": screenshot_filename,
-                    "about_us_info": about_info
-                }
+                    context = await browser.new_context(
+                        user_agent=random.choice(user_agents),
+                        viewport={'width': random.randint(1024, 1440), 'height': random.randint(768, 900)}
+                    )
+                    page = await context.new_page()
+                    
+                    # Load Page
+                    logger.info(f"Navigating to [cyan]{url}[/cyan]...")
+                    try:
+                        await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+                        await asyncio.sleep(3) # Give time for animations to settle
+                    except Exception as e:
+                        logger.warning(f"Resilient loading for {url}: {e}")
+                    
+                    # Screenshot
+                    try:
+                        await page.screenshot(path=screenshot_filename, timeout=10000)
+                    except:
+                        logger.warning(f"Screenshot failed for {url}")
+                    
+                    # Content Extraction
+                    html = await page.content()
+                    soup = BeautifulSoup(html, 'html.parser')
+                    text_content = await page.evaluate("() => document.body.innerText")
+                    
+                    # General Audit Info
+                    audit_info = {
+                        "title": await page.title(),
+                        "has_og_image": bool(soup.find("meta", property="og:image")),
+                        "is_responsive": "viewport" in html.lower(),
+                        "has_modern_framework": any(kw in html.lower() for kw in ["next.js", "react", "tailwind", "webflow", "framer"]),
+                        "text_content": text_content[:2000]
+                    }
+                    
+                    # Extract Emails & Socials
+                    emails = set(self.email_regex.findall(html))
+                    social_links = {}
+                    for platform, pattern in self.social_patterns.items():
+                        links = await page.evaluate(f"""
+                            (patternStr) => {{
+                                const reg = new RegExp(patternStr);
+                                return Array.from(document.querySelectorAll('a'))
+                                    .map(a => a.href)
+                                    .filter(href => reg.test(href));
+                            }}
+                        """, pattern)
+                        if links: social_links[platform] = links[0]
+                    
+                    # Deep Founder Search
+                    about_info = await self.extract_about_info(page)
+                    
+                    logger.info(f"Crawled [cyan]{url}[/cyan]: Metadata extracted.")
+                    
+                    return {
+                        "emails": list(emails),
+                        "social_links": social_links,
+                        "audit_info": audit_info,
+                        "screenshot_path": screenshot_filename if os.path.exists(screenshot_filename) else None,
+                        "about_us_info": about_info
+                    }
+                finally:
+                    await browser.close()
+
+        except Exception as e:
+            logger.error(f"Error crawling {url}: {e}")
+            return {}
 
         except Exception as e:
             logger.error(f"Error crawling {url}: {e}")

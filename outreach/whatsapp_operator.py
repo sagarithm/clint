@@ -33,19 +33,24 @@ class WhatsAppOperator:
 
         async with async_playwright() as p:
             # Load session to avoid repeating QR scan
+            user_agents = [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
+            ]
             browser = await p.chromium.launch_persistent_context(
                 self.session_path,
-                headless=False, # Must be False for initial QR scan and interaction
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                headless=False,
+                user_agent=random.choice(user_agents)
             )
             
-            page = await browser.new_page()
-            url = f"https://web.whatsapp.com/send?phone={phone}&text="
-            
-            logger.info(f"Opening WhatsApp Web for [cyan]{phone}[/cyan]...")
-            await page.goto(url)
-
             try:
+                page = await browser.new_page()
+                url = f"https://web.whatsapp.com/send?phone={phone}&text="
+                
+                logger.info(f"Opening WhatsApp Web for [cyan]{phone}[/cyan]...")
+                await page.goto(url)
+
                 # Wait for the main app to load
                 await page.wait_for_selector('div[contenteditable="true"]', timeout=60000)
                 
@@ -53,8 +58,6 @@ class WhatsAppOperator:
                 logger.info(f"Typing message to {phone}...")
                 input_box = await page.query_selector('div[contenteditable="true"]')
                 
-                # We don't use 'fill' for WhatsApp as it doesn't trigger listeners well
-                # Instead, we click and then type char by char
                 await input_box.click()
                 for char in message:
                     await page.keyboard.type(char)
@@ -67,14 +70,13 @@ class WhatsAppOperator:
                 
                 await self._update_stats()
                 logger.info(f"WhatsApp message sent to [green]{phone}[/green]")
-                
-                await browser.close()
                 return True
 
             except Exception as e:
-                logger.error(f"Failed to send WhatsApp to {phone}: {e}")
-                await browser.close()
+                logger.error(f"WhatsApp error for {phone}: {e}")
                 return False
+            finally:
+                await browser.close()
 
     async def _update_stats(self):
         async with aiosqlite.connect(settings.DB_PATH) as db:

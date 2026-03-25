@@ -23,6 +23,8 @@ async def init_db():
                 social_links TEXT,
                 audit_summary TEXT,
                 score INTEGER,
+                outreach_step INTEGER DEFAULT 0, -- 0: never contacted, 1: first outreach, 2: follow-up...
+                last_outreach TIMESTAMP,
                 status TEXT DEFAULT 'new', -- new, audit_pending, draft_ready, pending_review, approved, sent, failed
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
