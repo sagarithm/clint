@@ -37,8 +37,11 @@ class WebCrawler:
                 
                 # Load Page
                 logger.info(f"Navigating to [cyan]{url}[/cyan]...")
-                await page.goto(url, wait_until="networkidle", timeout=30000)
-                await page.wait_for_timeout(2000) # Give time for animations to settle
+                try:
+                    await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+                    await page.wait_for_timeout(3000) # Give time for animations to settle
+                except Exception as e:
+                    logger.warning(f"Resilient loading: Page.goto timed out or failed for {url}, proceeding with partial content: {e}")
                 
                 # Screenshot
                 await page.screenshot(path=screenshot_filename)
@@ -62,10 +65,13 @@ class WebCrawler:
                 social_links = {}
                 for platform, pattern in self.social_patterns.items():
                     links = await page.evaluate(f"""
-                        () => Array.from(document.querySelectorAll('a'))
-                            .map(a => a.href)
-                            .filter(href => href.match(/{pattern}/))
-                    """)
+                        (patternStr) => {{
+                            const reg = new RegExp(patternStr);
+                            return Array.from(document.querySelectorAll('a'))
+                                .map(a => a.href)
+                                .filter(href => reg.test(href));
+                        }}
+                    """, pattern)
                     if links: social_links[platform] = links[0]
                 
                 # Deep Founder Search
@@ -93,7 +99,7 @@ class WebCrawler:
             # Find About/Team links
             about_link = await page.evaluate("""
                 () => {
-                    const keywords = ['about', 'team', 'story', 'our-values', 'who-we-are'];
+                    const keywords = ['about', 'team', 'story', 'our-values', 'who-we-are', 'contact'];
                     const links = Array.from(document.querySelectorAll('a'));
                     const found = links.find(a => 
                         keywords.some(kw => a.href.toLowerCase().includes(kw)) ||

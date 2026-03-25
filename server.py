@@ -174,7 +174,7 @@ async def get_pipeline_status():
 async def run_full_pipeline(query: str, limit: int):
     from scrapers.maps import MapsScraper
     from scrapers.web_crawler import WebCrawler
-    from engine.auditor import WebsiteAuditor
+    from engine.auditor import AIAuditor
 
     pipeline_status["running"] = True
     pipeline_status["message"] = f"Scraping Google Maps for: {query}"
@@ -184,7 +184,7 @@ async def run_full_pipeline(query: str, limit: int):
 
         pipeline_status["message"] = "Auditing websites..."
         crawler = WebCrawler()
-        auditor = WebsiteAuditor()
+        auditor = AIAuditor()
 
         async with aiosqlite.connect(settings.DB_PATH) as db:
             db.row_factory = aiosqlite.Row

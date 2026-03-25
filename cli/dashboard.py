@@ -82,6 +82,8 @@ class ColdMailerApp:
                 audit = await self.auditor.audit_website(lead['name'], res)
                 
                 # Update DB
+                emails = ",".join(res.get('emails', []))
+                social = str(res.get('social_links', {}))
                 async with aiosqlite.connect(settings.DB_PATH) as db:
                     await db.execute("""
                         UPDATE leads 

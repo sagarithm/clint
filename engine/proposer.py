@@ -54,7 +54,10 @@ class Proposer:
             specific_task = "- Focus on the benefits of having a digital platform for trust and visibility."
 
         prompt = f"""
-        Role: Senior Business Development Manager at Pixartual Studio.
+        Role: {settings.SENDER_TITLE} at Pixartual Studio.
+        Sender Name: {settings.SENDER_NAME}
+        Sender Contact: {settings.SENDER_CONTACT}
+        
         About Us: {self.about_us}
         User Services: {self.services}
         Lead: {lead_name}
@@ -64,10 +67,24 @@ class Proposer:
         
         Task: Write a highly personalized {'FOLLOW-UP' if is_reminder else 'Initial Outreach'} from Pixartual Studio. 
         {specific_task}
-        - If 'Company Background' is available, pick a specific detail (like a founder's vision or a value) to mention.
+        - If 'Company Background' is available, pick a specific detail to mention.
         - If the lead has good reviews, MENTION IT to build rapport.
         - Style: High-end, futuristic, and professional.
-        - Ending: Ask for a 10-minute call.
+        
+        CRITICAL CONSTRAINTS:
+        1. NO PLACEHOLDERS: Never use [Recipient's Name], [Your Name], or any brackets. If a person's name is unknown, use "Dear {lead_name} Team," or "To the Leadership at {lead_name},".
+        2. NO MARKDOWN: This is for a plain-text email. Do NOT use **bolding**, # headers, or list characters like *. Use standard capitalization or spacing for emphasis.
+        3. SIGNATURE: End with the exact signature below. Use the provided Sender Name and Title.
+        
+        Ending: Use the following signature format (strictly no placeholders):
+          Warm regards,
+          
+          {settings.SENDER_NAME}
+          {settings.SENDER_TITLE}
+          Pixartual Studio
+          {settings.SENDER_CONTACT}
+          
+        - Ask for a 10-minute call.
         """
         
         if not has_website and not is_reminder:

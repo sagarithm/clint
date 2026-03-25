@@ -15,12 +15,14 @@ class EmailOperator:
     def _load_accounts(self):
         # Load from .env (Account 1 and 2)
         accounts = []
-        for i in range(1, 3):
+        for i in range(1, 4): # Support up to 3 accounts
             user = os.getenv(f"SMTP_USER_{i}")
             password = os.getenv(f"SMTP_PASS_{i}")
             host = os.getenv(f"SMTP_HOST_{i}")
             port = os.getenv(f"SMTP_PORT_{i}")
-            if user and password:
+            
+            # Skip placeholders and empty configs
+            if user and password and "your_email" not in user and "your_app_password" not in password:
                 accounts.append({
                     "user": user, 
                     "password": password, 
@@ -47,8 +49,8 @@ class EmailOperator:
             return False
 
         account = random.choice(self.accounts) # Rotation
-        # Use alias if provided in environment, otherwise use main user email
-        from_email = os.getenv("FROM_EMAIL_1") or account["user"]
+        # Use verified alias if provided in settings, otherwise use the auth user
+        from_email = settings.FROM_EMAIL or account["user"]
         
         msg = EmailMessage()
         msg["Subject"] = subject

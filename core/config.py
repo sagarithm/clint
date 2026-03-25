@@ -17,8 +17,14 @@ class Settings(BaseSettings):
     DAILY_WHATSAPP_LIMIT: int = int(os.getenv("DAILY_WHATSAPP_LIMIT", 100))
     
     # Delays
-    MIN_DELAY: int = int(os.getenv("MIN_DELAY_SECONDS", 30))
-    MAX_DELAY: int = int(os.getenv("MAX_DELAY_SECONDS", 120))
+    MIN_DELAY: int = int(os.getenv("MIN_DELAY_SECONDS", 5))
+    MAX_DELAY: int = int(os.getenv("MAX_DELAY_SECONDS", 15))
+
+    # Sender Personalization
+    SENDER_NAME: str = os.getenv("SENDER_NAME", "Senior Business Development Manager")
+    SENDER_TITLE: str = os.getenv("SENDER_TITLE", "Pixartual Studio")
+    SENDER_CONTACT: str = os.getenv("SENDER_CONTACT", "")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")
 
     class Config:
         case_sensitive = True
