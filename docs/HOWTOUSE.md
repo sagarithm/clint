@@ -29,7 +29,15 @@ Fill in your details in the `.env` file:
 
 ---
 
-## 3. Automated Follow-ups (Follow-up Mode)
+## 3. Resuming a Batch (Resume Mode)
+If your internet cuts out or you manually stop the script (Ctrl+C), do not worry:
+1.  Run `python run_outreach.py` and select **Resume**.
+2.  The system will skip Google Maps and immediately pick up all leads that were captured but not yet sent to.
+3.  This ensures no duplicates and saves you time!
+
+---
+
+## 4. Automated Follow-ups (Follow-up Mode)
 The system automatically tracks who you've messaged.
 1.  Run `python run_outreach.py` and select **Follow-up**.
 2.  The system will scan for leads who were messaged more than **3 days ago** and haven't replied.
