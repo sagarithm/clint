@@ -52,6 +52,8 @@ class OutreachDirector:
             progress.update(scrape_task, description="[bold green]Discovery Complete.", completed=True)
             
             # Phase 2: Processing & Enrichment
+            query_id = f"AUTO_{query[:10].replace(' ', '_')}_{random.randint(100, 999)}"
+            
             async with get_db() as db:
                 async with db.execute("""
                     SELECT * FROM leads 
@@ -75,7 +77,7 @@ class OutreachDirector:
                 try:
                     # 2.1 Enrichment
                     if lead_data['website'] and "google.com" not in lead_data['website']:
-                        enrichment = await self.web_crawler.crawl(lead_data['website'], lead_data['name'])
+                        enrichment = await self.web_crawler.crawl(lead_data['website'], lead_data['name'], query_id=query_id)
                         
                         emails = enrichment.get('emails', [])
                         email_str = ",".join(emails) if emails else "N/A"

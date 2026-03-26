@@ -91,6 +91,9 @@ class ColdMailerCLI:
         # Scrape
         await self.director.maps_scraper.scrape(query, max_results=target)
         
+        # Unique Query ID for this scrape
+        query_id = f"Q{random.randint(100, 999)}"
+        
         # Enrichment & Scoring
         async with get_db() as db:
             async with db.execute("SELECT * FROM leads WHERE status = 'new'") as cursor:
@@ -98,10 +101,10 @@ class ColdMailerCLI:
         
         if not leads: return
         
-        console.print(f"\n[bold yellow]Analyzing {len(leads)} Prospects...[/bold yellow]")
+        console.print(f"\n[bold yellow]Analyzing {len(leads)} Prospects (Query ID: {query_id})...[/bold yellow]")
         for lead in leads:
             if lead['website']:
-                res = await self.crawler.crawl(lead['website'], lead['name'])
+                res = await self.crawler.crawl(lead['website'], lead['name'], query_id=query_id)
                 emails = ",".join(res.get('emails', []))
                 score = score_lead({**lead, 'email': emails, 'about_us_info': res.get('about_us_info')})
                 
@@ -141,14 +144,28 @@ class ColdMailerCLI:
 
         # Display Table
         table = Table(title=f"INTELLIGENCE REPORT: {title}", header_style="bold gold1")
+        table.add_column("Sr. No.", justify="right", style="dim")
         table.add_column("Score", justify="center", style="bold green")
         table.add_column("Business Name", style="white")
+        table.add_column("Number", style="cyan")
         table.add_column("Email Status", justify="center", style="magenta")
+        table.add_column("Web Status", style="blue")
         table.add_column("Category", style="dim")
         
-        for l in leads:
+        from urllib.parse import urlparse
+        
+        for i, l in enumerate(leads, 1):
             email_status = "[bold green]VALID[/bold green]" if l['email'] and l['email'] != "N/A" else "[dim]N/A[/dim]"
-            table.add_row(str(l['score']), l['name'], email_status, l['business_category'] or "Local")
+            phone = l['phone'] if l['phone'] else "[dim]N/A[/dim]"
+            
+            # Extract clean domain
+            if l['website'] and l['website'] != "N/A":
+                domain = urlparse(l['website']).netloc.replace('www.', '')
+                web_status = f"[bold blue]{domain}[/bold blue]"
+            else:
+                web_status = "[dim]N/A[/dim]"
+                
+            table.add_row(str(i), str(l['score']), l['name'], phone, email_status, web_status, l['business_category'] or "Local")
         
         console.print(table)
 
@@ -184,16 +201,37 @@ class ColdMailerCLI:
                 else:
                     success = await self.whatsapp_op.send(lead['phone'], body)
                 
-                if success:
+                if success == True:
                     console.print(f"[bold green]✓ Sent to {lead['name']}[/bold green]")
                     async with get_db() as db:
                         await db.execute("UPDATE leads SET status='sent', last_outreach=datetime('now') WHERE id=?", (lead['id'],))
                         await db.commit()
+                elif success == "not_found":
+                    console.print(f"[bold yellow]⚠ User mapping failed: {lead['name']} not on WhatsApp. Added to Call List.[/bold yellow]")
+                    self._add_to_call_list(lead)
                 else:
                     console.print(f"[bold red]✗ Failed reaching {lead['name']}[/bold red]")
         
         if channel == 'whatsapp':
             await self.whatsapp_op.stop()
+
+    def _add_to_call_list(self, lead: Dict) -> None:
+        """Saves non-WhatsApp leads to a dedicated call list for manual follow-up."""
+        os.makedirs("data", exist_ok=True)
+        file_path = "data/direct_call_list.csv"
+        file_exists = os.path.isfile(file_path)
+        
+        import csv
+        with open(file_path, mode='a', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=["Name", "Phone", "Website", "Category"])
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow({
+                "Name": lead['name'],
+                "Phone": lead['phone'],
+                "Website": lead['website'],
+                "Category": lead['business_category']
+            })
 
 if __name__ == "__main__":
     cli = ColdMailerCLI()

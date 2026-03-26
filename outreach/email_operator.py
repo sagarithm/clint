@@ -1,16 +1,19 @@
 import aiosmtplib
-from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import asyncio
 import random
 import os
 from core.config import settings
 from core.logger import logger
-import aiosqlite
+from dotenv import load_dotenv
 from datetime import date
 
 class EmailOperator:
     def __init__(self):
+        load_dotenv() # Ensure .env is loaded into environment
         self.accounts = self._load_accounts()
+        self.current_idx = 0
 
     def _load_accounts(self):
         # Load from .env (Account 1 and 2)
@@ -50,7 +53,8 @@ class EmailOperator:
         self.current_idx = (self.current_idx + 1) % len(self.accounts)
 
         msg = MIMEMultipart()
-        msg["From"] = f"{settings.SENDER_NAME} <{account['user']}>"
+        msg["From"] = f"Pixartual Studio <{settings.FROM_EMAIL}>"
+        msg["Reply-To"] = settings.FROM_EMAIL
         msg["To"] = to_email
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "html" if "<br" in body or "<p" in body else "plain"))

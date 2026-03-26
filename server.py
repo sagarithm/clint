@@ -6,6 +6,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from contextlib import asynccontextmanager
+
 from core.config import settings
 from core.database import init_db, get_db
 from engine.director import OutreachDirector
@@ -13,10 +15,18 @@ from engine.proposer import Proposer
 from outreach.email_operator import EmailOperator
 from outreach.whatsapp_operator import WhatsAppOperator
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize Database
+    await init_db()
+    yield
+    # Shutdown logic (if any) can go here
+
 app = FastAPI(
     title="# Clint | Enterprise Intelligence Dashboard",
     description="Enterprise-grade backend for the Pixartual Outreach Suite.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # 1. Security & Middleware
@@ -167,10 +177,6 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 @app.get("/")
 async def serve_dashboard():
     return FileResponse("dashboard.html")
-
-@app.on_event("startup")
-async def on_startup():
-    await init_db()
 
 if __name__ == "__main__":
     import uvicorn

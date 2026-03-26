@@ -1,6 +1,9 @@
 import asyncio
 import httpx
 import re
+import random
+import os
+from bs4 import BeautifulSoup
 from typing import List, Dict, Set, Optional
 from playwright.async_api import async_playwright, Page, BrowserContext
 
@@ -27,13 +30,14 @@ class WebCrawler:
             "twitter": r'twitter\.com/[^/"]+'
         }
 
-    async def crawl(self, url: str, business_name: str) -> Dict[str, any]:
+    async def crawl(self, url: str, business_name: str, query_id: str = "default") -> Dict[str, any]:
         """
         Performs a deep crawl of a business website.
         
         Args:
             url: The base URL of the business.
             business_name: Name of the business for context enhancement.
+            query_id: ID of the search query for folder organization.
             
         Returns:
             A dictionary containing discovered emails, social links, and About Us info.
@@ -44,6 +48,11 @@ class WebCrawler:
         if not url.startswith("http"):
             url = f"https://{url}"
 
+        # Ensure directory exists
+        screenshot_dir = f"data/screenshots/{query_id}"
+        os.makedirs(screenshot_dir, exist_ok=True)
+        safe_name = re.sub(r'[^\w\s-]', '', business_name).strip().replace(' ', '_')
+        screenshot_filename = f"{screenshot_dir}/{safe_name}_{random.randint(1000, 9999)}.png"
         
         try:
             async with async_playwright() as p:
@@ -126,10 +135,6 @@ class WebCrawler:
                     }
                 finally:
                     await browser.close()
-
-        except Exception as e:
-            logger.error(f"Error crawling {url}: {e}")
-            return {}
 
         except Exception as e:
             logger.error(f"Error crawling {url}: {e}")

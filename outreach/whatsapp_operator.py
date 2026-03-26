@@ -69,27 +69,46 @@ class WhatsAppOperator:
 
         try:
             page = await self.context.new_page()
-            url = f"https://web.whatsapp.com/send?phone={clean_phone}&text="
+            url = f"https://web.whatsapp.com/send?phone={clean_phone}"
             
             logger.info(f"Navigating to WhatsApp for [bold cyan]{clean_phone}[/bold cyan]...")
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
-            # 2. Wait for Decryption / Sync
-            # WhatsApp Web often shows a 'Starting' or 'Loading' screen
+            # 2. Check for "Invalid Number" Dialog
+            try:
+                # This selector usually covers the "Phone number shared via url is invalid" popup
+                invalid_dialog = await page.wait_for_selector('div[data-animate-modal-body]', timeout=15000)
+                if invalid_dialog:
+                    text = await invalid_dialog.inner_text()
+                    if "invalid" in text.lower() or "not found" in text.lower():
+                        logger.warning(f"User not found for {clean_phone} on WhatsApp.")
+                        await page.close()
+                        return "not_found"
+            except:
+                pass # Continue if dialog doesn't appear
+
+            # 3. Wait for Chat Box
             logger.info("Waiting for chat synchronization...")
-            await page.wait_for_selector('div[contenteditable="true"]', timeout=90000)
+            try:
+                await page.wait_for_selector('div[contenteditable="true"]', timeout=30000)
+            except:
+                logger.error(f"Timeout waiting for chat interface: {clean_phone}")
+                await page.close()
+                return False
             
-            # 3. Human-Type Content
+            # 4. Human-Type Content
             logger.info("Mimicking human typing...")
             input_box = await page.query_selector('div[contenteditable="true"]')
-            if not input_box: return False
+            if not input_box: 
+                await page.close()
+                return False
             
             await input_box.click()
             await page.keyboard.type(message, delay=random.randint(20, 50))
             await asyncio.sleep(1)
             await page.keyboard.press("Enter")
             
-            # 4. Verification Wait
+            # 5. Verification Wait
             await asyncio.sleep(random.randint(5, 8))
             await page.close()
             

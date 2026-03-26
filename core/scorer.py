@@ -39,7 +39,7 @@ def score_lead(lead: Dict[str, Any]) -> int:
         score += 1
 
     # 4. Technical Debt (Extracted from metadata if available)
-    metadata = lead.get('about_us_info', '')
+    metadata = lead.get('about_us_info') or ""
     if 'failed' in metadata.lower() or 'not found' in metadata.lower():
         score += 1 # Site is broken/outdated
 

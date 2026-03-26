@@ -130,6 +130,5 @@ class FounderDashboard:
         Prompt.ask("\n[dim]Press Enter to return...[/dim]")
 
 if __name__ == "__main__":
-    from rich.prompt import Prompt
     app = FounderDashboard()
     asyncio.run(app.main_loop())
