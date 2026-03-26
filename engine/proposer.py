@@ -95,13 +95,14 @@ class Proposer:
         - NO PLACEHOLDERS.
         - NO MARKDOWN (Bold/Italic).
         - PLAIN TEXT ONLY.
-        - SIGNATURE: Use exactly this signature at the end:
+        - SIGNATURE (EMAIL ONLY): Use exactly this signature at the end if channel is EMAIL:
           Warm regards,
 
           {settings.SENDER_NAME}
           Founder | Pixartual
           🌐 https://www.pixartual.studio
           ✨ Where Brands Evolve Into Power.
+        - NO SIGNATURE for WHATSAPP.
         """
 
         try:
@@ -142,13 +143,17 @@ class Proposer:
                             subject = lines[0].replace("Subject:", "").strip()
                             body = lines[1].strip() if len(lines) > 1 else content
 
-                    if "Dear" not in body[:20] and channel == "email":
+                    if "Dear" not in body[:20]:
                         salutation = f"Dear {lead_name},\n\n"
                         body = salutation + body
                     
-                    if "Warm regards," not in body:
+                    if channel == "email" and "Warm regards," not in body:
                         signature = f"\n\nWarm regards,\n\n{settings.SENDER_NAME}\nFounder | Pixartual\n🌐 https://www.pixartual.studio\n✨ Where Brands Evolve Into Power."
                         body += signature
+                    elif channel == "whatsapp":
+                        # Ensure no signature in WA even if LLM added it
+                        if "Warm regards," in body:
+                            body = body.split("Warm regards,")[0].strip()
 
                     logger.info(f"Proposal Generated: [bold green]{lead_name}[/bold green]")
                     return subject, body

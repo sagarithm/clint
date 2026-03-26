@@ -1,5 +1,5 @@
 import asyncio
-from run_outreach import ColdMailerCLI
+from commander import ColdMailerCLI
 from core.database import init_db
 
 async def start():
