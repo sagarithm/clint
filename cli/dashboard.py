@@ -35,7 +35,7 @@ class FounderDashboard:
     async def render_header(self) -> Panel:
         """Renders the dashboard header."""
         return Panel(
-            Align.center("[bold gold1]PIXARTUAL STUDIO: FOUNDER DASHBOARD v2.0[/bold gold1]\n[dim]Autonomous Outreach & Lead Conversion Engine[/dim]"),
+            Align.center("[bold gold1]PIXARTUAL STUDIO: FOUNDER DASHBOARD v1.0[/bold gold1]\n[dim]Autonomous Outreach & Lead Conversion Engine[/dim]"),
             border_style="gold1"
         )
 

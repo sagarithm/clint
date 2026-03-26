@@ -65,7 +65,7 @@ class Proposer:
             tone_strategy = "STANDARD: Professional, curious, and value-focused."
 
         prompt = f"""
-        [ROLE] {settings.SENDER_NAME}, CEO & Founder at Clint.
+        [ROLE] {settings.SENDER_NAME}, Founder at Pixartual.
         [GOAL] {goal}
         [STRATEGY] {tone_strategy}
         [DNA] {settings.SENDER_TAGLINE}
@@ -88,6 +88,13 @@ class Proposer:
         - NO PLACEHOLDERS.
         - NO MARKDOWN (Bold/Italic).
         - PLAIN TEXT ONLY.
+        - SIGNATURE: Use exactly this signature at the end:
+          Warm regards,
+
+          {settings.SENDER_NAME}
+          Founder | Pixartual
+          🌐 https://www.pixartual.studio
+          ✨ Where Brands Evolve Into Power.
         """
 
         try:

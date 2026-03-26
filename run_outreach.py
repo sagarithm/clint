@@ -73,7 +73,7 @@ class ColdMailerCLI:
 
     async def _handle_founder_mode(self) -> None:
         """Executes the fully autonomous 'Founder' workflow.
-        [ROLE] {settings.SENDER_NAME}, CEO & Founder at Clint.
+        [ROLE] {settings.SENDER_NAME}, Founder at Pixartual.
         """
         query = Prompt.ask("[bold cyan]Target Niche (e.g. Dentists Dallas)[/bold cyan]", default="Dentists in California")
         target = int(Prompt.ask("[bold cyan]Collection Target[/bold cyan]", default="50"))
