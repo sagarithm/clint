@@ -32,7 +32,7 @@ async def run_final_test():
         if email_success:
             logger.info(f"[bold green]✓ Email delivered to {email_target}[/bold green]")
         else:
-            logger.error(f"[bold red]✗ Email failed. Check SMTP settings.[/bold red]")
+            logger.error("[bold red]✗ Email failed. Check SMTP settings.[/bold red]")
     except Exception as e:
         logger.error(f"Email Exception: {e}")
 
@@ -50,12 +50,12 @@ async def run_final_test():
     try:
         await whatsapp_op.start()
         wa_success = await whatsapp_op.send(wa_phone, wa_body)
-        if wa_success == True:
+        if wa_success is True:
             logger.info(f"[bold green]✓ WhatsApp delivered to {wa_phone}[/bold green]")
         elif wa_success == "not_found":
             logger.warning(f"[bold yellow]⚠ WhatsApp: User {wa_phone} not found on WA.[/bold yellow]")
         else:
-            logger.error(f"[bold red]✗ WhatsApp failed.[/bold red]")
+            logger.error("[bold red]✗ WhatsApp failed.[/bold red]")
     except Exception as e:
         logger.error(f"WhatsApp Exception: {e}")
     finally:

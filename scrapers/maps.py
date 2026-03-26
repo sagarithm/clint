@@ -62,13 +62,15 @@ class MapsScraper:
                     links = await page.query_selector_all('a.hfpxzc')
                     
                     if not links:
-                        if "reached the end" in await page.content(): break
+                        if "reached the end" in await page.content():
+                            break
                         await page.mouse.wheel(0, 2000)
                         await asyncio.sleep(3)
                         continue
 
                     for link in links:
-                        if results_found >= max_results: break
+                        if results_found >= max_results:
+                            break
                         
                         try:
                             label = await link.get_attribute("aria-label")
@@ -106,8 +108,8 @@ class MapsScraper:
             if await consent.is_visible():
                 await consent.click()
                 await asyncio.sleep(2)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Consent handling error: {e}")
 
     async def _interact_with_lead(self, page: Page, link: ElementHandle, name: str) -> None:
         """Simulates human interaction (scrolling, clicking) with a lead link."""
@@ -123,15 +125,16 @@ class MapsScraper:
                 arg=name,
                 timeout=8000
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Timeout waiting for lead panel {name}: {e}")
         await asyncio.sleep(random.uniform(1, 2))
 
     async def _extract_lead_details(self, page: Page, name: str, category: str) -> Optional[Dict]:
         """Extracts deep metadata from the lead's detail panel."""
         # 1. Verification: Is the target correct?
         check_name_el = await page.query_selector('h1.DUwDvf')
-        if not check_name_el: check_name_el = await page.query_selector('h1')
+        if not check_name_el:
+            check_name_el = await page.query_selector('h1')
         current_name = await check_name_el.inner_text() if check_name_el else ""
         
         if name.lower() not in current_name.lower() and current_name.lower() not in name.lower():
@@ -167,9 +170,10 @@ class MapsScraper:
                     if rv_m: reviews = int(rv_m.group(1).replace(",", ""))
             
             cat_el = await page.query_selector('button.DkEaL')
-            if cat_el: biz_cat = await cat_el.inner_text()
-        except Exception:
-            pass
+            if cat_el:
+                biz_cat = await cat_el.inner_text()
+        except Exception as e:
+            logger.debug(f"Metadata extraction error for {name}: {e}")
 
         return {
             "name": name,
@@ -186,7 +190,8 @@ class MapsScraper:
         """Saves a lead to the database, skipping duplicates."""
         async with get_db() as db:
             async with db.execute("SELECT id FROM leads WHERE name = ?", (data['name'],)) as cursor:
-                if await cursor.fetchone(): return
+                if await cursor.fetchone():
+                    return
             
             await db.execute("""
                 INSERT INTO leads (name, website, phone, rating, reviews_count, business_category, source, category)

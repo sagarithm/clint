@@ -99,13 +99,12 @@ class WebCrawler:
                     }
                     
                     # Extract Emails & Socials
-                    from core.utils import is_valid_email
                     found_emails = self.email_regex.findall(html)
                     emails = {e.lower().strip() for e in found_emails if is_valid_email(e)}
                     
                     social_links = {}
                     for platform, pattern in self.social_patterns.items():
-                        links = await page.evaluate(f"""
+                        links = await page.evaluate("""
                             (patternStr) => {{
                                 const reg = new RegExp(patternStr);
                                 return Array.from(document.querySelectorAll('a'))
@@ -115,11 +114,9 @@ class WebCrawler:
                         """, pattern)
                         if links: social_links[platform] = links[0]
                     
-                    # Smart Crawl Check: If we have emails and socials on the home page, skip the deep crawl
-                    about_info = ""
                     if emails and social_links:
-                        logger.info(f"Smart Crawl: Essential info found on home page. Skipping deep 'About' crawl.")
-                        about_info = text_content[:1500] # Use home page content for AI context
+                        logger.info("Smart Crawl: Essential info found on home page. Skipping deep 'About' crawl.")
+                        about_info = text_content[:1500]  # Use home page content for AI context
                     else:
                         # Deep Founder Search
                         about_info = await self.extract_about_info(page)

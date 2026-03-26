@@ -70,7 +70,6 @@ async def get_stats() -> Dict[str, int]:
         async with db.execute("SELECT COUNT(*) FROM leads WHERE status='sent'") as c: sent = (await c.fetchone())[0]
         async with db.execute("SELECT COUNT(*) FROM leads WHERE status='new'") as c: new = (await c.fetchone())[0]
     return {"total": total, "sent": sent, "pending": new}
-
 @app.get("/api/leads")
 async def get_leads(limit: int = 50, status: Optional[str] = None) -> List[Dict]:
     """Retrieves lead list with optional filtering."""
@@ -79,7 +78,8 @@ async def get_leads(limit: int = 50, status: Optional[str] = None) -> List[Dict]
     if status:
         query += " WHERE status = ?"
         params.append(status)
-    query += f" ORDER BY score DESC LIMIT {limit}"
+    query += " ORDER BY score DESC LIMIT ?"
+    params.append(limit)
     
     async with get_db() as db:
         async with db.execute(query, params) as cursor:
@@ -96,10 +96,9 @@ async def generate_outreach(req: ProposalRequest):
         raise HTTPException(status_code=404, detail="Lead not found")
     
     lead_data = dict(lead)
-    # The instruction provided was malformed. Assuming the intent was to update the generate_proposal call.
-    # Reverting to original structure as the provided snippet was syntactically incorrect and incomplete.
+    body_summary = lead_data.get('audit_summary', 'Digital growth audit.')
     subject, body = await proposer.generate_proposal(
-        lead_data['name'], lead_data.get('audit_summary', 'Digital growth audit.'), req.channel,
+        lead_data['name'], body_summary, req.channel,
         lead_data.get('rating', 0.0), lead_data.get('reviews_count', 0),
         lead_data.get('business_category'), bool(lead_data['website']),
         lead_data.get('about_us_info'), score=lead_data.get('score', 0.0),
@@ -163,7 +162,6 @@ async def get_pipeline_status():
 
 async def run_pipeline_task(query: str, limit: int):
     """Background task to execute the director's autonomous batch."""
-    global pipeline_status
     pipeline_status["running"] = True
     pipeline_status["message"] = f"Discovering leads for '{query}'..."
     try:
@@ -183,4 +181,8 @@ async def serve_dashboard():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+    import os
+    # Security: Bind to localhost by default for local development. 
+    # Use environment variables if external exposure is needed.
+    host = os.getenv("HOST", "127.0.0.1")
+    uvicorn.run("server:app", host=host, port=8000, reload=True)

@@ -84,22 +84,22 @@ class WhatsAppOperator:
                         logger.warning(f"User not found for {clean_phone} on WhatsApp.")
                         await page.close()
                         return "not_found"
-            except:
-                pass # Continue if dialog doesn't appear
+            except Exception as e:
+                logger.debug(f"Invalid number dialog check skipped or failed: {e}")
 
             # 3. Wait for Chat Box
             logger.info("Waiting for chat synchronization...")
             try:
                 await page.wait_for_selector('div[contenteditable="true"]', timeout=30000)
-            except:
-                logger.error(f"Timeout waiting for chat interface: {clean_phone}")
+            except Exception as e:
+                logger.error(f"Timeout waiting for chat interface for {clean_phone}: {e}")
                 await page.close()
                 return False
             
             # 4. Human-Type Content
             logger.info("Mimicking human typing...")
             input_box = await page.query_selector('div[contenteditable="true"]')
-            if not input_box: 
+            if not input_box:
                 await page.close()
                 return False
             

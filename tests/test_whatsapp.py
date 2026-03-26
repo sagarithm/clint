@@ -33,7 +33,7 @@ async def run_test():
         await whatsapp_op.start()
         success = await whatsapp_op.send(phone, body)
         
-        if success == True:
+        if success is True:
             logger.info("[bold green]✓ WhatsApp Test: Message delivered.[/bold green]")
         elif success == "not_found":
             logger.warning("[bold yellow]⚠ WhatsApp Test: User correctly identified as 'Not Found'.[/bold yellow]")
