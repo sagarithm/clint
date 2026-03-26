@@ -127,7 +127,8 @@ class OutreachDirector:
             lead_data['name'], audit, 'email',
             lead_data.get('rating', 0.0), lead_data.get('reviews_count', 0),
             lead_data.get('business_category'), bool(lead_data['website']),
-            lead_data.get('about_us_info'), score=lead_data.get('score', 0.0)
+            lead_data.get('about_us_info'), score=lead_data.get('score', 0.0),
+            service=lead_data.get('category')
         )
         
         # Delivery

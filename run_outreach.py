@@ -193,7 +193,13 @@ class ColdMailerCLI:
                 console.print(f"[dim]Generating personalized pitch for {lead['name']}...[/dim]")
                 
                 audit = await self.auditor.audit_website(lead['name'], lead)
-                subject, body = await self.proposer.generate_proposal(lead['name'], audit, channel)
+                subject, body = await self.proposer.generate_proposal(
+                    lead['name'], audit, channel,
+                    rating=lead.get('rating', 0.0), reviews_count=lead.get('reviews_count', 0),
+                    business_category=lead.get('business_category'), has_website=bool(lead['website']),
+                    about_us_info=lead.get('about_us_info'), score=lead.get('score', 0.0),
+                    service=lead.get('business_category')
+                )
                 
                 success = False
                 if channel == 'email':

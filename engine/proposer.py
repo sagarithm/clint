@@ -29,7 +29,7 @@ class Proposer:
     async def generate_proposal(self, lead_name: str, audit_summary: str, channel: str = "email", 
                                 rating: float = 0.0, reviews_count: int = 0, business_category: str = None,
                                 has_website: bool = True, about_us_info: str = None,
-                                outreach_step: int = 1, score: float = 0.0) -> tuple:
+                                outreach_step: int = 1, score: float = 0.0, service: str = None) -> tuple:
         if not self.api_key:
             return ("Outreach", f"Draft: Hi {lead_name}, Following up on my previous message regarding your {'website' if has_website else 'digital presence'}...")
 
@@ -64,11 +64,17 @@ class Proposer:
         else:
             tone_strategy = "STANDARD: Professional, curious, and value-focused."
 
+        # Service Inference
+        if not service:
+            service = "Website Redesign" if has_website else "Website Development"
+
         prompt = f"""
         [ROLE] {settings.SENDER_NAME}, Founder at Pixartual.
         [GOAL] {goal}
+        [SERVICE] {service}
         [STRATEGY] {tone_strategy}
         [DNA] {settings.SENDER_TAGLINE}
+        [TASK] {specific_task}
 
         [CONTEXT]
         - Target Business: {lead_name}
@@ -78,11 +84,12 @@ class Proposer:
         - Audit Findings: {audit_summary}
 
         [SYSTEM INSTRUCTIONS]
-        1. PERSUASIVE HOOK: Open with a specific, direct observation about their {business_category or 'business'} or 'Audit Finding'.
-        2. NO FLUFF: Avoid "I hope this email finds you well" or "My name is...". Start with VALUE.
-        3. FOUNDER TONE: Be authoritative, slightly provocative, but professional. You are an expert peer, not a solicitor.
-        4. SPECIFIC SOLUTION: Mention exactly how Pixartual Studio's {self.services[:100]} solves their 'Leakage Point'.
-        5. CHANNEL ADAPTATION: {'[EMAIL] Subject: [Hook] | Body: [3 Paras Max]' if channel == 'email' else '[WHATSAPP] 3 Sentences Max. High Impact.'}
+        1. SALUTATION: Start exactly with "Dear {lead_name}," (or "Dear {lead_name} Team," if it's a generic entity).
+        2. SERVICE MENTION: Explicitly mention that you are reaching out regarding "[SERVICE]".
+        3. PERSUASIVE HOOK: Immediately follow with a specific, direct observation about their {business_category or 'business'} or 'Audit Finding'.
+        4. NO FLUFF: Avoid "I hope this email finds you well" or "My name is...".
+        5. FOUNDER TONE: Be authoritative, slightly provocative, but professional. You are an expert peer.
+        6. CHANNEL ADAPTATION: {'[EMAIL] Subject: [Hook] | Body: [Salutation] [3 Paras Max]' if channel == 'email' else '[WHATSAPP] [Salutation] [3 Sentences Max].'}
 
         [CONSTRAINTS]
         - NO PLACEHOLDERS.
@@ -134,6 +141,14 @@ class Proposer:
                             lines = content.split("\n", 1)
                             subject = lines[0].replace("Subject:", "").strip()
                             body = lines[1].strip() if len(lines) > 1 else content
+
+                    if "Dear" not in body[:20] and channel == "email":
+                        salutation = f"Dear {lead_name},\n\n"
+                        body = salutation + body
+                    
+                    if "Warm regards," not in body:
+                        signature = f"\n\nWarm regards,\n\n{settings.SENDER_NAME}\nFounder | Pixartual\n🌐 https://www.pixartual.studio\n✨ Where Brands Evolve Into Power."
+                        body += signature
 
                     logger.info(f"Proposal Generated: [bold green]{lead_name}[/bold green]")
                     return subject, body
