@@ -1,6 +1,6 @@
-# ColdMailer Pro: AI-Driven Enterprise Outreach 🚀
+# Clint: AI-Driven Enterprise Outreach v1 🚀
 
-ColdMailer is a production-ready, asynchronous automation suite designed for high-conversion lead generation. It combines advanced stealth scraping, AI-powered audits, and multi-step outreach sequences into a powerful pipeline.
+Clint is a production-ready, asynchronous automation suite designed for high-conversion lead generation. It combines advanced stealth scraping, AI-powered audits, and multi-step outreach sequences into a powerful pipeline.
 
 ## 🌟 Premium Features
 
@@ -10,12 +10,13 @@ ColdMailer is a production-ready, asynchronous automation suite designed for hig
 - **Persistent Sessions**: Secure WhatsApp session handling to avoid repeated QR scans.
 
 ### 🤖 AI-Powered Intelligence
+- **Founder Mode (Autonomous)**: Single-command lead generation, enrichment, and outreach (Scrape → Audit → Send).
 - **Multi-Step Sequences**: Automated follow-up logic (Step 1: Pitch → Step 2: Reminder → Step 3: Final Call).
 - **Lead Scoring**: Visual ranking (0-10) based on digital presence and social proof.
 - **Deep Audit**: AI-driven analysis of Branding, UI/UX, and Tech frameworks.
 
-### 📈 CRM Dashboard
-- **Visual Intelligence**: Monitor lead quality and sequence progress in a premium web interface.
+### 📈 Clint Command Center
+- **Visual Intelligence**: Monitor lead quality and sequence progress in a premium Tailwind v4 interface.
 - **Dry Run Mode**: Safe simulation mode to verify outreach logic without actual delivery.
 - **Rich Logging**: Every action is mirrored to `logs/outreach.log` for full auditability.
 
@@ -42,8 +43,7 @@ Update your `.env` with:
 | Flow | Command |
 | :--- | :--- |
 | **Interactive CLI** | `python run_outreach.py` |
-| **CRM Dashboard** | `python server.py` (visit http://localhost:8000) |
-| **Database Refresh** | `python clear_db.py` |
+| **Clint Command Center** | `python server.py` (visit http://localhost:8000) |
 
 ---
 
@@ -54,4 +54,4 @@ Update your `.env` with:
 
 ---
 
-*Built for High-Growth Sales & Marketing Teams.*
+*Clint v1.0.0 | Launch Ready*

@@ -1,40 +1,48 @@
 import os
-from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
-
-load_dotenv()
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 class Settings(BaseSettings):
-    # API Keys
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-    AI_MODEL: str = os.getenv("AI_MODEL", "openai/gpt-4o-mini")
-
-    # DB
-    DB_PATH: str = os.getenv("DB_PATH", "data/cold_mailer.db")
-
-    # Limits
-    DAILY_EMAIL_LIMIT: int = int(os.getenv("DAILY_EMAIL_LIMIT", 200))
-    DAILY_WHATSAPP_LIMIT: int = int(os.getenv("DAILY_WHATSAPP_LIMIT", 100))
+    """
+    Enterprise-grade configuration settings for the Clint suite.
+    Uses Pydantic for validation and environment variable loading.
+    """
     
-    # Delays
-    MIN_DELAY: int = int(os.getenv("MIN_DELAY_SECONDS", 5))
-    MAX_DELAY: int = int(os.getenv("MAX_DELAY_SECONDS", 15))
+    # --- AI & LLM CONFIGURATION ---
+    OPENROUTER_API_KEY: str
+    AI_MODEL: str = "google/gemini-2.0-flash-001"
 
-    # Sender Personalization
-    SENDER_NAME: str = os.getenv("SENDER_NAME", "Senior Business Development Manager")
-    SENDER_TITLE: str = os.getenv("SENDER_TITLE", "Founder")
-    SENDER_CONTACT: str = os.getenv("SENDER_CONTACT", "")
-    SENDER_SITE: str = os.getenv("SENDER_SITE", "https://www.pixartual.studio/")
-    SENDER_SUPPORT: str = os.getenv("SENDER_SUPPORT", "hello@pixartual.studio")
-    SENDER_TAGLINE: str = os.getenv("SENDER_TAGLINE", "Where Brands Evolve Into Power.")
-    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "hello@pixartual.studio")
+    # --- DATABASE CONFIGURATION ---
+    DB_PATH: str = "data/clint.db"
 
-    class Config:
-        case_sensitive = True
+    # --- OUTREACH LIMITS & SAFETY ---
+    DAILY_EMAIL_LIMIT: int = 200
+    DAILY_WHATSAPP_LIMIT: int = 100
+    
+    # Safety delays (seconds) between messages
+    MIN_DELAY_SECONDS: int = 5
+    MAX_DELAY_SECONDS: int = 15
+
+    # --- SENDER PERSONALIZATION (PIXARTUAL STUDIO) ---
+    SENDER_NAME: str = "Sagar Kewat"
+    SENDER_TITLE: str = "Founder | Pixartual"
+    SENDER_CONTACT: str = ""
+    SENDER_SITE: str = "https://www.pixartual.studio/"
+    SENDER_SUPPORT: str = "hello@pixartual.studio"
+    SENDER_TAGLINE: str = "Where Brands Evolve Into Power."
+    FROM_EMAIL: str = "hello@pixartual.studio"
+
+    # --- SMTP CONFIGURATION (ROTATION SUPPORT) ---
+    # These are typically loaded from .env mapping to SMTP_USER_{1,2,3} etc.
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 settings = Settings()
 
-# Runtime validation
-if not settings.OPENROUTER_API_KEY:
-    from core.logger import logger
-    logger.error("[bold red]CRITICAL: OPENROUTER_API_KEY is missing![/bold red] AI features will not work.")
+if __name__ == "__main__":
+    # Test loading
+    print(f"Loaded Settings for: {settings.SENDER_NAME}")

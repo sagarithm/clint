@@ -1,36 +1,49 @@
 import asyncio
 import httpx
 import re
-import os
-import random
-from bs4 import BeautifulSoup
-from typing import Set, Dict
+from typing import List, Dict, Set, Optional
+from playwright.async_api import async_playwright, Page, BrowserContext
+
 from core.logger import logger
-from urllib.parse import urljoin, urlparse
-from playwright.async_api import async_playwright
+from core.utils import is_valid_email
 
 class WebCrawler:
-    def __init__(self):
-        self.email_regex = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
-        # Common social media patterns
-        self.social_patterns = {
-            "linkedin": r'linkedin\.com/company/[^/"]+',
-            "instagram": r'instagram\.com/[^/"]+',
+    """
+    An advanced web crawler designed for deep contact enrichment.
+    
+    Extracts emails, social media links, and contextual business information 
+    (About Us) to empower AI-driven personalization.
+    """
+
+    def __init__(self) -> None:
+        self.email_regex: re.Pattern = re.compile(
+            r'[a-zA-Z0-9._%+-]+@(?![0-9]x)[a-zA-Z0-9.-]+\.(?!png|jpg|jpeg|gif|webp|svg|pdf|zip|mp4|png|js|css|woff|woff2)[a-zA-Z]{2,}', 
+            re.I
+        )
+        self.social_patterns: Dict[str, str] = {
+            "linkedin": r'linkedin\.com/(?:company|in)/[^/"]+',
             "facebook": r'facebook\.com/[^/"]+',
+            "instagram": r'instagram\.com/[^/"]+',
             "twitter": r'twitter\.com/[^/"]+'
         }
 
-    async def crawl(self, url: str, lead_name: str = "Unassigned", output_folder: str = "data/screenshots") -> Dict:
-        if not url:
+    async def crawl(self, url: str, business_name: str) -> Dict[str, any]:
+        """
+        Performs a deep crawl of a business website.
+        
+        Args:
+            url: The base URL of the business.
+            business_name: Name of the business for context enhancement.
+            
+        Returns:
+            A dictionary containing discovered emails, social links, and About Us info.
+        """
+        if not url or "google.com" in url:
             return {}
         
         if not url.startswith("http"):
             url = f"https://{url}"
 
-        # Setup paths
-        os.makedirs(output_folder, exist_ok=True)
-        safe_name = re.sub(r'[^a-zA-Z0-9]', '_', lead_name)
-        screenshot_filename = os.path.join(output_folder, f"{safe_name}_{int(asyncio.get_event_loop().time())}.png")
         
         try:
             async with async_playwright() as p:
@@ -77,7 +90,10 @@ class WebCrawler:
                     }
                     
                     # Extract Emails & Socials
-                    emails = set(self.email_regex.findall(html))
+                    from core.utils import is_valid_email
+                    found_emails = self.email_regex.findall(html)
+                    emails = {e.lower().strip() for e in found_emails if is_valid_email(e)}
+                    
                     social_links = {}
                     for platform, pattern in self.social_patterns.items():
                         links = await page.evaluate(f"""

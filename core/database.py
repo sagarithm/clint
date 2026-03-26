@@ -1,10 +1,32 @@
 import aiosqlite
 import asyncio
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 from core.config import settings
+from core.logger import logger
 
-async def init_db():
+@asynccontextmanager
+async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
+    """
+    A context manager that provides a clean, asynchronous connection to the database.
+    Ensures row_factory is set to Row for dictionary-like access.
+    """
+    db = await aiosqlite.connect(settings.DB_PATH)
+    db.row_factory = aiosqlite.Row
+    try:
+        yield db
+    finally:
+        await db.close()
+
+async def init_db() -> None:
+    """
+    Initializes the SQLite database with the required schema.
+    Indexes are added to critical columns for high-performance lookups.
+    """
     async with aiosqlite.connect(settings.DB_PATH) as db:
-        # Leads Table
+        logger.info(f"Initializing database at: {settings.DB_PATH}")
+        
+        # 1. Leads Table: Core storage for business prospects
         await db.execute("""
             CREATE TABLE IF NOT EXISTS leads (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -12,8 +34,8 @@ async def init_db():
                 website TEXT,
                 phone TEXT,
                 address TEXT,
-                rating REAL,
-                reviews_count INTEGER,
+                rating REAL DEFAULT 0.0,
+                reviews_count INTEGER DEFAULT 0,
                 business_category TEXT,
                 screenshot_path TEXT,
                 about_us_info TEXT,
@@ -21,22 +43,21 @@ async def init_db():
                 category TEXT,
                 email TEXT,
                 social_links TEXT,
-                audit_summary TEXT,
-                score INTEGER,
-                outreach_step INTEGER DEFAULT 0, -- 0: never contacted, 1: first outreach, 2: follow-up...
+                score INTEGER DEFAULT 0,
+                outreach_step INTEGER DEFAULT 0,
                 last_outreach TIMESTAMP,
-                status TEXT DEFAULT 'new', -- new, audit_pending, draft_ready, pending_review, approved, sent, failed
+                status TEXT DEFAULT 'new',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-
-        # Outreach History Table
+        
+        # 2. Outreach History: Tracks every message sent for auditability
         await db.execute("""
             CREATE TABLE IF NOT EXISTS outreach_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 lead_id INTEGER,
-                channel TEXT, -- email, whatsapp
+                channel TEXT,
                 content TEXT,
                 status TEXT,
                 error_message TEXT,
@@ -45,7 +66,7 @@ async def init_db():
             )
         """)
 
-        # Daily Limits Tracker
+        # 3. Daily Stats: Enforces daily sending limits
         await db.execute("""
             CREATE TABLE IF NOT EXISTS daily_stats (
                 date DATE PRIMARY KEY,
@@ -54,7 +75,13 @@ async def init_db():
             )
         """)
 
+        # Performance Architecture: Indexes
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_leads_status ON leads (status)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_leads_category ON leads (category)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_leads_email ON leads (email)")
+
         await db.commit()
+    logger.info("Database initialization successful.")
 
 if __name__ == "__main__":
     asyncio.run(init_db())

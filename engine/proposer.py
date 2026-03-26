@@ -29,7 +29,7 @@ class Proposer:
     async def generate_proposal(self, lead_name: str, audit_summary: str, channel: str = "email", 
                                 rating: float = 0.0, reviews_count: int = 0, business_category: str = None,
                                 has_website: bool = True, about_us_info: str = None,
-                                outreach_step: int = 1) -> tuple:
+                                outreach_step: int = 1, score: float = 0.0) -> tuple:
         if not self.api_key:
             return ("Outreach", f"Draft: Hi {lead_name}, Following up on my previous message regarding your {'website' if has_website else 'digital presence'}...")
 
@@ -55,84 +55,91 @@ class Proposer:
             goal = "Final Re-engagement: Offer a quick value-add or a very short 5-min chat. Last attempt."
             specific_task = "- Keep it extremely brief. Ask if they are still the right person to talk to about digital strategy."
 
-        is_reminder = outreach_step > 1
+        # Multi-Condition Messaging Adaptation
+        if score >= 8:
+            if rating < 3.5:
+                tone_strategy = "RESCUE: The business is struggling online. Be empathetic but firm about the risks of inaction."
+            else:
+                tone_strategy = "SCALE: The business is doing well but missing digital leverage. Be ambitious and focus on market dominance."
+        else:
+            tone_strategy = "STANDARD: Professional, curious, and value-focused."
+
         prompt = f"""
-        Role: {settings.SENDER_TITLE} at Pixartual Studio.
-        Sender Name: {settings.SENDER_NAME}
-        Sender Contact: {settings.SENDER_CONTACT}
-        
-        About Us: {self.about_us}
-        User Services: {self.services}
-        Lead: {lead_name}
-        {deep_knowledge}
-        Goal: {goal}
-        Channel: {channel}
-        
-        Task: Write a highly personalized, warm, and human {'FOLLOW-UP' if is_reminder else 'Initial Outreach'} from Pixartual Studio. 
-        {specific_task}
-        - Use a warm, non-corporate tone. Avoid being 'salesy'.
-        - If 'Company Background' is available, pick a specific detail to mention.
-        - If the lead has good reviews, MENTION IT to build rapport.
-        - Style: High-end, futuristic, yet remarkably human and curious.
-        
-        CRITICAL CONSTRAINTS:
-        1. NO PLACEHOLDERS: Never use [Recipient's Name], [Your Name], or any brackets. If a person's name is unknown, use "Dear {lead_name} Team," or "To the {lead_name} leadership,".
-        2. NO MARKDOWN: This is for a plain-text email. Do NOT use **bolding**, # headers, or list characters like *. Use standard capitalization or spacing for emphasis.
-        3. SUBJECT LINE (Email Only): Generate a short, human subject line (e.g., "Quick question about {lead_name}" or "Thought for {lead_name}"). Do NOT use "Growth Opportunity".
-        4. SIGNATURE: End with the exact signature below. 
-        
-        Ending: Use the following signature format (strictly no placeholders):
-          Warm regards,
-          
-          {settings.SENDER_NAME}
-          {settings.SENDER_TITLE}
-          📞 {settings.SENDER_CONTACT}
-          🌐 {settings.SENDER_SITE}
-          ✨ {settings.SENDER_TAGLINE}
-          
-        - Ask for a 10-minute call.
-        
-        FORMAT: 
-        SUBJECT: [Your generated subject]
-        BODY: [Your generated message]
+        [ROLE] {settings.SENDER_NAME}, CEO & Founder at Clint.
+        [GOAL] {goal}
+        [STRATEGY] {tone_strategy}
+        [DNA] {settings.SENDER_TAGLINE}
+
+        [CONTEXT]
+        - Target Business: {lead_name}
+        - Industry: {business_category or 'Local Business'}
+        - Social Proof: {rating}/5 Stars ({reviews_count} Reviews)
+        - Site Crawl: {about_us_info[:300] if about_us_info else 'No crawl data'}
+        - Audit Findings: {audit_summary}
+
+        [SYSTEM INSTRUCTIONS]
+        1. PERSUASIVE HOOK: Open with a specific, direct observation about their {business_category or 'business'} or 'Audit Finding'.
+        2. NO FLUFF: Avoid "I hope this email finds you well" or "My name is...". Start with VALUE.
+        3. FOUNDER TONE: Be authoritative, slightly provocative, but professional. You are an expert peer, not a solicitor.
+        4. SPECIFIC SOLUTION: Mention exactly how Pixartual Studio's {self.services[:100]} solves their 'Leakage Point'.
+        5. CHANNEL ADAPTATION: {'[EMAIL] Subject: [Hook] | Body: [3 Paras Max]' if channel == 'email' else '[WHATSAPP] 3 Sentences Max. High Impact.'}
+
+        [CONSTRAINTS]
+        - NO PLACEHOLDERS.
+        - NO MARKDOWN (Bold/Italic).
+        - PLAIN TEXT ONLY.
         """
-        
+
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=45.0) as client:
                 response = await client.post(
                     self.url,
                     headers={
                         "Authorization": f"Bearer {self.api_key}",
+                        "HTTP-Referer": settings.SENDER_SITE,
+                        "X-Title": "ColdMailer Pro",
                         "Content-Type": "application/json"
                     },
                     json={
                         "model": settings.AI_MODEL,
-                        "messages": [{"role": "user", "content": prompt}]
+                        "messages": [
+                            {"role": "system", "content": "You are the Founder of Pixartual Studio. You write short, high-conversion, authoritative emails."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.6
                     }
                 )
                 
                 if response.status_code == 200:
-                    data = response.json()
-                    raw_content = data['choices'][0]['message']['content'].strip()
+                    content = response.json()['choices'][0]['message']['content'].strip()
                     
-                    subject = "Introduction: Pixartual Studio"
-                    body = raw_content
+                    # Parsing Logic
+                    subject = f"Regarding {lead_name}"
+                    body = content
                     
-                    if "SUBJECT:" in raw_content and "BODY:" in raw_content:
-                        parts = raw_content.split("BODY:", 1)
-                        subject = parts[0].replace("SUBJECT:", "").strip()
-                        body = parts[1].strip()
-                    
-                    logger.info(f"Proposal Generated for [bold cyan]{lead_name}[/bold cyan] ({channel})")
-                    return (subject, body)
+                    if "Subject:" in content:
+                        parts = content.split("Body:", 1)
+                        if len(parts) > 1:
+                            subject = parts[0].replace("Subject:", "").strip()
+                            body = parts[1].strip()
+                        else:
+                            # fallback if Body: is missing
+                            lines = content.split("\n", 1)
+                            subject = lines[0].replace("Subject:", "").strip()
+                            body = lines[1].strip() if len(lines) > 1 else content
+
+                    logger.info(f"Proposal Generated: [bold green]{lead_name}[/bold green]")
+                    return subject, body
                 else:
-                    return ("Outreach Error", f"Error generating proposal: {response.text}")
+                    logger.error(f"Proposer API Error ({response.status_code}): {response.text}")
+                    return "Important Note", "Generation failed."
 
         except Exception as e:
-            logger.error(f"Proposal Exception: {e}")
-            return ("Outreach Exception", f"Exception in proposal generation: {e}")
+            logger.error(f"Proposer Exception for {lead_name}: {e}")
+            return "Important Note", "Generation failed."
 
 if __name__ == "__main__":
     proposer = Proposer()
-    res = asyncio.run(proposer.generate_proposal("Dental Clinic", "Their website is not mobile responsive and has outdated 2010 graphics."))
-    print(res)
+    # Test call
+    # res = asyncio.run(proposer.generate_proposal("Dental Clinic", "Their website is not mobile responsive."))
+    # print(res)

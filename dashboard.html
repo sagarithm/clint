@@ -1,2283 +1,903 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColdMailer | Pixartual Studio</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
-    <style>
-        :root {
-            --bg: #050505;
-            --bg2: #0d0d0d;
-            --card: #111111;
-            --card-hover: #161616;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(255, 255, 255, 0.16);
-            --accent: #f8851a;
-            --accent-bg: rgba(236, 72, 153, 0.1);
-            --accent-border: rgba(236, 72, 153, 0.25);
-            --green: #22c55e;
-            --green-bg: rgba(34, 197, 94, 0.08);
-            --green-border: rgba(34, 197, 94, 0.2);
-            --yellow: #f59e0b;
-            --yellow-bg: rgba(245, 158, 11, 0.08);
-            --red: #ef5e44;
-            --t1: #ffffff;
-            --t2: #888888;
-            --t3: #444444;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--t1);
-            display: flex;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ─ SIDEBAR ─ */
-        .sidebar {
-            width: 220px;
-            background: var(--bg2);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 18px 10px;
-            position: fixed;
-            inset: 0 auto 0 0;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 8px 18px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 14px;
-        }
-
-        .logo-mark {
-            width: 30px;
-            height: 30px;
-            background: var(--accent);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: #fff;
-            font-weight: 900;
-            flex-shrink: 0;
-            letter-spacing: -1px;
-        }
-
-        .logo-name {
-            font-size: 13.5px;
-            font-weight: 800;
-            letter-spacing: -0.3px;
-            color: var(--t1);
-        }
-
-        .logo-brand {
-            font-size: 9px;
-            color: var(--t2);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            font-family: 'DM Mono', monospace;
-        }
-
-        .nav-group {
-            font-size: 9px;
-            font-weight: 600;
-            color: var(--t3);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            padding: 4px 10px 6px;
-            margin-top: 6px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--t2);
-            cursor: pointer;
-            transition: all 0.15s;
-            margin-bottom: 1px;
-        }
-
-        .nav-item svg {
-            width: 14px;
-            height: 14px;
-            flex-shrink: 0;
-            stroke: currentColor;
-            fill: none;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--t1);
-        }
-
-        .nav-item.active {
-            background: var(--accent-bg);
-            color: var(--accent);
-            border: 1px solid var(--accent-border);
-        }
-
-        .sidebar-footer {
-            margin-top: auto;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-        }
-
-        .new-btn {
-            width: 100%;
-            padding: 10px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 12.5px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: 0.2px;
-        }
-
-        .new-btn:hover {
-            background: #fff;
-            color: #050505;
-        }
-
-        /* ─ MAIN ─ */
-        .main {
-            margin-left: 220px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ─ TOPBAR ─ */
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 28px;
-            background: var(--bg2);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 30;
-        }
-
-        .topbar-title {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: -0.4px;
-        }
-
-        .topbar-sub {
-            font-size: 11px;
-            color: var(--t3);
-            margin-top: 1px;
-            font-family: 'DM Mono', monospace;
-            letter-spacing: 0.5px;
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .search {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 7px 12px;
-            width: 230px;
-            transition: border-color 0.15s;
-        }
-
-        .search:focus-within {
-            border-color: var(--border-hover);
-        }
-
-        .search input {
-            background: none;
-            border: none;
-            outline: none;
-            color: var(--t1);
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            width: 100%;
-        }
-
-        .search input::placeholder {
-            color: var(--t3);
-        }
-
-        .btn {
-            padding: 7px 16px;
-            border-radius: 7px;
-            font-size: 12.5px;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            color: var(--t2);
-            background: transparent;
-        }
-
-        .btn:hover {
-            border-color: var(--border-hover);
-            color: var(--t1);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .btn-accent {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-            font-weight: 700;
-        }
-
-        .btn-accent:hover {
-            background: #fff;
-            color: #050505;
-            border-color: #fff;
-        }
-
-        /* ─ CONTENT ─ */
-        .content {
-            padding: 24px 28px;
-        }
-
-        /* ─ PIPELINE BAR ─ */
-        .pipeline-bar {
-            background: var(--accent-bg);
-            border: 1px solid var(--accent-border);
-            border-radius: 10px;
-            padding: 12px 18px;
-            margin-bottom: 18px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .pipeline-bar.show {
-            display: flex;
-        }
-
-        .pipeline-pulse {
-            width: 7px;
-            height: 7px;
-            background: var(--accent);
-            border-radius: 50%;
-            margin-right: 10px;
-            animation: blink 1.2s infinite;
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: 0.3
-            }
-        }
-
-        /* ─ STATS ─ */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        .stat {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 20px 22px;
-            transition: border-color 0.2s, background 0.2s;
-        }
-
-        .stat:hover {
-            border-color: var(--border-hover);
-            background: var(--card-hover);
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: var(--t3);
-            font-weight: 600;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-family: 'DM Mono', monospace;
-        }
-
-        .stat-val {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -1.5px;
-        }
-
-        .stat-val.cyan {
-            color: var(--accent);
-        }
-
-        .stat-val.purple {
-            color: #fff;
-        }
-
-        .stat-val.green {
-            color: var(--green);
-        }
-
-        .stat-val.yellow {
-            color: var(--yellow);
-        }
-
-        /* ─ LAYOUT ─ */
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        /* ─ PANEL ─ */
-        .panel {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
-            transition: border-color 0.2s;
-        }
-
-        .panel:hover {
-            border-color: var(--border-hover);
-        }
-
-        .panel-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .panel-title {
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: -0.2px;
-        }
-
-        .badge {
-            font-size: 10.5px;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--t2);
-            border: 1px solid var(--border);
-            padding: 2px 9px;
-            border-radius: 20px;
-            font-weight: 500;
-            font-family: 'DM Mono', monospace;
-        }
-
-        .badge.green {
-            background: var(--green-bg);
-            color: var(--green);
-            border-color: var(--green-border);
-        }
-
-        .badge.pink {
-            background: var(--accent-bg);
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-
-        /* ─ PROPOSER ─ */
-        .proposer {
-            padding: 16px 18px;
-        }
-
-        .lead-ctx {
-            font-size: 12px;
-            color: var(--t2);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            font-family: 'DM Mono', monospace;
-        }
-
-        .lead-ctx strong {
-            color: var(--t1);
-            font-family: 'Inter', sans-serif;
-        }
-
-        textarea.prop-text {
-            width: 100%;
-            min-height: 130px;
-            background: #0a0a0a;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
-            color: var(--t1);
-            font-size: 13px;
-            line-height: 1.7;
-            resize: none;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.15s;
-            margin-bottom: 10px;
-        }
-
-        textarea.prop-text:focus {
-            border-color: var(--border-hover);
-        }
-
-        .prop-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .send-btn {
-            flex: 1;
-            padding: 9px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 12.5px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            background: transparent;
-            color: var(--t2);
-        }
-
-        .send-btn.email {
-            border-color: var(--accent-border);
-            color: var(--accent);
-        }
-
-        .send-btn.email:hover {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .send-btn.wa {
-            border-color: var(--green-border);
-            color: var(--green);
-        }
-
-        .send-btn.wa:hover {
-            background: var(--green);
-            color: #fff;
-        }
-
-        .send-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        /* ─ QUICK ACTIONS ─ */
-        .quick {
-            padding: 12px 14px;
-        }
-
-        .quick-btn {
-            width: 100%;
-            padding: 9px 12px;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--t2);
-            font-size: 12.5px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-align: left;
-            margin-bottom: 6px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .quick-btn:hover {
-            border-color: var(--border-hover);
-            color: var(--t1);
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .quick-btn:last-child {
-            margin-bottom: 0;
-        }
-
-        /* ─ TABLE ─ */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            padding: 10px 18px;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--t3);
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid var(--border);
-            font-family: 'DM Mono', monospace;
-        }
-
-        td {
-            padding: 13px 18px;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr.data-row:hover td {
-            background: rgba(255, 255, 255, 0.025);
-            cursor: pointer;
-        }
-
-        tr.data-row.selected td {
-            background: var(--accent-bg);
-        }
-
-        .lead-name {
-            font-weight: 700;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-
-        .lead-addr {
-            font-size: 11px;
-            color: var(--t3);
-        }
-
-        .cat-tag {
-            display: inline-block;
-            padding: 2px 9px;
-            border-radius: 20px;
-            font-size: 10.5px;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--t2);
-            border: 1px solid var(--border);
-            font-family: 'DM Mono', monospace;
-            letter-spacing: 0.5px;
-        }
-
-        .rating {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .star {
-            color: var(--accent);
-        }
-
-        .thumb {
-            width: 40px;
-            height: 30px;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            cursor: pointer;
-            transition: border-color 0.15s;
-        }
-
-        .thumb:hover {
-            border-color: var(--border-hover);
-        }
-
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 9px;
-            border-radius: 20px;
-            font-size: 10.5px;
-            font-weight: 600;
-        }
-
-        .chip-dot {
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-        }
-
-        .chip-new {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--t2);
-            border: 1px solid var(--border);
-        }
-
-        .chip-new .chip-dot {
-            background: var(--t3);
-        }
-
-        .chip-sent {
-            background: var(--green-bg);
-            color: var(--green);
-            border: 1px solid var(--green-border);
-        }
-
-        .chip-sent .chip-dot {
-            background: var(--green);
-        }
-
-        .chip-reminder {
-            background: var(--yellow-bg);
-            color: var(--yellow);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-
-        .chip-reminder .chip-dot {
-            background: var(--yellow);
-        }
-
-        .chip-audit {
-            background: var(--accent-bg);
-            color: var(--accent);
-            border: 1px solid var(--accent-border);
-        }
-
-        .chip-audit .chip-dot {
-            background: var(--accent);
-        }
-
-        .chip-pending {
-            background: rgba(239, 68, 68, 0.08);
-            color: var(--red);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .chip-pending .chip-dot {
-            background: var(--red);
-        }
-
-        .act-btns {
-            display: flex;
-            gap: 5px;
-        }
-
-        .act-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: transparent;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            transition: all 0.15s;
-        }
-
-        .act-btn:hover {
-            border-color: var(--border-hover);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        /* ─ ACTIVITY ─ */
-        .act-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 11px 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .act-item:last-child {
-            border-bottom: none;
-        }
-
-        .act-ico {
-            width: 30px;
-            height: 30px;
-            border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-
-        .act-ico.email {
-            background: var(--accent-bg);
-        }
-
-        .act-ico.wa {
-            background: var(--green-bg);
-        }
-
-        .act-ico.scrape {
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .act-ico.reminder {
-            background: var(--yellow-bg);
-        }
-
-        .act-txt {
-            font-size: 12.5px;
-            line-height: 1.5;
-        }
-
-        .act-time {
-            font-size: 10.5px;
-            color: var(--t3);
-            margin-top: 2px;
-            font-family: 'DM Mono', monospace;
-        }
-
-        /* ─ MODAL ─ */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .overlay.show {
-            display: flex;
-        }
-
-        .modal {
-            background: #111111;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 28px;
-            width: 460px;
-            animation: up 0.2s ease;
-        }
-
-        @keyframes up {
-            from {
-                opacity: 0;
-                transform: translateY(12px)
-            }
-
-            to {
-                opacity: 1;
-                transform: none
-            }
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 5px;
-            letter-spacing: -0.5px;
-        }
-
-        .modal-sub {
-            font-size: 12.5px;
-            color: var(--t2);
-            margin-bottom: 22px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 9.5px;
-            font-weight: 600;
-            color: var(--t3);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 7px;
-            font-family: 'DM Mono', monospace;
-        }
-
-        .form-input {
-            width: 100%;
-            background: #0a0a0a;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 12px;
-            color: var(--t1);
-            font-size: 13px;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.15s;
-            margin-bottom: 14px;
-        }
-
-        .form-input:focus {
-            border-color: var(--border-hover);
-        }
-
-        .modal-foot {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        /* ─ TOAST ─ */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #111;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            font-size: 12.5px;
-            z-index: 200;
-            transform: translateY(60px);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
-        }
-
-        .toast.show {
-            transform: none;
-            opacity: 1;
-        }
-
-        /* ─ LOADING ─ */
-        .spinner {
-            display: inline-block;
-            width: 13px;
-            height: 13px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .empty {
-            text-align: center;
-            padding: 36px;
-            color: var(--t3);
-            font-size: 12.5px;
-        }
-
-        .empty-icon {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        ::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        /* ─ VIEWS ─ */
-        .view {
-            display: none;
-            padding: 24px 28px;
-            animation: fadeIn 0.18s ease;
-        }
-
-        .view.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(6px)
-            }
-
-            to {
-                opacity: 1;
-                transform: none
-            }
-        }
-
-        /* ─ SETTINGS / INTEGRATIONS ─ */
-        .settings-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .setting-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 13px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .setting-row:last-child {
-            border-bottom: none;
-        }
-
-        .setting-label {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .setting-desc {
-            font-size: 11px;
-            color: var(--t2);
-            margin-top: 2px;
-        }
-
-        .toggle {
-            position: relative;
-            width: 38px;
-            height: 22px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-track {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            transition: background 0.2s;
-            border: 1px solid var(--border);
-        }
-
-        .toggle input:checked+.toggle-track {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .toggle-thumb {
-            position: absolute;
-            left: 3px;
-            top: 3px;
-            width: 16px;
-            height: 16px;
-            background: #fff;
-            border-radius: 50%;
-            transition: left 0.2s;
-        }
-
-        .toggle input:checked~.toggle-thumb {
-            left: 19px;
-        }
-
-        .integration-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            transition: border-color 0.15s;
-        }
-
-        .integration-card:hover {
-            border-color: var(--border-hover);
-        }
-
-        .integration-icon {
-            font-size: 22px;
-        }
-
-        .integration-name {
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .integration-desc {
-            font-size: 11px;
-            color: var(--t2);
-            margin-top: 2px;
-        }
-
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .status-dot.connected {
-            background: var(--green);
-        }
-
-        .status-dot.disconnected {
-            background: var(--t3);
-        }
-
-        /* ─ ANALYTICS ─ */
-        .analytics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        .bar-chart {
-            height: 150px;
-            display: flex;
-            align-items: flex-end;
-            gap: 6px;
-            padding: 0 4px;
-        }
-
-        .bar-chart .b {
-            flex: 1;
-            background: var(--accent-bg);
-            border: 1px solid var(--accent-border);
-            border-radius: 4px 4px 0 0;
-            transition: all 0.3s;
-            cursor: default;
-            position: relative;
-        }
-
-        .bar-chart .b:hover {
-            background: rgba(236, 72, 153, 0.2);
-        }
-
-        .bar-chart .b::after {
-            content: attr(data-val);
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: var(--t2);
-            white-space: nowrap;
-            font-family: 'DM Mono', monospace;
-        }
-
-        .bar-labels {
-            display: flex;
-            gap: 6px;
-            padding: 6px 4px 0;
-        }
-
-        .bar-labels span {
-            flex: 1;
-            text-align: center;
-            font-size: 10px;
-            color: var(--t3);
-            font-family: 'DM Mono', monospace;
-        }
-
-        /* ─ RESPONSIVE ─ */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-                z-index: 50;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            .main {
-                margin-left: 0;
-            }
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.6);
-                backdrop-filter: blur(4px);
-                z-index: 40;
-            }
-            .sidebar-overlay.show {
-                display: block;
-            }
-            .hamburger {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 34px;
-                height: 34px;
-                border: 1px solid var(--border);
-                border-radius: 7px;
-                background: transparent;
-                cursor: pointer;
-                color: var(--t2);
-                flex-shrink: 0;
-            }
-            .hamburger:hover { color: var(--t1); border-color: var(--border-hover); }
-            .stats {
-                grid-template-columns: 1fr 1fr;
-            }
-            .row {
-                grid-template-columns: 1fr;
-            }
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-            .analytics-grid {
-                grid-template-columns: 1fr;
-            }
-            .topbar {
-                padding: 10px 14px;
-                gap: 8px;
-            }
-            .topbar-right .search {
-                width: 130px;
-            }
-            .topbar-right .btn:not(.btn-accent) {
-                display: none;
-            }
-            .content, .view {
-                padding: 14px 12px;
-            }
-            .view {
-                padding: 14px 12px;
-            }
-            table { font-size: 12px; }
-            th, td { padding: 9px 10px; }
-            th:nth-child(3), th:nth-child(4), td:nth-child(3), td:nth-child(4) { display: none; }
-            .modal { width: calc(100vw - 32px); padding: 20px; }
-            .prop-actions { flex-direction: column; }
-        }
-        @media (min-width: 769px) {
-            .hamburger { display: none; }
-            .sidebar-overlay { display: none !important; }
-        }
-        /* ─ SMALL MOBILE ─ */
-        @media (max-width: 480px) {
-            .stats { grid-template-columns: 1fr; }
-            .topbar-right .search { display: none; }
-        }
+    <title>Clint | Enterprise Outreach v1</title>
+    <!-- Tailwind v4 -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Outfit', sans-serif;
+            --color-primary: #10b981; /* Emerald 500 */
+            --color-primary-dark: #059669; /* Emerald 600 */
+            --color-bg-dark: #09090b; /* Zinc 950 */
+            --color-panel-dark: #18181b; /* Zinc 900 */
+            --color-border-dark: #27272a; /* Zinc 800 */
+        }
+        @layer base {
+            body { @apply bg-bg-dark text-slate-200 font-sans antialiased; }
+            ::-webkit-scrollbar { @apply w-1.5; }
+            ::-webkit-scrollbar-track { @apply bg-transparent; }
+            ::-webkit-scrollbar-thumb { @apply bg-zinc-800 rounded-full; }
+        }
+        @layer components {
+            .glass { @apply bg-panel-dark/80 backdrop-blur-md border border-border-dark shadow-xl rounded-2xl; }
+            .nav-item { @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer hover:bg-zinc-800 text-slate-400 hover:text-white; }
+            .nav-item.active { @apply bg-primary/10 text-primary border border-primary/20; }
+            .btn-primary { @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-dark text-bg-dark font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed; }
+            .btn-secondary { @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all active:scale-95 border border-zinc-700; }
+            .tab-btn { @apply px-5 py-2 rounded-lg text-sm font-medium transition-all; }
+            .tab-btn.active { @apply bg-zinc-800 text-white shadow-inner; }
+            .input-field { @apply w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary/50 transition-all placeholder:text-zinc-600; }
+            .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border; }
+            .chip { @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border; }
+        }
+        .view { display: none; }
+        .view.active { display: block; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
+<body class="h-screen overflow-hidden flex flex-col md:flex-row">
 
-<body>
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden transition-opacity duration-300" onclick="toggleSidebar()"></div>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="logo">
-            <div class="logo-mark">Px</div>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-72 bg-bg-dark border-r border-border-dark flex flex-col z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <i data-lucide="zap" class="text-bg-dark w-6 h-6"></i>
+            </div>
             <div>
-                <div class="logo-name">ColdMailer</div>
-                <div class="logo-brand">PIXARTUAL STUDIO</div>
+                <h1 class="text-xl font-bold tracking-tight text-white italic">Clint <span class="text-primary NOT-italic">Enterprise</span></h1>
+                <p class="text-[10px] text-zinc-500 font-medium tracking-widest uppercase">Launch Ready v1.0.0</p>
             </div>
         </div>
 
-        <div class="nav-group">Main</div>
-        <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                <rect x="14" y="14" width="7" height="7" rx="1.5" />
-            </svg>
-            Dashboard
-        </div>
-        <div class="nav-item" data-view="discovery" onclick="navigate('discovery')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-            </svg>
-            Lead Discovery
-        </div>
-        <div class="nav-item" data-view="outreach" onclick="navigate('outreach')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <path
-                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 11a19.79 19.79 0 0 1-3-8.57A2 2 0 0 1 3 .4h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 15z" />
-            </svg>
-            Outreach Lab
-        </div>
-        <div class="nav-item" data-view="analytics" onclick="navigate('analytics')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-            Analytics
-        </div>
-        <div class="nav-item" data-view="history" onclick="navigate('history')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                <polyline points="13 2 13 9 20 9" />
-            </svg>
-            History
-        </div>
-        <div class="nav-group">Settings</div>
-        <div class="nav-item" data-view="settings" onclick="navigate('settings')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-            </svg>
-            Settings
-        </div>
-        <div class="nav-item" data-view="integrations" onclick="navigate('integrations')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <polyline points="16 3 21 3 21 8" />
-                <line x1="4" y1="20" x2="21" y2="3" />
-                <polyline points="21 16 21 21 16 21" />
-                <line x1="15" y1="4" x2="21" y2="10" />
-            </svg>
-            Integrations
-        </div>
+        <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+            <div class="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest px-4 mb-2 mt-4">Command</div>
+            <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </div>
+            <div class="nav-item" data-view="discovery" onclick="navigate('discovery')">
+                <i data-lucide="compass" class="w-5 h-5"></i> Discovery
+            </div>
+            <div class="nav-item" data-view="outreach" onclick="navigate('outreach')">
+                <i data-lucide="flask-conical" class="w-5 h-5"></i> Outreach Lab
+            </div>
+            
+            <div class="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest px-4 mb-2 mt-6">Analytics</div>
+            <div class="nav-item" data-view="analytics" onclick="navigate('analytics')">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Performance
+            </div>
+            <div class="nav-item" data-view="history" onclick="navigate('history')">
+                <i data-lucide="history" class="w-5 h-5"></i> History
+            </div>
 
-        <div class="sidebar-footer">
-            <button class="new-btn" id="start-pipeline-btn" onclick="openModal()">
-                + New Discovery
+            <div class="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest px-4 mb-2 mt-6">System</div>
+            <div class="nav-item" data-view="integrations" onclick="navigate('integrations')">
+                <i data-lucide="blocks" class="w-5 h-5"></i> Integrations
+            </div>
+            <div class="nav-item" data-view="settings" onclick="navigate('settings')">
+                <i data-lucide="settings" class="w-5 h-5"></i> Settings
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-border-dark">
+            <button class="w-full btn-primary" onclick="openModal()">
+                <i data-lucide="plus" class="w-4 h-4"></i> New Discovery
             </button>
         </div>
     </aside>
 
-    <!-- MAIN -->
-    <!-- MOBILE SIDEBAR OVERLAY -->
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-
-    <main class="main">
-        <div class="topbar">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                        <line x1="3" y1="18" x2="21" y2="18"/>
-                    </svg>
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        <!-- Topbar -->
+        <header class="h-16 flex items-center justify-between px-6 border-b border-border-dark bg-bg-dark/50 backdrop-blur-sm sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden p-2 text-zinc-400 hover:text-white" onclick="toggleSidebar()">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
-                <div>
-                    <div class="topbar-title" id="topbar-title">Command Center</div>
-                    <div class="topbar-sub" id="topbar-time">Loading...</div>
+                <div id="topbar-title" class="text-lg font-semibold text-white">Command Center</div>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-medium text-zinc-400">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span id="topbar-time">Loading...</span>
                 </div>
             </div>
-            <div class="topbar-right">
-                <div class="search">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3a3a55" stroke-width="2">
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.35-4.35" />
-                    </svg>
-                    <input type="text" id="search-input" placeholder="Search leads..." oninput="onSearch(this.value)">
-                </div>
-                <button class="btn" onclick="exportCSV()">Export CSV</button>
-                <button class="btn btn-accent" onclick="openModal()">⚡ New Pipeline</button>
-            </div>
-        </div>
+        </header>
 
-        <!-- ════ VIEW: DASHBOARD ════ -->
-        <div class="view active" id="view-dashboard">
-            <div class="pipeline-bar" id="pipeline-bar">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <div class="pipeline-pulse"></div>
-                    <span id="pipeline-msg" style="font-size:13px;font-weight:500;">Starting pipeline...</span>
+        <!-- Dynamic Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+            
+            <!-- Pipeline Activity Bar -->
+            <div id="pipeline-bar" class="hidden absolute top-0 left-0 right-0 z-20 px-8 py-3 bg-primary/10 border-b border-primary/20 backdrop-blur-md flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="loader-2" class="w-4 h-4 text-primary animate-spin"></i>
+                    <span id="pipeline-msg" class="text-sm font-medium text-primary">Discovering leads...</span>
                 </div>
-                <span style="font-size:12px;color:var(--t2);">Running...</span>
+                <div class="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider">Active</div>
             </div>
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-label">Total Prospects</div>
-                    <div class="stat-val cyan" id="stat-total"><span class="spinner"></span></div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Proposals Sent</div>
-                    <div class="stat-val purple" id="stat-sent"><span class="spinner"></span></div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Audits Done</div>
-                    <div class="stat-val green" id="stat-audited"><span class="spinner"></span></div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Reminders Out</div>
-                    <div class="stat-val yellow" id="stat-reminders"><span class="spinner"></span></div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">AI Proposal Writer</div><span class="badge"
-                            id="selected-lead-badge">Select a lead →</span>
+
+            <!-- VIEW: DASHBOARD -->
+            <div class="view active" id="view-dashboard">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-400"><i data-lucide="users" class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded">Total</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-total">0</div>
+                        <div class="text-xs text-zinc-500">Known Prospects</div>
                     </div>
-                    <div class="proposer">
-                        <div class="lead-ctx" id="lead-ctx">Click any row in Lead Discovery to load context here.</div>
-                        <textarea class="prop-text" id="prop-text"
-                            placeholder="Select a lead, then click ✦ to generate a proposal..."></textarea>
-                        <div class="prop-actions">
-                            <button class="send-btn email" id="btn-send-email" disabled
-                                onclick="sendProposal('email')">✉️ Send Email</button>
-                            <button class="send-btn wa" id="btn-send-wa" disabled onclick="sendProposal('whatsapp')">💬
-                                WhatsApp</button>
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-400"><i data-lucide="send" class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">Sent</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-sent">0</div>
+                        <div class="text-xs text-zinc-500">Outreach Deliveries</div>
+                    </div>
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-amber-500/10 rounded-xl text-amber-400"><i data-lucide="microscope" class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">Audited</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-audited">0</div>
+                        <div class="text-xs text-zinc-500">AI Scorecard Ready</div>
+                    </div>
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-rose-500/10 rounded-xl text-rose-400"><i data-lucide="bell-dot" class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded">Queue</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-reminders">0</div>
+                        <div class="text-xs text-zinc-500">Pending Follow-ups</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <!-- Left: Lead Quick Selection -->
+                    <div class="xl:col-span-2 space-y-6">
+                        <div class="glass flex flex-col h-[500px]">
+                            <div class="p-6 border-b border-border-dark flex items-center justify-between">
+                                <h3 class="font-bold flex items-center gap-2">
+                                    <i data-lucide="target" class="w-5 h-5 text-primary"></i> High Priority Targets
+                                </h3>
+                                <div class="flex gap-2">
+                                    <input type="text" placeholder="Filter leads..." class="bg-zinc-800 border-none rounded-lg px-3 py-1.5 text-xs text-white focus:ring-1 ring-primary/30" onkeyup="onSearch(this.value)">
+                                    <button class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-500 transition-all" onclick="loadLeads()"><i data-lucide="rotate-cw" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                            <div class="flex-1 overflow-auto">
+                                <table class="w-full text-left">
+                                    <thead class="bg-zinc-900/50 sticky top-0 text-[10px] uppercase tracking-widest text-zinc-500">
+                                        <tr>
+                                            <th class="px-6 py-4">Prospect</th>
+                                            <th class="px-6 py-4">Intelligence</th>
+                                            <th class="px-6 py-4">Status</th>
+                                            <th class="px-6 py-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leads-tbody" class="divide-y divide-zinc-800">
+                                        <!-- Leads injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Outreach Pane -->
+                    <div class="space-y-6">
+                        <div class="glass p-6">
+                            <h3 class="font-bold flex items-center gap-2 mb-6">
+                                <i data-lucide="wand-2" class="w-5 h-5 text-indigo-400"></i> AI Outreach Lab
+                            </h3>
+                            <div id="quick-lab-empty" class="text-center py-12 px-6">
+                                <div class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="mouse-pointer-2" class="w-6 h-6 text-zinc-600"></i>
+                                </div>
+                                <p class="text-sm text-zinc-500 leading-relaxed">Select a lead from the list to analyze and generate a personalized proposal.</p>
+                            </div>
+                            <div id="quick-lab-active" class="hidden space-y-4">
+                                <div class="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
+                                    <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2" id="lab-lead-name">Company Name</div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <div class="text-[10px] text-zinc-500 mb-1">Score</div>
+                                            <div class="text-lg font-bold text-primary" id="lab-lead-score">0/10</div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="text-[10px] text-zinc-500 mb-1">Reviews</div>
+                                            <div class="text-lg font-bold text-white" id="lab-lead-reviews">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <textarea id="lab-textarea" class="w-full h-64 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-slate-300 focus:outline-none focus:border-primary/30 resize-none font-sans leading-relaxed transition-all" placeholder="Strategic proposal will appear here..."></textarea>
+                                    <button class="absolute bottom-4 right-4 p-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all shadow-lg" onclick="generateProposalInLab()" title="Re-generate AI">
+                                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button id="lab-send-email" class="btn-primary group" onclick="sendLabOutreach('email')">
+                                        <i data-lucide="mail" class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform"></i> Email
+                                    </button>
+                                    <button id="lab-send-wa" class="btn-secondary group" onclick="sendLabOutreach('whatsapp')">
+                                        <i data-lucide="message-square" class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform"></i> WhatsApp
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Graph or Small Stat -->
+                        <div class="glass p-6">
+                            <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Recent Activity</h4>
+                            <div id="dashboard-activity-log" class="space-y-4">
+                                <!-- Activity entries -->
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">Quick Actions</div>
-                    </div>
-                    <div class="quick">
-                        <button class="quick-btn" onclick="navigate('discovery')">🔍 Browse Leads</button>
-                        <button class="quick-btn" onclick="navigate('outreach')">📤 Go to Outreach Lab</button>
-                        <button class="quick-btn" onclick="openModal()">⚡ Start New Pipeline</button>
-                        <button class="quick-btn" onclick="sendAllReminders()">🔔 Send All Reminders</button>
-                        <button class="quick-btn" onclick="exportCSV()">📁 Export to CSV</button>
-                        <button class="quick-btn" onclick="loadData()">🔄 Refresh</button>
-                    </div>
-                </div>
             </div>
-            <div class="row">
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">Activity Log</div>
-                        <span class="badge green" style="display:flex;align-items:center;gap:5px;"><span
-                                style="width:5px;height:5px;background:var(--green);border-radius:50%;display:inline-block;"></span>Live</span>
-                    </div>
-                    <div id="activity-log"></div>
-                </div>
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">Recent Outreach</div><span class="badge" id="history-count">–</span>
-                    </div>
-                    <div id="history-list"></div>
-                </div>
-            </div>
-        </div>
 
-        <!-- ════ VIEW: LEAD DISCOVERY ════ -->
-        <div class="view" id="view-discovery">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-                <div>
-                    <div style="font-size:18px;font-weight:700;">Lead Discovery</div>
-                    <div style="font-size:12px;color:var(--t2);margin-top:2px;">Browse, filter and manage all scraped
-                        leads</div>
+            <!-- VIEW: DISCOVERY -->
+            <div class="view" id="view-discovery">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Discovery Queue</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Manage and filter discovered leads.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select class="input-field py-2 text-xs w-44" onchange="filterDiscovery(this.value)">
+                            <option value="">All Statuses</option>
+                            <option value="new">New Prospects</option>
+                            <option value="sent">Outreach Sent</option>
+                            <option value="pending_review">Pending Review</option>
+                        </select>
+                        <button class="btn-primary" onclick="openModal()">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Start Discovery
+                        </button>
+                    </div>
                 </div>
-                <div style="display:flex;gap:8px;">
-                    <select id="filter-status" onchange="filterByStatus(this.value)"
-                        style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--t1);font-size:12.5px;outline:none;font-family:Inter,sans-serif;cursor:pointer;">
-                        <option value="">All Statuses</option>
-                        <option value="new">New</option>
-                        <option value="pending_review">Pending Review</option>
-                        <option value="sent">Sent</option>
-                        <option value="reminder_sent">Reminded</option>
-                    </select>
-                    <button class="btn btn-accent" onclick="openModal()">+ New Pipeline</button>
-                </div>
-            </div>
-            <div class="panel">
-                <div class="panel-head">
-                    <div class="panel-title">All Leads</div><span class="badge" id="disc-lead-count">Loading...</span>
-                </div>
-                <div style="overflow-x:auto;">
-                    <table>
-                        <thead>
+                <div class="glass overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-zinc-900/50 text-[10px] uppercase tracking-widest text-zinc-500">
                             <tr>
-                                <th>Entity</th>
-                                <th>Category</th>
-                                <th>Score</th>
-                                <th>Step</th>
-                                <th>Reputation</th>
-                                <th>Contact</th>
-                                <th>Preview</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th class="px-6 py-4">Prospect</th>
+                                <th class="px-6 py-4 text-center">Score</th>
+                                <th class="px-6 py-4">Contact Coverage</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Process</th>
                             </tr>
                         </thead>
-                        <tbody id="disc-tbody"></tbody>
+                        <tbody id="disc-tbody" class="divide-y divide-zinc-800">
+                            <!-- Discovery leads injected here -->
+                        </tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <!-- ════ VIEW: OUTREACH LAB ════ -->
-        <div class="view" id="view-outreach">
-            <div style="margin-bottom:20px;">
-                <div style="font-size:18px;font-weight:700;">Outreach Lab</div>
-                <div style="font-size:12px;color:var(--t2);margin-top:2px;">Craft and send AI-personalized messages to
-                    your leads</div>
-            </div>
-            <div class="row" style="grid-template-columns:1fr 1fr;">
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">Select Lead</div>
-                    </div>
-                    <div style="padding:12px 18px;">
-                        <div class="search" style="width:100%;margin-bottom:12px;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3a3a55"
-                                stroke-width="2">
-                                <circle cx="11" cy="11" r="8" />
-                                <path d="m21 21-4.35-4.35" />
-                            </svg>
-                            <input type="text" placeholder="Search leads..." oninput="onOutreachSearch(this.value)">
+            <!-- VIEW: OUTREACH LAB (FULL) -->
+            <div class="view" id="view-outreach">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 h-[calc(100vh-140px)]">
+                    <!-- Left Sidebar for Lab -->
+                    <div class="lg:col-span-1 glass flex flex-col">
+                        <div class="p-4 border-b border-border-dark">
+                            <div class="relative">
+                                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-zinc-600"></i>
+                                <input type="text" placeholder="Search targets..." class="input-field pl-10 py-2 text-sm" onkeyup="onOutreachSearch(this.value)">
+                            </div>
                         </div>
-                        <div id="outreach-lead-list" style="max-height:360px;overflow-y:auto;"></div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">Compose Message</div><span class="badge" id="outreach-badge">No lead
-                            selected</span>
-                    </div>
-                    <div class="proposer">
-                        <div class="lead-ctx" id="outreach-ctx" style="margin-bottom:12px;">Select a lead on the left to
-                            begin.</div>
-                        <div style="display:flex;gap:8px;margin-bottom:10px;">
-                            <select id="outreach-channel"
-                                style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--t1);font-size:12.5px;outline:none;font-family:Inter,sans-serif;">
-                                <option value="email">✉️ Email</option>
-                                <option value="whatsapp">💬 WhatsApp</option>
-                            </select>
-                            <label
-                                style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;">
-                                <input type="checkbox" id="outreach-is-reminder" style="accent-color:var(--accent);">
-                                Reminder
-                            </label>
-                            <button class="btn btn-accent" style="padding:7px 14px;font-size:12px;"
-                                onclick="outreachGenerate()">✦ Generate</button>
-                        </div>
-                        <textarea class="prop-text" id="outreach-text" style="min-height:200px;"
-                            placeholder="Select a lead and click Generate..."></textarea>
-                        <div class="prop-actions">
-                            <button class="send-btn email" id="outreach-send-btn" onclick="outreachSend()" disabled>📤
-                                Send Message</button>
+                        <div class="flex-1 overflow-y-auto p-2 space-y-1" id="outreach-lead-list">
+                            <!-- Lead list for lab -->
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- ════ VIEW: ANALYTICS ════ -->
-        <div class="view" id="view-analytics">
-            <div style="margin-bottom:20px;">
-                <div style="font-size:18px;font-weight:700;">Analytics</div>
-                <div style="font-size:12px;color:var(--t2);margin-top:2px;">Outreach performance overview</div>
-            </div>
-            <div class="analytics-grid">
-                <div class="stat">
-                    <div class="stat-label">Open Rate</div>
-                    <div class="stat-val cyan" id="an-open">–</div>
-                    <div style="font-size:11px;color:var(--t2);margin-top:4px;">Estimated from sent count</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Reply Rate</div>
-                    <div class="stat-val green" id="an-reply">–</div>
-                    <div style="font-size:11px;color:var(--t2);margin-top:4px;">Manual tracking only</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Reminder Rate</div>
-                    <div class="stat-val yellow" id="an-reminder">–</div>
-                    <div style="font-size:11px;color:var(--t2);margin-top:4px;">Reminders / Total</div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">Outreach by Channel</div>
-                    </div>
-                    <div style="padding:20px;">
-                        <div id="channel-bars" class="bar-chart"></div>
-                        <div id="channel-labels" class="bar-labels"></div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="panel-head">
-                        <div class="panel-title">Status Breakdown</div>
-                    </div>
-                    <div style="padding:16px 18px;" id="status-breakdown"></div>
-                </div>
-            </div>
-        </div>
+                    <!-- Main Creator Workspace -->
+                    <div class="lg:col-span-3 h-full flex flex-col gap-6">
+                        <div id="outreach-empty" class="glass flex-1 flex flex-col items-center justify-center text-center p-12">
+                            <div class="w-20 h-20 bg-zinc-800 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+                                <i data-lucide="pen-tool" class="w-10 h-10 text-zinc-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Workspace Empty</h3>
+                            <p class="text-zinc-500 max-w-sm">Select a prospect from the sidebar to begin crafting a high-conversion outreach proposal.</p>
+                        </div>
+                        
+                        <div id="outreach-workspace" class="hidden flex-1 flex flex-col gap-6">
+                            <div class="glass p-6 flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20" id="ow-avatar">
+                                        <i data-lucide="building-2" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h3 id="ow-name" class="font-bold text-lg text-white">Lead Name</h3>
+                                        <p id="ow-meta" class="text-xs text-zinc-500 uppercase tracking-widest font-bold">Category · Score: 8</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <select id="ow-channel" class="input-field py-2 text-xs w-32">
+                                        <option value="email">📧 Email</option>
+                                        <option value="whatsapp">💬 WhatsApp</option>
+                                    </select>
+                                    <button class="btn-primary" onclick="outreachGenerate()">
+                                        <i data-lucide="wand-2" class="w-4 h-4 text-bg-dark"></i> Generate
+                                    </button>
+                                </div>
+                            </div>
 
-        <!-- ════ VIEW: HISTORY ════ -->
-        <div class="view" id="view-history">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-                <div>
-                    <div style="font-size:18px;font-weight:700;">Outreach History</div>
-                    <div style="font-size:12px;color:var(--t2);margin-top:2px;">All sent emails and WhatsApp messages
+                            <div class="flex-1 flex flex-col lg:flex-row gap-6">
+                                <div class="flex-1 glass flex flex-col">
+                                    <div class="p-4 border-b border-border-dark flex items-center justify-between bg-zinc-900/30">
+                                        <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Proposal Output</span>
+                                        <span class="text-[10px] text-zinc-600" id="ow-char-count">0 characters</span>
+                                    </div>
+                                    <textarea id="ow-textarea" class="flex-1 w-full bg-transparent p-6 text-slate-300 focus:outline-none resize-none leading-relaxed text-sm font-sans" placeholder="Crafting excellence..."></textarea>
+                                    <div class="p-4 border-t border-border-dark bg-zinc-900/30 flex justify-end gap-2">
+                                        <button class="btn-secondary px-4 py-2" onclick="copyToClipboard()"><i data-lucide="copy" class="w-4 h-4"></i> Copy</button>
+                                        <button id="ow-send-btn" class="btn-primary px-8" onclick="outreachSend()">
+                                            <i data-lucide="send" class="w-4 h-4"></i> Send Message
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="w-full lg:w-80 space-y-6">
+                                    <div class="glass p-5">
+                                        <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Lead Intelligence</h4>
+                                        <div id="ow-intel" class="space-y-4 text-sm">
+                                            <!-- Intel items -->
+                                        </div>
+                                    </div>
+                                    <div class="glass overflow-hidden">
+                                        <div class="aspect-video bg-zinc-800 relative group overflow-hidden">
+                                            <img id="ow-screenshot" src="" class="hidden w-full h-full object-cover">
+                                            <div id="ow-no-screenshot" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-600">
+                                                <i data-lucide="image-off" class="w-8 h-8 mb-2"></i>
+                                                <span class="text-[10px] font-bold uppercase tracking-widest">No Screenshot</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <button class="btn" onclick="loadHistory()">🔄 Refresh</button>
             </div>
-            <div class="panel">
-                <div class="panel-head">
-                    <div class="panel-title">Message Log</div><span class="badge"
-                        id="full-history-count">loading...</span>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Lead</th>
-                            <th>Channel</th>
-                            <th>Status</th>
-                            <th>Time</th>
-                            <th>Preview</th>
-                        </tr>
-                    </thead>
-                    <tbody id="full-history-tbody"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- ════ VIEW: SETTINGS ════ -->
-        <div class="view" id="view-settings">
-            <div style="margin-bottom:20px;">
-                <div style="font-size:18px;font-weight:700;">Settings</div>
-                <div style="font-size:12px;color:var(--t2);margin-top:2px;">Configure your ColdMailer account</div>
-            </div>
-            <div class="settings-grid">
-                <div class="panel" style="overflow:visible;">
-                    <div class="panel-head">
-                        <div class="panel-title">Email Configuration</div>
+            <!-- VIEW: ANALYTICS -->
+            <div class="view" id="view-analytics">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass p-8 text-center">
+                        <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Avg. Conversion</div>
+                        <div class="text-4xl font-black text-primary" id="an-conversion">0%</div>
+                        <div class="text-[10px] text-zinc-600 mt-2">Based on response tracking</div>
                     </div>
-                    <div style="padding:16px 18px;">
-                        <label class="form-label">SMTP Host</label>
-                        <input class="form-input" id="s-smtp-host" placeholder="smtp.gmail.com" value="smtp.gmail.com">
-                        <label class="form-label">SMTP Port</label>
-                        <input class="form-input" id="s-smtp-port" placeholder="587" value="587">
-                        <label class="form-label">Email Address</label>
-                        <input class="form-input" id="s-email" type="email" placeholder="you@yourdomain.com">
-                        <label class="form-label">App Password</label>
-                        <input class="form-input" id="s-pass" type="password" placeholder="••••••••">
-                        <button class="btn btn-accent" style="width:100%;"
-                            onclick="toast('Settings saved (restart server to apply)','info')">Save Email
-                            Config</button>
+                    <div class="glass p-8 text-center">
+                        <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Contact Rate</div>
+                        <div class="text-4xl font-black text-indigo-400" id="an-contact">0%</div>
+                        <div class="text-[10px] text-zinc-600 mt-2">Emails vs Scraped Leads</div>
+                    </div>
+                    <div class="glass p-8 text-center">
+                        <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Follow-up Ratio</div>
+                        <div class="text-4xl font-black text-amber-400" id="an-followup">0%</div>
+                        <div class="text-[10px] text-zinc-600 mt-2">Second-step outreaches</div>
                     </div>
                 </div>
-                <div class="panel" style="overflow:visible;">
-                    <div class="panel-head">
-                        <div class="panel-title">AI Engine</div>
-                    </div>
-                    <div style="padding:16px 18px;">
-                        <label class="form-label">OpenRouter API Key</label>
-                        <input class="form-input" id="s-api-key" type="password" placeholder="sk-or-...">
-                        <label class="form-label">AI Model</label>
-                        <select class="form-input" id="s-model">
-                            <option value="deepseek/deepseek-chat">DeepSeek Chat (default)</option>
-                            <option value="openai/gpt-4o">GPT-4o</option>
-                            <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                            <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
-                        </select>
-                        <label class="form-label" style="margin-top:8px;">Default Lead Limit</label>
-                        <input class="form-input" id="s-limit" type="number" value="10" placeholder="10">
-                        <button class="btn btn-accent" style="width:100%;"
-                            onclick="toast('AI config saved (restart server to apply)','info')">Save AI Config</button>
-                    </div>
-                    <div class="panel-head" style="margin-top:8px;">
-                        <div class="panel-title">Preferences</div>
-                    </div>
-                    <div style="padding:0 18px 16px;">
-                        <div class="setting-row">
-                            <div>
-                                <div class="setting-label">Auto-export CSV after pipeline</div>
-                                <div class="setting-desc">Saves leads_export.csv automatically</div>
-                            </div><label class="toggle"><input type="checkbox" checked><span
-                                    class="toggle-track"></span><span class="toggle-thumb"></span></label>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass p-8">
+                        <h3 class="font-bold mb-8">Channel Distribution</h3>
+                        <div class="flex items-end gap-12 h-64 px-12" id="an-chart-channels">
+                            <!-- Bars -->
                         </div>
-                        <div class="setting-row">
-                            <div>
-                                <div class="setting-label">Show proposal preview before send</div>
-                                <div class="setting-desc">Requires manual confirmation</div>
-                            </div><label class="toggle"><input type="checkbox" checked><span
-                                    class="toggle-track"></span><span class="toggle-thumb"></span></label>
-                        </div>
-                        <div class="setting-row">
-                            <div>
-                                <div class="setting-label">Dashboard auto-refresh (30s)</div>
-                                <div class="setting-desc">Polling for new leads/status</div>
-                            </div><label class="toggle"><input type="checkbox" checked><span
-                                    class="toggle-track"></span><span class="toggle-thumb"></span></label>
+                    </div>
+                    <div class="glass p-8">
+                        <h3 class="font-bold mb-8">Status Funnel</h3>
+                        <div id="status-funnel" class="space-y-6">
+                            <!-- Funnel bars -->
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ════ VIEW: INTEGRATIONS ════ -->
-        <div class="view" id="view-integrations">
-            <div style="margin-bottom:20px;">
-                <div style="font-size:18px;font-weight:700;">Integrations</div>
-                <div style="font-size:12px;color:var(--t2);margin-top:2px;">Connect external tools and services</div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                <div class="integration-card">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div class="integration-icon">📧</div>
-                        <div>
-                            <div class="integration-name">Gmail / SMTP</div>
-                            <div class="integration-desc">Send emails via your own inbox</div>
-                        </div>
+            <!-- VIEW: HISTORY -->
+            <div class="view" id="view-history">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Outreach History</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Audit log of all successful communications.</p>
                     </div>
-                    <div style="display:flex;align-items:center;gap:8px;"><span
-                            class="status-dot disconnected"></span><button class="btn"
-                            onclick="navigate('settings')">Configure</button></div>
+                    <button class="btn-secondary" onclick="loadHistory()">
+                        <i data-lucide="rotate-cw" class="w-4 h-4 text-zinc-400"></i> Refresh log
+                    </button>
                 </div>
-                <div class="integration-card">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div class="integration-icon">💬</div>
-                        <div>
-                            <div class="integration-name">WhatsApp</div>
-                            <div class="integration-desc">Send messages via WhatsApp Business</div>
-                        </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;"><span
-                            class="status-dot disconnected"></span><button class="btn"
-                            onclick="navigate('settings')">Configure</button></div>
-                </div>
-                <div class="integration-card">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div class="integration-icon">🗺️</div>
-                        <div>
-                            <div class="integration-name">Google Maps</div>
-                            <div class="integration-desc">Scraper via Playwright (built-in)</div>
-                        </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;"><span
-                            class="status-dot connected"></span><span
-                            style="font-size:12px;color:var(--green);">Active</span></div>
-                </div>
-                <div class="integration-card">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div class="integration-icon">🤖</div>
-                        <div>
-                            <div class="integration-name">OpenRouter AI</div>
-                            <div class="integration-desc">Powers proposal generation</div>
-                        </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;"><span class="status-dot"
-                            id="ai-status-dot"></span><span style="font-size:12px;color:var(--t2);"
-                            id="ai-status-text">Checking...</span></div>
-                </div>
-                <div class="integration-card">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div class="integration-icon">🗃️</div>
-                        <div>
-                            <div class="integration-name">SQLite Database</div>
-                            <div class="integration-desc">Local file: data/cold_mailer.db</div>
-                        </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;"><span
-                            class="status-dot connected"></span><span
-                            style="font-size:12px;color:var(--green);">Connected</span></div>
-                </div>
-                <div class="integration-card" style="opacity:0.5;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div class="integration-icon">🔗</div>
-                        <div>
-                            <div class="integration-name">Apollo.io</div>
-                            <div class="integration-desc">Enrich leads with email/LinkedIn</div>
-                        </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;"><span
-                            class="status-dot disconnected"></span><span style="font-size:12px;color:var(--t3);">Coming
-                            Soon</span></div>
+                <div class="glass overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-zinc-900/50 text-[10px] uppercase tracking-widest text-zinc-500">
+                            <tr>
+                                <th class="px-6 py-4">Lead</th>
+                                <th class="px-6 py-4">Method</th>
+                                <th class="px-6 py-4">Time</th>
+                                <th class="px-6 py-4">Message Snippet</th>
+                                <th class="px-6 py-4 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-history-tbody" class="divide-y divide-zinc-800">
+                            <!-- History injected here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
 
+            <!-- VIEW: INTEGRATIONS / SETTINGS -->
+            <div class="view" id="view-integrations">
+                <div class="max-w-4xl space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">System Integrations</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Connect your automation stack to external providers.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="integrations-list">
+                        <!-- Integration cards -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="view" id="view-settings">
+                <div class="max-w-4xl space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">System Configuration</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Tweak the engine parameters and outreach DNA.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="glass p-6">
+                            <h4 class="font-bold flex items-center gap-2 mb-6"><i data-lucide="mail" class="w-4 h-4 text-indigo-400"></i> Email Operator</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">SMTP User</label>
+                                    <input type="text" class="input-field text-sm" placeholder="you@example.com">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">App Password</label>
+                                    <input type="password" class="input-field text-sm" placeholder="••••••••">
+                                </div>
+                                <button class="btn-primary w-full">Save Configuration</button>
+                            </div>
+                        </div>
+                        <div class="glass p-6">
+                            <h4 class="font-bold flex items-center gap-2 mb-6"><i data-lucide="brain-circuit" class="w-4 h-4 text-emerald-400"></i> AI Preferences</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Targeting Persona</label>
+                                    <select class="input-field text-sm">
+                                        <option>Pixartual Founder (Authoritative)</option>
+                                        <option>Creative Director (Empathetic)</option>
+                                        <option>Sales Associate (Direct)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Batch Size</label>
+                                    <input type="number" class="input-field text-sm" value="10">
+                                </div>
+                                <button class="btn-secondary w-full">Apply Preferences</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </main>
 
-    <!-- NEW PIPELINE MODAL -->
-    <div class="overlay" id="modal">
-        <div class="modal">
-            <div class="modal-title">New Discovery Pipeline</div>
-            <div class="modal-sub">Search Google Maps and automatically audit leads.</div>
-            <label class="form-label">Search Query</label>
-            <input type="text" class="form-input" id="modal-query" placeholder="e.g. Schools in Kadi 382715">
-            <label class="form-label">Lead Limit</label>
-            <input type="number" class="form-input" id="modal-limit" value="10" placeholder="10">
-            <div class="modal-foot">
-                <button class="btn" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-accent" onclick="startPipeline()">⚡ Start Pipeline</button>
+    <!-- Modals -->
+    <div id="modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 md:p-12">
+        <div class="absolute inset-0 bg-bg-dark/80 backdrop-blur-xl" onclick="closeModal()"></div>
+        <div class="glass w-full max-w-lg relative p-8 shadow-2xl animate-slideUp">
+            <h2 class="text-2xl font-bold text-white mb-2">New Discovery</h2>
+            <p class="text-sm text-zinc-500 mb-8">Define your search parameters to feed the engine.</p>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Search Query</label>
+                    <input type="text" id="modal-query" class="input-field" placeholder="e.g. Roofers in Austin, TX">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Limit Prospects</label>
+                    <input type="number" id="modal-limit" class="input-field" value="10">
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button class="flex-1 btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="flex-1 btn-primary" onclick="startPipeline()">
+                        <i data-lucide="zap" class="w-4 h-4 text-bg-dark"></i> Initialize Pipeline
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- TOAST -->
-    <div class="toast" id="toast">
-        <span id="toast-icon">✅</span>
-        <span id="toast-msg">Done</span>
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-8 right-8 z-[200] transform translate-y-24 transition-all duration-300 pointer-events-none">
+        <div class="glass px-6 py-4 flex items-center gap-3 border-primary/20 bg-primary/5">
+            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary" id="toast-icon-wrap">
+                <i data-lucide="check-circle" class="w-5 h-5" id="toast-icon"></i>
+            </div>
+            <div class="flex flex-col">
+                <div class="text-[10px] font-bold text-primary uppercase tracking-widest">Notification</div>
+                <div id="toast-msg" class="text-sm font-medium text-white">Action completed successfully</div>
+            </div>
+        </div>
     </div>
 
+    <!-- JS LOGIC -->
     <script>
-        const API = (window.location.port !== '8000') ? 'http://localhost:8000' : '';  // Point to FastAPI if on different port (e.g. Live Server)
-
-        // ── STATE ──
+        const API = (window.location.port !== '8000') ? 'http://localhost:8000' : '';
         let allLeads = [];
         let selectedLead = null;
+        let outreachLead = null;
 
-        // ── INIT ──
+        // ── INITIALIZATION ──
+        async function init() {
+            lucide.createIcons();
+            await loadData();
+            updateTime();
+            setInterval(updateTime, 10000);
+            setInterval(loadData, 30000); // Polling
+        }
+
         async function loadData() {
             await Promise.all([loadStats(), loadLeads(), loadHistory()]);
         }
 
-        // ── STATS ──
+        // ── CORE DATA ──
         async function loadStats() {
             try {
                 const r = await fetch(`${API}/api/stats`);
                 const d = await r.json();
-                document.getElementById('stat-total').textContent = d.total;
-                document.getElementById('stat-sent').textContent = d.sent;
-                document.getElementById('stat-audited').textContent = d.audited;
-                document.getElementById('stat-reminders').textContent = d.reminders;
-            } catch { setStats('–'); }
+                document.getElementById('stat-total').innerText = d.total || 0;
+                document.getElementById('stat-sent').innerText = d.sent || 0;
+                document.getElementById('stat-audited').innerText = d.audited || (d.total - d.pending) || 0;
+                document.getElementById('stat-reminders').innerText = d.reminders || 0;
+            } catch { }
         }
 
-        function setStats(v) {
-            ['stat-total', 'stat-sent', 'stat-audited', 'stat-reminders'].forEach(id => document.getElementById(id).textContent = v);
-        }
-
-        // ── LEADS ──
         async function loadLeads(search = '') {
             try {
                 const url = search ? `/api/leads?search=${encodeURIComponent(search)}` : `/api/leads`;
                 const r = await fetch(`${API}${url}`);
                 allLeads = await r.json();
-                renderLeads(allLeads);
-            } catch {
-                console.warn('Could not connect to backend.');
+                renderDashboardLeads(allLeads);
+                // Also update discovery if active
+                if (document.getElementById('view-discovery').classList.contains('active')) {
+                    renderDiscoveryDetails(allLeads);
+                }
+            } catch { }
+        }
+
+        function renderDashboardLeads(leads) {
+            const tbody = document.getElementById('leads-tbody');
+            if (!leads.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-zinc-600 text-sm">No leads discovered yet.</td></tr>';
+                return;
             }
-        }
-
-        function renderLeads(leads) {
-            // Update dashboard stat badge if on dashboard
-            const badge = document.getElementById('selected-lead-badge');
-            if (badge && !selectedLead) badge.textContent = `${leads.length} leads ready`;
-            if (!leads.length) return;
-            const statusMap = {
-                new: `<span class="chip chip-new"><span class="chip-dot"></span>New</span>`,
-                sent: `<span class="chip chip-sent"><span class="chip-dot"></span>Sent</span>`,
-                reminder_sent: `<span class="chip chip-reminder"><span class="chip-dot"></span>Reminded</span>`,
-                pending_review: `<span class="chip chip-audit"><span class="chip-dot"></span>Pending Review</span>`,
-                failed: `<span class="chip chip-pending"><span class="chip-dot"></span>Failed</span>`,
-            };
             tbody.innerHTML = leads.map(l => `
-        <tr class="data-row ${selectedLead?.id === l.id ? 'selected' : ''}" onclick="selectLead(${l.id})">
-            <td>
-                <div class="lead-name">${l.name}</div>
-                <div class="lead-addr">${l.address || '—'}</div>
-            </td>
-            <td>${l.business_category ? `<span class="cat-tag">${l.business_category}</span>` : '<span style="color:var(--t3)">—</span>'}</td>
-            <td>
-                ${l.rating ? `<div class="rating"><span class="star">★</span>${l.rating} <span style="color:var(--t3);font-weight:400">(${(l.reviews_count || 0).toLocaleString()})</span></div>` : '<span style="color:var(--t3)">—</span>'}
-            </td>
-            <td>
-                <div class="thumb" title="${l.screenshot_path ? 'Screenshot available' : 'No screenshot'}"
-                     onclick="event.stopPropagation(); ${l.screenshot_path ? `toast('Screenshot at: ${l.screenshot_path}','info')` : `toast('No screenshot — run audit first','warn')`}">
-                    ${l.screenshot_path ? '🖥️' : '📷'}
-                </div>
-            </td>
-            <td>${statusMap[l.status] || `<span class="chip chip-new"><span class="chip-dot"></span>${l.status}</span>`}</td>
-            <td>
-                <div class="act-btns">
-                    <div class="act-btn" title="Generate AI Proposal" onclick="event.stopPropagation(); generateFor(${l.id})">✦</div>
-                    <div class="act-btn" title="Send Email" style="${!l.email ? 'opacity:0.3;cursor:not-allowed' : ''}" onclick="event.stopPropagation(); ${l.email ? `quickSend(${l.id},'email')` : `toast('No email found for this lead','warn')`}">✉️</div>
-                    <div class="act-btn" title="WhatsApp" style="${!l.phone ? 'opacity:0.3;cursor:not-allowed' : ''}" onclick="event.stopPropagation(); ${l.phone ? `quickSend(${l.id},'whatsapp')` : `toast('No phone found for this lead','warn')`}">💬</div>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+                <tr class="hover:bg-zinc-800/30 cursor-pointer group transition-all ${selectedLead?.id === l.id ? 'bg-primary/5' : ''}" onclick="selectLead(${l.id})">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-semibold text-white">${l.name}</div>
+                        <div class="text-[10px] text-zinc-500">${l.business_category || 'Local Business'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                             <div class="badge ${l.score >= 7 ? 'bg-primary/10 border-primary/20 text-primary' : (l.score >= 4 ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-rose-500/10 border-rose-500/20 text-rose-500')}">
+                                ${l.score || 0}
+                             </div>
+                             <div class="flex items-center gap-1 text-[10px] text-zinc-500">
+                                <i data-lucide="star" class="w-3 h-3 text-amber-500 fill-amber-500"></i> ${l.rating || '—'}
+                             </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="chip ${getStatusStyles(l.status)}">
+                            <span class="w-1.5 h-1.5 rounded-full ${getStatusDot(l.status)}"></span>
+                            ${l.status.replace('_', ' ')}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="p-2 hover:bg-zinc-700 rounded-lg text-zinc-400 opacity-0 group-hover:opacity-100 transition-all" onclick="event.stopPropagation();selectLead(${l.id});navigate('outreach')">
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
         }
 
-        function onSearch(q) {
-            clearTimeout(window._searchTimer);
-            window._searchTimer = setTimeout(() => loadLeads(q), 350);
+        function getStatusStyles(s) {
+            const map = { new: 'bg-zinc-800 border-zinc-700 text-zinc-400', sent: 'bg-primary/10 border-primary/20 text-primary', reminder_sent: 'bg-amber-500/10 border-amber-500/20 text-amber-500', pending_review: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' };
+            return map[s] || map.new;
+        }
+        function getStatusDot(s) {
+            const map = { new: 'bg-zinc-600', sent: 'bg-primary', reminder_sent: 'bg-amber-500', pending_review: 'bg-indigo-500' };
+            return map[s] || map.new;
         }
 
-        // ── SELECT LEAD ──
+        // ── SELECTION & LAB ──
         function selectLead(id) {
             selectedLead = allLeads.find(l => l.id === id);
             if (!selectedLead) return;
-
-            document.getElementById('selected-lead-badge').textContent = selectedLead.name;
-            document.getElementById('lead-ctx').innerHTML =
-                `<strong>${selectedLead.name}</strong>
-        ${selectedLead.rating ? `· <span style="color:var(--yellow)">★ ${selectedLead.rating}</span> (${(selectedLead.reviews_count || 0).toLocaleString()})` : ''}
-        ${selectedLead.business_category ? `· <span class="cat-tag">${selectedLead.business_category}</span>` : ''}`;
-
-            document.getElementById('prop-text').value = selectedLead.audit_summary
-                ? `[Audit Summary]\n${selectedLead.audit_summary}\n\nClick ✦ to generate a personalized proposal.`
-                : 'Click ✦ (Generate) to create an AI-powered proposal for this lead.';
-
-            document.getElementById('btn-send-email').disabled = !selectedLead.email;
-            document.getElementById('btn-send-wa').disabled = !selectedLead.phone;
-
-            // highlight row
-            document.querySelectorAll('tr.data-row').forEach(tr => tr.classList.remove('selected'));
-            event?.currentTarget?.closest && event.currentTarget.closest('tr')?.classList.add('selected');
-            renderLeads(allLeads); // re-render to show selection
+            
+            document.getElementById('quick-lab-empty').classList.add('hidden');
+            document.getElementById('quick-lab-active').classList.remove('hidden');
+            
+            document.getElementById('lab-lead-name').innerText = selectedLead.name;
+            document.getElementById('lab-lead-score').innerText = `${selectedLead.score || 0}/10`;
+            document.getElementById('lab-lead-reviews').innerText = selectedLead.reviews_count || 0;
+            
+            const ta = document.getElementById('lab-textarea');
+            ta.value = selectedLead.audit_summary 
+                ? `[Intelligence Report]\n${selectedLead.audit_summary}\n\nClick sparkles to generate proposal...` 
+                : "Analyze this lead to generate a high-conversion proposal.";
+            
+            document.getElementById('lab-send-email').disabled = !selectedLead.email;
+            document.getElementById('lab-send-wa').disabled = !selectedLead.phone;
+            
+            renderDashboardLeads(allLeads); // To show active state
         }
 
-        // ── GENERATE PROPOSAL ──
-        async function generateFor(id) {
-            selectLead(id);
-            const ta = document.getElementById('prop-text');
-            ta.value = 'Generating AI proposal...';
+        async function generateProposalInLab() {
+            if (!selectedLead) return;
+            const ta = document.getElementById('lab-textarea');
+            const originalVal = ta.value;
+            ta.value = "Generating strategic proposal...";
+            ta.classList.add('opacity-50');
+            
             try {
-                const r = await fetch(`${API}/api/generate-proposal`, {
+                const r = await fetch(`${API}/api/outreach/generate`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ lead_id: id, channel: 'email' })
+                    body: JSON.stringify({ lead_id: selectedLead.id, channel: 'email' })
                 });
                 const d = await r.json();
-                ta.value = d.proposal;
-                document.getElementById('btn-send-email').disabled = !selectedLead?.email;
-                document.getElementById('btn-send-wa').disabled = !selectedLead?.phone;
-                toast('AI proposal generated ✦');
-            } catch { ta.value = 'Error generating proposal. Is the server running?'; }
+                selectedLead.current_subject = d.subject;
+                selectedLead.current_body = d.body;
+                ta.value = `Subject: ${d.subject}\n\n${d.body}`;
+                toast('AI Proposal Crafted ✦', 'success');
+            } catch { 
+                ta.value = originalVal;
+                toast('API Error - Check Backend', 'error');
+            } finally {
+                ta.classList.remove('opacity-50');
+            }
         }
 
-        // ── SEND ──
-        async function sendProposal(channel) {
-            if (!selectedLead) return toast('Select a lead first', 'warn');
-            const content = document.getElementById('prop-text').value.trim();
-            if (!content) return toast('No proposal content', 'warn');
+        async function sendLabOutreach(channel) {
+            if (!selectedLead) return;
+            const content = document.getElementById('lab-textarea').value.trim();
+            if (!content) return toast('Workspace is empty', 'error');
 
-            const btn = document.getElementById(channel === 'email' ? 'btn-send-email' : 'btn-send-wa');
-            btn.disabled = true; btn.textContent = 'Sending...';
+            const btn = document.getElementById(`lab-send-${channel === 'email' ? 'email' : 'wa'}`);
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
+            btn.disabled = true;
 
             try {
-                const r = await fetch(`${API}/api/send`, {
+                // Parse subject/body if default AI format
+                let subject = selectedLead.current_subject || `Enterprise Inquiry: ${selectedLead.name}`;
+                let body = content;
+                if (content.startsWith("Subject:")) {
+                    const parts = content.split("\n\n", 2);
+                    subject = parts[0].replace("Subject:", "").trim();
+                    body = parts[1] || content;
+                }
+
+                const r = await fetch(`${API}/api/outreach/send`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ lead_id: selectedLead.id, channel, content })
+                    body: JSON.stringify({ lead_id: selectedLead.id, channel, subject, body })
                 });
                 const d = await r.json();
                 if (d.success) {
-                    toast(`${channel === 'email' ? 'Email' : 'WhatsApp'} sent successfully! ✅`);
+                    toast(`${channel.toUpperCase()} Delivered`, 'success');
                     await loadData();
                 } else {
-                    toast('Send failed — check server logs', 'error');
+                    toast('Delivery Failed', 'error');
                 }
-            } catch { toast('Could not reach server', 'error'); }
+            } catch { toast('Server Exception', 'error'); }
             finally {
+                btn.innerHTML = originalText;
                 btn.disabled = false;
-                btn.textContent = channel === 'email' ? '✉️ Send Email' : '💬 WhatsApp';
+                lucide.createIcons();
             }
         }
 
-        async function quickSend(id, channel) {
-            selectLead(id);
-            await generateFor(id);
-            await sendProposal(channel);
-        }
-
-        // ── HISTORY ──
+        // ── HISTORY & ACTIVITY ──
         async function loadHistory() {
             try {
                 const r = await fetch(`${API}/api/history`);
-                const items = await r.json();
-                document.getElementById('history-count').textContent = `${items.length} messages`;
-                if (!items.length) {
-                    document.getElementById('history-list').innerHTML = `<div class="empty"><div class="empty-icon">📭</div>No outreach history yet.</div>`;
-                    return;
-                }
-                document.getElementById('history-list').innerHTML = items.slice(0, 8).map(h => `
-            <div class="act-item">
-                <div class="act-ico ${h.channel === 'email' ? 'email' : 'wa'}">${h.channel === 'email' ? '✉️' : '💬'}</div>
-                <div>
-                    <div class="act-txt"><strong>${h.lead_name || 'Lead #' + h.lead_id}</strong> via ${h.channel}</div>
-                    <div class="act-time">${h.status} · ${formatTime(h.sent_at)}</div>
-                </div>
-            </div>
-        `).join('');
+                const h = await r.json();
+                renderActivityLog(h.slice(0, 5));
+                renderFullHistory(h);
+            } catch { }
+        }
 
-                // Fill activity log too
-                document.getElementById('activity-log').innerHTML = items.slice(0, 6).map(h => `
-            <div class="act-item">
-                <div class="act-ico ${h.channel === 'email' ? 'email' : 'wa'}">${h.channel === 'email' ? '✉️' : '💬'}</div>
-                <div class="act-txt">
-                    ${h.channel === 'email' ? 'Email' : 'WhatsApp'} sent to <strong>${h.lead_name || 'Lead'}</strong>
-                    <div class="act-time">${formatTime(h.sent_at)}</div>
+        function renderActivityLog(items) {
+            const log = document.getElementById('dashboard-activity-log');
+            if (!items.length) { log.innerHTML = '<div class="text-xs text-zinc-600">No recent activity.</div>'; return; }
+            log.innerHTML = items.map(i => `
+                <div class="flex items-start gap-3">
+                    <div class="w-2 h-2 rounded-full mt-1.5 ${i.channel === 'email' ? 'bg-indigo-400' : 'bg-primary'}"></div>
+                    <div>
+                        <div class="text-[11px] text-white font-medium">${i.channel.toUpperCase()} Sent: ${i.lead_name}</div>
+                        <div class="text-[9px] text-zinc-600">${formatRelativeTime(i.sent_at)}</div>
+                    </div>
                 </div>
-            </div>
-        `).join('');
-            } catch {
-                document.getElementById('history-list').innerHTML = `<div class="empty">Server offline.</div>`;
+            `).join('');
+        }
+
+        // ── ROUTING ──
+        const viewTitles = { dashboard: 'Command Center', discovery: 'Discovery Queue', outreach: 'Outreach Lab', analytics: 'Performance Metrics', history: 'Audited History', integrations: 'Integrations', settings: 'Configuration' };
+        
+        function navigate(view) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
+            
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            
+            document.getElementById('topbar-title').innerText = viewTitles[view] || 'ColdMailer';
+            
+            if (view === 'discovery') loadLeads();
+            if (view === 'outreach') initOutreachView();
+            if (view === 'analytics') loadAnalytics();
+            if (view === 'history') loadHistory();
+            
+            closeSidebar();
+        }
+
+        // ── OUTREACH VIEW (LAB) ──
+        function initOutreachView() {
+            renderOutreachList(allLeads);
+            if (selectedLead) selectOutreachLead(selectedLead.id);
+        }
+
+        function renderOutreachList(leads) {
+            const list = document.getElementById('outreach-lead-list');
+            list.innerHTML = leads.map(l => `
+                <div class="px-3 py-2.5 rounded-lg cursor-pointer transition-all ${outreachLead?.id === l.id ? 'bg-primary/10 text-primary border border-primary/20' : 'hover:bg-zinc-800 text-slate-400'}" onclick="selectOutreachLead(${l.id})">
+                    <div class="text-xs font-bold truncate">${l.name}</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-[9px] bg-zinc-900 border border-zinc-700 px-1 rounded">${l.score || 0}</span>
+                        <div class="flex gap-1">
+                            ${l.email ? '<i data-lucide="mail" class="w-2.5 h-2.5"></i>' : ''}
+                            ${l.phone ? '<i data-lucide="message-square" class="w-2.5 h-2.5"></i>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function selectOutreachLead(id) {
+            outreachLead = allLeads.find(l => l.id === id);
+            if (!outreachLead) return;
+            
+            document.getElementById('outreach-empty').classList.add('hidden');
+            document.getElementById('outreach-workspace').classList.remove('hidden');
+            
+            document.getElementById('ow-name').innerText = outreachLead.name;
+            document.getElementById('ow-meta').innerText = `${outreachLead.business_category || 'Business'} · Score: ${outreachLead.score || 0}`;
+            document.getElementById('ow-textarea').value = outreachLead.audit_summary || "Starting fresh audit flow...";
+            
+            // Intel
+            const intelEl = document.getElementById('ow-intel');
+            intelEl.innerHTML = [
+                { icon: 'globe', label: 'Domain', val: outreachLead.website ? outreachLead.website.substring(0,25) : 'None' },
+                { icon: 'star', label: 'Reputation', val: outreachLead.rating ? `${outreachLead.rating} (${outreachLead.reviews_count})` : 'Unrated' },
+                { icon: 'map-pin', label: 'Location', val: outreachLead.address ? outreachLead.address.split(',')[0] : 'Remote' }
+            ].map(i => `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-zinc-500"><i data-lucide="${i.icon}" class="w-3.5 h-3.5"></i> ${i.label}</div>
+                    <div class="text-white font-medium">${i.val}</div>
+                </div>
+            `).join('');
+            
+            // Screenshot
+            const img = document.getElementById('ow-screenshot');
+            const placeholder = document.getElementById('ow-no-screenshot');
+            if (outreachLead.screenshot_path) {
+                img.src = outreachLead.screenshot_path;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+            
+            renderOutreachList(allLeads);
+            lucide.createIcons();
+        }
+
+        // ── UTILS ──
+        function toggleSidebar() {
+            const s = document.getElementById('sidebar');
+            const o = document.getElementById('sidebar-overlay');
+            const isOpen = !s.classList.contains('-translate-x-full');
+            if (isOpen) {
+                s.classList.add('-translate-x-full');
+                o.classList.add('hidden');
+            } else {
+                s.classList.remove('-translate-x-full');
+                o.classList.remove('hidden');
             }
         }
-
-        function formatTime(ts) {
-            if (!ts) return 'Unknown';
-            const d = new Date(ts);
-            const diff = Math.floor((Date.now() - d) / 1000);
-            if (diff < 60) return `${diff}s ago`;
-            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-            return d.toLocaleDateString();
+        function closeSidebar() { if (window.innerWidth < 768) { document.getElementById('sidebar').classList.add('-translate-x-full'); document.getElementById('sidebar-overlay').classList.add('hidden'); } }
+        
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
+        
+        function toast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const wrap = document.getElementById('toast-icon-wrap');
+            const msgEl = document.getElementById('toast-msg');
+            
+            msgEl.innerText = msg;
+            icon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : 'alert-circle');
+            wrap.className = `w-8 h-8 rounded-full flex items-center justify-center ${type === 'success' ? 'bg-primary/20 text-primary' : 'bg-rose-500/20 text-rose-500'}`;
+            
+            t.classList.remove('translate-y-24');
+            lucide.createIcons();
+            setTimeout(() => t.classList.add('translate-y-24'), 3000);
         }
 
-        // ── PIPELINE ──
-        function openModal() { document.getElementById('modal').classList.add('show'); }
-        function closeModal() { document.getElementById('modal').classList.remove('show'); }
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('topbar-time').innerText = now.toLocaleString('en-IN', { timeStyle: 'short', dateStyle: 'medium' });
+        }
 
+        function formatRelativeTime(ts) {
+            const diff = Math.floor((new Date() - new Date(ts)) / 1000);
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+            return new Date(ts).toLocaleDateString();
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+
+        // ── PIPELINE & API EXPOSE ──
         async function startPipeline() {
             const query = document.getElementById('modal-query').value.trim();
             const limit = parseInt(document.getElementById('modal-limit').value) || 10;
-            if (!query) return toast('Enter a search query', 'warn');
+            if (!query) return toast('Provide a niche/location', 'error');
             closeModal();
-
             try {
                 const r = await fetch(`${API}/api/pipeline/start`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query, limit })
                 });
-                if (!r.ok) throw new Error('Already running or error');
-                toast(`Pipeline started for: "${query}"`);
-                document.getElementById('pipeline-bar').classList.add('show');
-                pollPipeline();
-            } catch (e) { toast('Could not start pipeline: ' + e.message, 'error'); }
+                if (r.ok) {
+                    toast('Pipeline Initialized 🚀');
+                    document.getElementById('pipeline-bar').classList.remove('hidden');
+                    pollPipeline();
+                }
+            } catch { toast('Pipeline Start Failed', 'error'); }
         }
 
         async function pollPipeline() {
-            const check = async () => {
-                try {
-                    const r = await fetch(`${API}/api/pipeline/status`);
-                    const d = await r.json();
-                    document.getElementById('pipeline-msg').textContent = d.message;
-                    if (!d.running) {
-                        document.getElementById('pipeline-bar').classList.remove('show');
-                        toast('Pipeline complete! Refreshing...', 'info');
-                        await loadData();
-                    } else {
-                        setTimeout(check, 2000);
-                    }
-                } catch { setTimeout(check, 3000); }
-            };
-            await check();
-        }
-
-        // ── REMINDERS ──
-        async function sendAllReminders() {
-            toast('Loading reminder leads...', 'info');
             try {
-                const r = await fetch(`${API}/api/leads?status=sent`);
-                const leads = await r.json();
-                if (!leads.length) return toast('No leads pending reminders', 'warn');
-                toast(`Generating reminders for ${leads.length} leads...`, 'info');
-                for (const lead of leads) {
-                    const pr = await fetch(`${API}/api/generate-proposal`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ lead_id: lead.id, channel: 'email', is_reminder: true })
-                    });
-                    const pd = await pr.json();
-                    if (lead.email) {
-                        await fetch(`${API}/api/send`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ lead_id: lead.id, channel: 'email', content: pd.proposal })
-                        });
-                    }
-                }
-                toast(`Reminders sent to ${leads.length} leads ✅`);
-                await loadData();
-            } catch { toast('Error sending reminders', 'error'); }
-        }
-
-        // ── EXPORT ──
-        function exportCSV() {
-            window.open(`${API}/api/leads`, '_blank');
-            toast('Opening leads data in new tab. You can save it as CSV.');
-        }
-
-        // ── ROUTING ──
-        const viewTitles = {
-            dashboard: 'Command Center',
-            discovery: 'Lead Discovery',
-            outreach: 'Outreach Lab',
-            analytics: 'Analytics',
-            history: 'Outreach History',
-            settings: 'Settings',
-            integrations: 'Integrations'
-        };
-
-        function navigate(view) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            const navEl = document.querySelector(`[data-view="${view}"]`);
-            if (navEl) navEl.classList.add('active');
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            const viewEl = document.getElementById(`view-${view}`);
-            if (viewEl) viewEl.classList.add('active');
-            document.getElementById('topbar-title').textContent = viewTitles[view] || 'ColdMailer';
-            if (view === 'discovery') loadDiscovery();
-            if (view === 'outreach') loadOutreachLeads();
-            if (view === 'analytics') loadAnalytics();
-            if (view === 'history') loadFullHistory();
-            if (view === 'integrations') checkAIStatus();
-        }
-
-        // ── DISCOVERY VIEW ──
-        let discLeads = [];
-        async function loadDiscovery(statusFilter = '') {
-            const url = statusFilter ? `/api/leads?status=${statusFilter}` : '/api/leads';
-            const tbody = document.getElementById('disc-tbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr>';
-            try {
-                const r = await fetch(API + url);
-                discLeads = await r.json();
-                renderDiscovery(discLeads);
-            } catch { tbody.innerHTML = '<tr><td colspan="7" class="empty">Server offline</td></tr>'; }
-        }
-
-        function filterByStatus(v) { loadDiscovery(v); }
-
-        function renderDiscovery(leads) {
-            const tbody = document.getElementById('disc-tbody');
-            document.getElementById('disc-lead-count').textContent = `${leads.length} lead${leads.length !== 1 ? 's' : ''}`;
-            if (!leads.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty"><div class="empty-icon">🎯</div>No leads. Start a pipeline!</td></tr>'; return; }
-            const statusMap = { new: 'chip-new', sent: 'chip-sent', reminder_sent: 'chip-reminder', pending_review: 'chip-audit', failed: 'chip-pending' };
-            tbody.innerHTML = leads.map(l => `<tr class="data-row" onclick="selectLead(${l.id});navigate('dashboard')">
-        <td><div class="lead-name">${l.name}</div><div class="lead-addr">${l.address || '—'}</div></td>
-        <td>${l.category ? `<span class="cat-tag">${l.category}</span>` : '—'}</td>
-        <td><span class="badge ${l.score >= 7 ? 'green' : (l.score >= 4 ? 'yellow' : 'pink')}">${l.score || 0}</span></td>
-        <td><span class="badge">${l.outreach_step || 0}</span></td>
-        <td>${l.rating ? `<div class="rating"><span class="star">★</span>${l.rating} <span style="color:var(--t3);font-weight:400">(${(l.reviews_count || 0).toLocaleString()})</span></div>` : '—'}</td>
-        <td><div style="font-size:12px;">${l.email ? `<div>✉️ ${l.email.split(',')[0].substring(0, 25)}...</div>` : '<span style="color:var(--t3)">No email</span>'}${l.phone ? `<div style="color:var(--green);">📱 ${l.phone}</div>` : ''}</div></td>
-        <td><div class="thumb" title="${l.screenshot_path ? 'Has screenshot' : 'No screenshot'}">${l.screenshot_path ? '🖥️' : '📷'}</div></td>
-        <td><span class="chip ${statusMap[l.status] || 'chip-new'}"><span class="chip-dot"></span>${l.status || 'new'}</span></td>
-        <td><div class="act-btns">
-            <div class="act-btn" title="Generate & Go" onclick="event.stopPropagation();selectLead(${l.id});navigate('outreach')">✦</div>
-            <div class="act-btn" title="Send Email" onclick="event.stopPropagation();${l.email ? `quickSend(${l.id},'email')` : `toast('No email','warn')`}">✉️</div>
-        </div></td>
-    </tr>`).join('');
-        }
-
-        // ── OUTREACH VIEW ──
-        let outreachLead = null;
-        let outreachAllLeads = [];
-
-        async function loadOutreachLeads() {
-            try {
-                const r = await fetch(API + '/api/leads');
-                outreachAllLeads = await r.json();
-                renderOutreachList(outreachAllLeads);
-            } catch { }
-        }
-
-        function renderOutreachList(leads) {
-            const el = document.getElementById('outreach-lead-list');
-            if (!leads.length) { el.innerHTML = '<div class="empty">No leads found</div>'; return; }
-            el.innerHTML = leads.map(l => `
-        <div onclick="selectOutreachLead(${l.id})" style="padding:10px 12px;border-radius:8px;cursor:pointer;border:1px solid var(--border);margin-bottom:6px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:13px;font-weight:600;">${l.name}</div>
-            <div style="font-size:11px;color:var(--t2);margin-top:2px;">${l.business_category || '—'} · ${l.email ? '✉️ Has email' : l.phone ? '📱 Has phone' : 'No contact'}</div>
-        </div>
-    `).join('');
-        }
-
-        function onOutreachSearch(q) {
-            const filtered = q ? outreachAllLeads.filter(l => l.name.toLowerCase().includes(q.toLowerCase())) : outreachAllLeads;
-            renderOutreachList(filtered);
-        }
-
-        function selectOutreachLead(id) {
-            outreachLead = outreachAllLeads.find(l => l.id === id);
-            if (!outreachLead) return;
-            document.getElementById('outreach-badge').textContent = outreachLead.name;
-            document.getElementById('outreach-ctx').innerHTML = `<strong>${outreachLead.name}</strong>${outreachLead.rating ? ` · <span style="color:var(--yellow)">★${outreachLead.rating}</span>` : ''}`;
-            document.getElementById('outreach-text').value = outreachLead.audit_summary
-                ? `[Audit]\n${outreachLead.audit_summary}\n\nClick Generate to write a proposal.`
-                : 'Click Generate to create an AI proposal for this lead.';
-            document.getElementById('outreach-send-btn').disabled = false;
-        }
-
-        async function outreachGenerate() {
-            if (!outreachLead) return toast('Select a lead first', 'warn');
-            const channel = document.getElementById('outreach-channel').value;
-            const targetStep = (outreachLead.outreach_step || 0) + 1;
-            const ta = document.getElementById('outreach-text');
-            ta.value = 'Generating...';
-            try {
-                const r = await fetch(API + '/api/generate-proposal', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ lead_id: outreachLead.id, channel, outreach_step: targetStep }) 
-                });
+                const r = await fetch(`${API}/api/pipeline/status`);
                 const d = await r.json();
-                ta.value = d.proposal;
-                outreachLead.next_step = d.next_step;
-                toast(`Step ${d.next_step} generated ✦`);
-            } catch { ta.value = 'Error — is server running?'; }
-        }
-
-        async function outreachSend() {
-            if (!outreachLead) return;
-            const channel = document.getElementById('outreach-channel').value;
-            const content = document.getElementById('outreach-text').value.trim();
-            const step = outreachLead.next_step || (outreachLead.outreach_step || 0) + 1;
-            if (!content) return toast('No content to send', 'warn');
-            const btn = document.getElementById('outreach-send-btn');
-            btn.disabled = true; btn.textContent = 'Sending...';
-            try {
-                const r = await fetch(API + '/api/send', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ lead_id: outreachLead.id, channel, content, step: step }) 
-                });
-                const d = await r.json();
-                d.success ? toast('Message sent! ✅') : toast('Send failed — check server logs', 'error');
-                if (d.success) await loadOutreachLeads();
-            } catch { toast('Server error', 'error'); }
-            btn.disabled = false; btn.textContent = '📤 Send Message';
-        }
-
-        // ── ANALYTICS VIEW ──
-        async function loadAnalytics() {
-            try {
-                const [stats, history] = await Promise.all([fetch(API + '/api/stats').then(r => r.json()), fetch(API + '/api/history?limit=100').then(r => r.json())]);
-                document.getElementById('an-open').textContent = stats.sent ? Math.round(Math.min(stats.sent * 0.62, stats.total) * 100 / Math.max(stats.total, 1)) + '%' : '—';
-                document.getElementById('an-reply').textContent = stats.sent ? Math.round(Math.min(stats.sent * 0.18, 1) * 100 / Math.max(stats.sent * 0.18, 1) * 100) + '%' : '—';
-                document.getElementById('an-reminder').textContent = stats.total ? Math.round(stats.reminders / Math.max(stats.total, 1) * 100) + '%' : '—';
-
-                // Channel bars
-                const emailCount = history.filter(h => h.channel === 'email').length;
-                const waCount = history.filter(h => h.channel === 'whatsapp').length;
-                const max = Math.max(emailCount, waCount, 1);
-                document.getElementById('channel-bars').innerHTML = [
-                    `<div class="b" style="height:${Math.round(emailCount / max * 100)}%" data-val="${emailCount}"></div>`,
-                    `<div class="b" style="height:${Math.round(waCount / max * 100)}%;background:var(--green-bg);border-color:rgba(34,197,94,0.12);" data-val="${waCount}"></div>`
-                ].join('');
-                document.getElementById('channel-labels').innerHTML = '<span>Email</span><span>WhatsApp</span>';
-
-                // Status breakdown
-                const statuses = ['new', 'pending_review', 'sent', 'reminder_sent'];
-                const labels = { new: 'New', pending_review: 'Pending Review', sent: 'Sent', reminder_sent: 'Reminded' };
-                const colors = { new: 'var(--accent)', pending_review: '#a78bfa', sent: 'var(--green)', reminder_sent: 'var(--yellow)' };
-                const r2 = await fetch(API + '/api/leads'); const allL = await r2.json();
-                document.getElementById('status-breakdown').innerHTML = statuses.map(s => {
-                    const c = allL.filter(l => l.status === s).length;
-                    const pct = allL.length ? Math.round(c / allL.length * 100) : 0;
-                    return `<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>${labels[s]}</span><span style="color:${colors[s]};font-weight:600;">${c} (${pct}%)</span></div><div style="height:5px;background:var(--border);border-radius:4px;"><div style="height:5px;width:${pct}%;background:${colors[s]};border-radius:4px;transition:width 0.5s;"></div></div></div>`;
-                }).join('');
-            } catch { toast('Could not load analytics', 'error'); }
-        }
-
-        // ── FULL HISTORY VIEW ──
-        async function loadFullHistory() {
-            const tbody = document.getElementById('full-history-tbody');
-            tbody.innerHTML = '<tr><td colspan="5" class="empty"><span class="spinner"></span></td></tr>';
-            try {
-                const r = await fetch(API + '/api/history?limit=100');
-                const items = await r.json();
-                document.getElementById('full-history-count').textContent = `${items.length} messages`;
-                if (!items.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="empty-icon">📭</div>No history yet.</td></tr>'; return; }
-                tbody.innerHTML = items.map(h => `<tr>
-            <td><div class="lead-name">${h.lead_name || 'Lead #' + h.lead_id}</div></td>
-            <td>${h.channel === 'email' ? '✉️ Email' : '💬 WhatsApp'}</td>
-            <td><span class="chip ${h.status === 'sent' || h.status === 'reminder_sent' ? 'chip-sent' : 'chip-pending'}"><span class="chip-dot"></span>${h.status}</span></td>
-            <td style="color:var(--t2);font-size:12px;">${formatTime(h.sent_at)}</td>
-            <td style="max-width:220px;"><div style="font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(h.content || '').replace(/"/g, '&quot;')}">${(h.content || '').substring(0, 60)}...</div></td>
-        </tr>`).join('');
-            } catch { tbody.innerHTML = '<tr><td colspan="5" class="empty">Server offline</td></tr>'; }
-        }
-
-        // ── CHECK AI STATUS ──
-        async function checkAIStatus() {
-            try {
-                const r = await fetch(API + '/api/stats');
-                if (r.ok) {
-                    document.getElementById('ai-status-dot').className = 'status-dot connected';
-                    document.getElementById('ai-status-text').textContent = 'Connected';
-                    document.getElementById('ai-status-text').style.color = 'var(--green)';
+                document.getElementById('pipeline-msg').innerText = d.message;
+                if (!d.running) {
+                    document.getElementById('pipeline-bar').classList.add('hidden');
+                    await loadData();
+                } else {
+                    setTimeout(pollPipeline, 3000);
                 }
-            } catch {
-                document.getElementById('ai-status-dot').className = 'status-dot disconnected';
-                document.getElementById('ai-status-text').textContent = 'Offline';
-                document.getElementById('ai-status-text').style.color = 'var(--red)';
-            }
+            } catch { setTimeout(pollPipeline, 5000); }
         }
 
-        // ── TOAST ──
-        let toastTimer;
-        function toast(msg, type = 'success') {
-            const icons = { success: '✅', info: 'ℹ️', warn: '⚠️', error: '❌' };
-            document.getElementById('toast-msg').textContent = msg;
-            document.getElementById('toast-icon').textContent = icons[type] || '✅';
-            const el = document.getElementById('toast');
-            el.classList.add('show');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
-        }
-
-        // ── TOPBAR TIME ──
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('topbar-time').textContent = now.toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' });
-        }
-        updateTime();
-        setInterval(updateTime, 60000);
-
-        // ── CLOSE MODAL ON OVERLAY CLICK ──
-        document.getElementById('modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
-
-        // ── MOBILE SIDEBAR ──
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('show');
-        }
-        function closeSidebar() {
-            document.querySelector('.sidebar').classList.remove('open');
-            document.getElementById('sidebar-overlay').classList.remove('show');
-        }
-        // Auto-close sidebar on mobile nav click
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                if (window.innerWidth <= 768) closeSidebar();
-            });
-        });
-
-        // ── START ──
-        loadData();
-        // Auto-refresh every 30s
-        setInterval(loadData, 30000);
     </script>
 </body>
-
 </html>

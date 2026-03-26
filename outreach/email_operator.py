@@ -15,81 +15,67 @@ class EmailOperator:
     def _load_accounts(self):
         # Load from .env (Account 1 and 2)
         accounts = []
-        for i in range(1, 4): # Support up to 3 accounts
+        i = 1
+        while True:
             user = os.getenv(f"SMTP_USER_{i}")
-            password = os.getenv(f"SMTP_PASS_{i}")
-            host = os.getenv(f"SMTP_HOST_{i}")
-            port = os.getenv(f"SMTP_PORT_{i}")
+            pwd = os.getenv(f"SMTP_PASS_{i}")
+            if not user or not pwd: break
             
-            # Skip placeholders and empty configs
-            if user and password and "your_email" not in user and "your_app_password" not in password:
-                accounts.append({
-                    "user": user, 
-                    "password": password, 
-                    "host": host, 
-                    "port": int(port) if port else 587
-                })
+            accounts.append({
+                "user": user,
+                "pass": pwd,
+                "host": os.getenv(f"SMTP_HOST_{i}", "smtp.gmail.com"),
+                "port": int(os.getenv(f"SMTP_PORT_{i}", "587"))
+            })
+            i += 1
         return accounts
 
-    async def can_send(self) -> bool:
-        async with aiosqlite.connect(settings.DB_PATH) as db:
-            async with db.execute("SELECT emails_sent FROM daily_stats WHERE date = ?", (date.today(),)) as cursor:
-                row = await cursor.fetchone()
-                if row and row[0] >= settings.DAILY_EMAIL_LIMIT:
-                    return False
-        return True
-
-    async def send(self, to_email: str, subject: str, content: str):
-        if not self.accounts:
-            logger.error("No SMTP accounts configured.")
-            return False
-
-        if not await self.can_send():
-            logger.warning("Daily email limit reached.")
-            return False
-
-        account = random.choice(self.accounts) # Rotation
-        # Use verified alias if provided in settings, otherwise use the auth user
-        from_email = settings.FROM_EMAIL or account["user"]
+    async def send(self, to_email: str, subject: str, body: str) -> bool:
+        """
+        Sends a personalized email using the next available account in rotation.
         
-        msg = EmailMessage()
-        msg["Subject"] = subject
-        msg["From"] = from_email
+        Args:
+            to_email: Recipient address.
+            subject: Email subject.
+            body: Email content (HTML supported).
+            
+        Returns:
+            True if sent successfully, False otherwise.
+        """
+        if not self.accounts:
+            logger.error("No SMTP accounts configured. Set SMTP_USER_1/SMTP_PASS_1 in .env.")
+            return False
+
+        account = self.accounts[self.current_idx]
+        self.current_idx = (self.current_idx + 1) % len(self.accounts)
+
+        msg = MIMEMultipart()
+        msg["From"] = f"{settings.SENDER_NAME} <{account['user']}>"
         msg["To"] = to_email
-        msg.set_content(content)
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "html" if "<br" in body or "<p" in body else "plain"))
 
         try:
-            # Human-like delay
-            delay = random.uniform(settings.MIN_DELAY, settings.MAX_DELAY)
-            logger.info(f"Waiting {delay:.1f}s before sending email to {to_email}...")
-            await asyncio.sleep(delay)
-
-            await aiosmtplib.send(
-                msg,
-                hostname=account["host"],
-                port=account["port"],
-                username=account["user"],
-                password=account["password"],
-                use_tls=True if account["port"] == 465 else False,
-                start_tls=True if account["port"] == 587 else False,
-            )
+            logger.info(f"Sending email to [bold magenta]{to_email}[/bold magenta] via {account['user']}...")
             
-            await self._update_stats()
-            logger.info(f"Email sent successfully to [green]{to_email}[/green] via {account['user']}")
+            # Randomized delay to mimic human behavior
+            await asyncio.sleep(random.uniform(settings.MIN_DELAY_SECONDS, settings.MAX_DELAY_SECONDS))
+            
+            async with aiosmtplib.SMTP(
+                hostname=account['host'], 
+                port=account['port'], 
+                use_tls=False, 
+                start_tls=True
+            ) as smtp:
+                await smtp.login(account['user'], account['pass'])
+                await smtp.send_message(msg)
+                
+            logger.info(f"✓ Email delivered successfully to {to_email}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to send email to {to_email}: {e}")
+            logger.error(f"✕ SMTP delivery failed for {to_email}: {e}")
             return False
-
-    async def _update_stats(self):
-        async with aiosqlite.connect(settings.DB_PATH) as db:
-            await db.execute("""
-                INSERT INTO daily_stats (date, emails_sent) 
-                VALUES (?, 1) 
-                ON CONFLICT(date) DO UPDATE SET emails_sent = emails_sent + 1
-            """, (date.today(),))
-            await db.commit()
 
 if __name__ == "__main__":
     op = EmailOperator()
