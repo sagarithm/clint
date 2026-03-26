@@ -22,7 +22,7 @@ data/screenshots/
 # Temporary and Test Scripts
 tmp_*.py
 verify_*.py
-tests/test_*.py
+# tests/ are now part of the repo for stability
 
 # Clean up any other OS-specific files
 .DS_Store
