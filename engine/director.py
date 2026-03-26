@@ -1,5 +1,7 @@
 import asyncio
 import aiosqlite
+import random
+import os
 from typing import List, Dict, Optional
 
 from core.config import settings

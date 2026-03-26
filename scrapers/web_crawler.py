@@ -49,10 +49,10 @@ class WebCrawler:
             url = f"https://{url}"
 
         # Ensure directory exists
-        screenshot_dir = f"data/screenshots/{query_id}"
+        screenshot_dir = os.path.join("data", "screenshots", query_id)
         os.makedirs(screenshot_dir, exist_ok=True)
         safe_name = re.sub(r'[^\w\s-]', '', business_name).strip().replace(' ', '_')
-        screenshot_filename = f"{screenshot_dir}/{safe_name}_{random.randint(1000, 9999)}.png"
+        screenshot_filename = os.path.join(screenshot_dir, f"{safe_name}_{random.randint(1000, 9999)}.png")
         
         try:
             async with async_playwright() as p:
