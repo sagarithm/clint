@@ -36,6 +36,12 @@ Or install as a CLI package:
 pip install .
 ```
 
+Or install as an isolated global CLI (recommended):
+
+```bash
+pipx install .
+```
+
 ### 2. Configuration
 Update your `.env` with:
 - `OPENROUTER_API_KEY`: For AI Audits/Proposals.
@@ -45,6 +51,16 @@ Update your `.env` with:
 ---
 
 ## 🚀 Execution
+
+### First 5 Commands (Recommended Path)
+
+```bash
+clint version
+clint init
+clint config doctor
+clint run --query "Dentists in California"
+clint run --query "Dentists in California" --live
+```
 
 | Flow | Command |
 | :--- | :--- |

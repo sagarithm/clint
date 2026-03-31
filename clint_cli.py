@@ -33,6 +33,34 @@ EXIT_RUNTIME = 4
 EXIT_NETWORK = 5
 EXIT_INTERNAL = 10
 
+
+def _map_exception_to_exit(exc: Exception, default: int = EXIT_INTERNAL) -> int:
+    module_name = type(exc).__module__.lower()
+    class_name = type(exc).__name__.lower()
+
+    if isinstance(exc, typer.BadParameter):
+        return EXIT_USAGE
+    if "httpx" in module_name or "aiosmtplib" in module_name:
+        return EXIT_NETWORK
+    if "timeout" in class_name or "connection" in class_name:
+        return EXIT_NETWORK
+    if "sqlite" in module_name or "permission" in class_name or "filenotfound" in class_name:
+        return EXIT_RUNTIME
+    return default
+
+
+def _ensure_live_config() -> None:
+    values = read_env()
+    missing = [
+        key for key in ("OPENROUTER_API_KEY", "SMTP_USER_1", "SMTP_PASS_1") if not values.get(key)
+    ]
+    if missing:
+        console.print(
+            "Missing required credentials for live mode: " + ", ".join(missing) +
+            ". Run: clint init"
+        )
+        raise typer.Exit(code=EXIT_CONFIG)
+
 def _require_tty_or_value(value: Optional[str], prompt_text: str, hide: bool = False) -> str:
     if value:
         return value
@@ -166,13 +194,24 @@ def config_doctor() -> None:
     table.add_column("Details")
 
     failures = 0
+    config_fail = False
+    network_fail = False
     for name, (status, detail) in checks:
         if status == "FAIL":
             failures += 1
+            detail_l = detail.lower()
+            if "missing" in detail_l:
+                config_fail = True
+            elif "auth" in detail_l or "invalid" in detail_l:
+                network_fail = True
         table.add_row(name, status, detail)
 
     console.print(table)
     if failures:
+        if config_fail:
+            raise typer.Exit(code=EXIT_CONFIG)
+        if network_fail:
+            raise typer.Exit(code=EXIT_NETWORK)
         raise typer.Exit(code=EXIT_RUNTIME)
 
 
@@ -190,6 +229,8 @@ def run_cmd(
         console.print(f"Dry run preview: query='{query_val}', target={target}, send_limit={send_limit}")
         return
 
+    _ensure_live_config()
+
     async def _run_live() -> None:
         await init_db()
         director = OutreachDirector()
@@ -199,7 +240,7 @@ def run_cmd(
         asyncio.run(_run_live())
     except Exception as exc:
         console.print(f"Run failed: {exc}")
-        raise typer.Exit(code=EXIT_INTERNAL)
+        raise typer.Exit(code=_map_exception_to_exit(exc))
 
 
 @app.command("scrape")
@@ -226,7 +267,7 @@ def scrape_cmd(
         asyncio.run(_scrape())
     except Exception as exc:
         console.print(f"Scrape failed: {exc}")
-        raise typer.Exit(code=EXIT_INTERNAL)
+        raise typer.Exit(code=_map_exception_to_exit(exc))
 
 
 @app.command("followup")
@@ -270,7 +311,7 @@ def followup_cmd(
         asyncio.run(_followup())
     except Exception as exc:
         console.print(f"Follow-up failed: {exc}")
-        raise typer.Exit(code=EXIT_INTERNAL)
+        raise typer.Exit(code=_map_exception_to_exit(exc))
 
 
 @app.command("export")
@@ -307,7 +348,7 @@ def export_cmd(
         asyncio.run(_export())
     except Exception as exc:
         console.print(f"Export failed: {exc}")
-        raise typer.Exit(code=EXIT_INTERNAL)
+        raise typer.Exit(code=_map_exception_to_exit(exc))
 
 
 @app.command("dashboard")
@@ -322,7 +363,7 @@ def dashboard_cmd(
         uvicorn.run("server:app", host=host, port=port, reload=reload)
     except Exception as exc:
         console.print(f"Dashboard failed: {exc}")
-        raise typer.Exit(code=EXIT_INTERNAL)
+        raise typer.Exit(code=_map_exception_to_exit(exc))
 
 
 def run() -> None:
