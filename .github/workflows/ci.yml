@@ -40,7 +40,7 @@ jobs:
       - name: Install built wheel
         shell: bash
         run: |
-          python -m pip uninstall -y clint-cli || true
+          python -m pip uninstall -y sagarithm-clint || true
           python -m pip install dist/*.whl
 
       - name: Installed CLI smoke test

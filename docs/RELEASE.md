@@ -18,7 +18,7 @@ Launch Clint as a polished open-source CLI, comparable to modern AI CLIs, with:
 
 ### What launch-ready means
 
-1. One install command (`pipx install clint-cli`)
+1. One install command (`pipx install sagarithm-clint`)
 2. One stable executable command (`clint`)
 3. Clear setup flow (`clint init`)
 4. Safe diagnostics (`clint config doctor`)
@@ -210,7 +210,7 @@ Ship Clint as a standards-compliant Python package with a stable executable (`cl
 ### Project structure and metadata requirements
 
 1. Package identity
-	- distribution name: `clint-cli`
+	- distribution name: `sagarithm-clint`
 	- import package: `agent` (or `clint` if renamed during packaging cleanup)
 	- command: `clint`
 
@@ -275,8 +275,8 @@ Command behavior must be consistent for:
 2. Add package data configuration for dashboard/static assets.
 3. Add build command docs (`python -m build`).
 4. Add install docs for:
-	- `pipx install clint-cli`
-	- `pip install clint-cli`
+	- `pipx install sagarithm-clint`
+	- `pip install sagarithm-clint`
 5. Add smoke test job that validates a fresh install invocation.
 
 ### Acceptance criteria
@@ -625,7 +625,7 @@ Post-launch operations:
 
 ## Definition of Done for v1.0.0
 
-1. `pipx install clint-cli` works and exposes `clint`
+1. `pipx install sagarithm-clint` works and exposes `clint`
 2. `clint init` captures OpenRouter and Gmail app password flow
 3. `clint config doctor` validates full runtime dependencies
 4. `clint run` supports dry-run and live-run modes

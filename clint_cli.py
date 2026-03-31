@@ -87,7 +87,7 @@ def main(ctx: typer.Context) -> None:
 @app.command("version")
 def version_cmd(verbose: bool = typer.Option(False, "--verbose", help="Show runtime details")) -> None:
     try:
-        cli_ver = version("clint-cli")
+        cli_ver = version("sagarithm-clint")
     except PackageNotFoundError:
         cli_ver = "0.0.0-dev"
 
