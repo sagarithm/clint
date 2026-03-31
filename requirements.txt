@@ -1,0 +1,13 @@
+playwright
+asyncio
+aiosqlite
+rich
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+beautifulsoup4
+aiosmtplib
+fastapi
+uvicorn[standard]
+typer

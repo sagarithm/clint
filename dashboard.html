@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clint | Enterprise Outreach v1</title>
+    <!-- Tailwind v4 -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Inter', sans-serif;
+            --font-heading: 'Plus Jakarta Sans', sans-serif;
+            --color-primary: #10b981; /* Emerald 500 */
+            --color-primary-dark: #059669; /* Emerald 600 */
+            --color-bg-dark: #09090b; /* Zinc 950 */
+            --color-panel-dark: #18181b; /* Zinc 900 */
+            --color-border-dark: #27272a; /* Zinc 800 */
+        }
+        @layer base {
+            body { @apply bg-bg-dark text-slate-200 font-sans antialiased; }
+            ::-webkit-scrollbar { @apply w-1.5; }
+            ::-webkit-scrollbar-track { @apply bg-transparent; }
+            ::-webkit-scrollbar-thumb { @apply bg-zinc-800 rounded-full; }
+        }
+        @layer components {
+            .glass { @apply bg-panel-dark/80 backdrop-blur-md border border-border-dark shadow-xl rounded-2xl; }
+            .nav-item { @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer hover:bg-zinc-800 text-slate-400 hover:text-white; }
+            .nav-item.active { @apply bg-primary/10 text-primary border border-primary/20; }
+            .btn-primary { @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-dark text-bg-dark font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed; }
+            .btn-secondary { @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all active:scale-95 border border-zinc-700; }
+            .tab-btn { @apply px-5 py-2 rounded-lg text-sm font-medium transition-all; }
+            .tab-btn.active { @apply bg-zinc-800 text-white shadow-inner; }
+            .input-field { @apply w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary/50 transition-all placeholder:text-zinc-600; }
+            .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border; }
+            .chip { @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border; }
+        }
+        .view { display: none; }
+        .view.active { display: block; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden flex flex-col md:flex-row">
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden transition-opacity duration-300"
+        onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="fixed md:relative inset-y-0 left-0 w-72 bg-bg-dark border-r border-border-dark flex flex-col z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <i data-lucide="zap" class="text-bg-dark w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white italic">Clint <span
+                        class="text-primary NOT-italic">Enterprise</span></h1>
+                <p class="text-[10px] text-zinc-500 font-medium tracking-widest uppercase">Launch Ready v1.0.0</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+            <div class="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest px-4 mb-2 mt-4">Command</div>
+            <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </div>
+            <div class="nav-item" data-view="discovery" onclick="navigate('discovery')">
+                <i data-lucide="compass" class="w-5 h-5"></i> Discovery
+            </div>
+            <div class="nav-item" data-view="outreach" onclick="navigate('outreach')">
+                <i data-lucide="flask-conical" class="w-5 h-5"></i> Outreach Lab
+            </div>
+
+            <div class="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest px-4 mb-2 mt-6">Analytics
+            </div>
+            <div class="nav-item" data-view="analytics" onclick="navigate('analytics')">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Performance
+            </div>
+            <div class="nav-item" data-view="history" onclick="navigate('history')">
+                <i data-lucide="history" class="w-5 h-5"></i> History
+            </div>
+
+            <div class="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest px-4 mb-2 mt-6">System</div>
+            <div class="nav-item" data-view="integrations" onclick="navigate('integrations')">
+                <i data-lucide="blocks" class="w-5 h-5"></i> Integrations
+            </div>
+            <div class="nav-item" data-view="settings" onclick="navigate('settings')">
+                <i data-lucide="settings" class="w-5 h-5"></i> Settings
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-border-dark">
+            <button class="w-full btn-primary" onclick="openModal()">
+                <i data-lucide="plus" class="w-4 h-4"></i> New Discovery
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        <!-- Topbar -->
+        <header
+            class="h-16 flex items-center justify-between px-6 border-b border-border-dark bg-bg-dark/50 backdrop-blur-sm sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden p-2 text-zinc-400 hover:text-white" onclick="toggleSidebar()">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div id="topbar-title" class="text-lg font-semibold text-white">Command Center</div>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-medium text-zinc-400">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span id="topbar-time">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+
+            <!-- Pipeline Activity Bar -->
+            <div id="pipeline-bar"
+                class="hidden absolute top-0 left-0 right-0 z-20 px-8 py-3 bg-primary/10 border-b border-primary/20 backdrop-blur-md flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="loader-2" class="w-4 h-4 text-primary animate-spin"></i>
+                    <span id="pipeline-msg" class="text-sm font-medium text-primary">Discovering leads...</span>
+                </div>
+                <div
+                    class="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                    Active</div>
+            </div>
+
+            <!-- VIEW: DASHBOARD -->
+            <div class="view active" id="view-dashboard">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-400"><i data-lucide="users"
+                                    class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded">Total</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-total">0</div>
+                        <div class="text-xs text-zinc-500">Known Prospects</div>
+                    </div>
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-400"><i data-lucide="send"
+                                    class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">Sent</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-sent">0</div>
+                        <div class="text-xs text-zinc-500">Outreach Deliveries</div>
+                    </div>
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-amber-500/10 rounded-xl text-amber-400"><i data-lucide="microscope"
+                                    class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">Audited</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-audited">0</div>
+                        <div class="text-xs text-zinc-500">AI Scorecard Ready</div>
+                    </div>
+                    <div class="glass p-6 group hover:border-primary/30 transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-rose-500/10 rounded-xl text-rose-400"><i data-lucide="bell-dot"
+                                    class="w-6 h-6"></i></div>
+                            <span class="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded">Queue</span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-1" id="stat-reminders">0</div>
+                        <div class="text-xs text-zinc-500">Pending Follow-ups</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <!-- Left: Lead Quick Selection -->
+                    <div class="xl:col-span-2 space-y-6">
+                        <div class="glass flex flex-col h-[500px]">
+                            <div class="p-6 border-b border-border-dark flex items-center justify-between">
+                                <h3 class="font-bold flex items-center gap-2">
+                                    <i data-lucide="target" class="w-5 h-5 text-primary"></i> High Priority Targets
+                                </h3>
+                                <div class="flex gap-2">
+                                    <input type="text" placeholder="Filter leads..."
+                                        class="bg-zinc-800 border-none rounded-lg px-3 py-1.5 text-xs text-white focus:ring-1 ring-primary/30"
+                                        onkeyup="onSearch(this.value)">
+                                    <button class="p-2 hover:bg-zinc-800 rounded-lg text-zinc-500 transition-all"
+                                        onclick="loadLeads()"><i data-lucide="rotate-cw" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                            <div class="flex-1 overflow-auto">
+                                <table class="w-full text-left">
+                                    <thead
+                                        class="bg-zinc-900/50 sticky top-0 text-[10px] uppercase tracking-widest text-zinc-500">
+                                        <tr>
+                                            <th class="px-6 py-4">Prospect</th>
+                                            <th class="px-6 py-4">Intelligence</th>
+                                            <th class="px-6 py-4">Status</th>
+                                            <th class="px-6 py-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leads-tbody" class="divide-y divide-zinc-800">
+                                        <!-- Leads injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Outreach Pane -->
+                    <div class="space-y-6">
+                        <div class="glass p-6">
+                            <h3 class="font-bold flex items-center gap-2 mb-6">
+                                <i data-lucide="wand-2" class="w-5 h-5 text-indigo-400"></i> AI Outreach Lab
+                            </h3>
+                            <div id="quick-lab-empty" class="text-center py-12 px-6">
+                                <div
+                                    class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="mouse-pointer-2" class="w-6 h-6 text-zinc-600"></i>
+                                </div>
+                                <p class="text-sm text-zinc-500 leading-relaxed">Select a lead from the list to analyze
+                                    and generate a personalized proposal.</p>
+                            </div>
+                            <div id="quick-lab-active" class="hidden space-y-4">
+                                <div class="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
+                                    <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2"
+                                        id="lab-lead-name">Company Name</div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <div class="text-[10px] text-zinc-500 mb-1">Score</div>
+                                            <div class="text-lg font-bold text-primary" id="lab-lead-score">0/10</div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="text-[10px] text-zinc-500 mb-1">Reviews</div>
+                                            <div class="text-lg font-bold text-white" id="lab-lead-reviews">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <textarea id="lab-textarea"
+                                        class="w-full h-64 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-slate-300 focus:outline-none focus:border-primary/30 resize-none font-sans leading-relaxed transition-all"
+                                        placeholder="Strategic proposal will appear here..."></textarea>
+                                    <button
+                                        class="absolute bottom-4 right-4 p-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all shadow-lg"
+                                        onclick="generateProposalInLab()" title="Re-generate AI">
+                                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button id="lab-send-email" class="btn-primary group"
+                                        onclick="sendLabOutreach('email')">
+                                        <i data-lucide="mail"
+                                            class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform"></i> Email
+                                    </button>
+                                    <button id="lab-send-wa" class="btn-secondary group"
+                                        onclick="sendLabOutreach('whatsapp')">
+                                        <i data-lucide="message-square"
+                                            class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform"></i>
+                                        WhatsApp
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Graph or Small Stat -->
+                        <div class="glass p-6">
+                            <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Recent Activity
+                            </h4>
+                            <div id="dashboard-activity-log" class="space-y-4">
+                                <!-- Activity entries -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: DISCOVERY -->
+            <div class="view" id="view-discovery">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Discovery Queue</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Manage and filter discovered leads.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select class="input-field py-2 text-xs w-44" onchange="filterDiscovery(this.value)">
+                            <option value="">All Statuses</option>
+                            <option value="new">New Prospects</option>
+                            <option value="sent">Outreach Sent</option>
+                            <option value="pending_review">Pending Review</option>
+                        </select>
+                        <button class="btn-primary" onclick="openModal()">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Start Discovery
+                        </button>
+                    </div>
+                </div>
+                <div class="glass overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-zinc-900/50 text-[10px] uppercase tracking-widest text-zinc-500">
+                            <tr>
+                                <th class="px-6 py-4">Prospect</th>
+                                <th class="px-6 py-4 text-center">Score</th>
+                                <th class="px-6 py-4">Contact Coverage</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Process</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disc-tbody" class="divide-y divide-zinc-800">
+                            <!-- Discovery leads injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: OUTREACH LAB (FULL) -->
+            <div class="view" id="view-outreach">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 h-[calc(100vh-140px)]">
+                    <!-- Left Sidebar for Lab -->
+                    <div class="lg:col-span-1 glass flex flex-col">
+                        <div class="p-4 border-b border-border-dark">
+                            <div class="relative">
+                                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-zinc-600"></i>
+                                <input type="text" placeholder="Search targets..."
+                                    class="input-field pl-10 py-2 text-sm" onkeyup="onOutreachSearch(this.value)">
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-2 space-y-1" id="outreach-lead-list">
+                            <!-- Lead list for lab -->
+                        </div>
+                    </div>
+
+                    <!-- Main Creator Workspace -->
+                    <div class="lg:col-span-3 h-full flex flex-col gap-6">
+                        <div id="outreach-empty"
+                            class="glass flex-1 flex flex-col items-center justify-center text-center p-12">
+                            <div
+                                class="w-20 h-20 bg-zinc-800 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+                                <i data-lucide="pen-tool" class="w-10 h-10 text-zinc-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Workspace Empty</h3>
+                            <p class="text-zinc-500 max-w-sm">Select a prospect from the sidebar to begin crafting a
+                                high-conversion outreach proposal.</p>
+                        </div>
+
+                        <div id="outreach-workspace" class="hidden flex-1 flex flex-col gap-6">
+                            <div class="glass p-6 flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20"
+                                        id="ow-avatar">
+                                        <i data-lucide="building-2" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h3 id="ow-name" class="font-bold text-lg text-white">Lead Name</h3>
+                                        <p id="ow-meta"
+                                            class="text-xs text-zinc-500 uppercase tracking-widest font-bold">Category ·
+                                            Score: 8</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <select id="ow-channel" class="input-field py-2 text-xs w-32">
+                                        <option value="email">📧 Email</option>
+                                        <option value="whatsapp">💬 WhatsApp</option>
+                                    </select>
+                                    <button class="btn-primary" onclick="outreachGenerate()">
+                                        <i data-lucide="wand-2" class="w-4 h-4 text-bg-dark"></i> Generate
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 flex flex-col lg:flex-row gap-6">
+                                <div class="flex-1 glass flex flex-col">
+                                    <div
+                                        class="p-4 border-b border-border-dark flex items-center justify-between bg-zinc-900/30">
+                                        <span
+                                            class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Proposal
+                                            Output</span>
+                                        <span class="text-[10px] text-zinc-600" id="ow-char-count">0 characters</span>
+                                    </div>
+                                    <textarea id="ow-textarea"
+                                        class="flex-1 w-full bg-transparent p-6 text-slate-300 focus:outline-none resize-none leading-relaxed text-sm font-sans"
+                                        placeholder="Crafting excellence..."></textarea>
+                                    <div class="p-4 border-t border-border-dark bg-zinc-900/30 flex justify-end gap-2">
+                                        <button class="btn-secondary px-4 py-2" onclick="copyToClipboard()"><i
+                                                data-lucide="copy" class="w-4 h-4"></i> Copy</button>
+                                        <button id="ow-send-btn" class="btn-primary px-8" onclick="outreachSend()">
+                                            <i data-lucide="send" class="w-4 h-4"></i> Send Message
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="w-full lg:w-80 space-y-6">
+                                    <div class="glass p-5">
+                                        <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Lead
+                                            Intelligence</h4>
+                                        <div id="ow-intel" class="space-y-4 text-sm">
+                                            <!-- Intel items -->
+                                        </div>
+                                    </div>
+                                    <div class="glass overflow-hidden">
+                                        <div class="aspect-video bg-zinc-800 relative group overflow-hidden">
+                                            <img id="ow-screenshot" src="" class="hidden w-full h-full object-cover">
+                                            <div id="ow-no-screenshot"
+                                                class="absolute inset-0 flex flex-col items-center justify-center text-zinc-600">
+                                                <i data-lucide="image-off" class="w-8 h-8 mb-2"></i>
+                                                <span class="text-[10px] font-bold uppercase tracking-widest">No
+                                                    Screenshot</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: ANALYTICS -->
+            <div class="view" id="view-analytics">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass p-8 text-center">
+                        <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Avg. Conversion
+                        </div>
+                        <div class="text-4xl font-black text-primary" id="an-conversion">0%</div>
+                        <div class="text-[10px] text-zinc-600 mt-2">Based on response tracking</div>
+                    </div>
+                    <div class="glass p-8 text-center">
+                        <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Contact Rate
+                        </div>
+                        <div class="text-4xl font-black text-indigo-400" id="an-contact">0%</div>
+                        <div class="text-[10px] text-zinc-600 mt-2">Emails vs Scraped Leads</div>
+                    </div>
+                    <div class="glass p-8 text-center">
+                        <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Follow-up Ratio
+                        </div>
+                        <div class="text-4xl font-black text-amber-400" id="an-followup">0%</div>
+                        <div class="text-[10px] text-zinc-600 mt-2">Second-step outreaches</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass p-8">
+                        <h3 class="font-bold mb-8">Channel Distribution</h3>
+                        <div class="flex items-end gap-12 h-64 px-12" id="an-chart-channels">
+                            <!-- Bars -->
+                        </div>
+                    </div>
+                    <div class="glass p-8">
+                        <h3 class="font-bold mb-8">Status Funnel</h3>
+                        <div id="status-funnel" class="space-y-6">
+                            <!-- Funnel bars -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: HISTORY -->
+            <div class="view" id="view-history">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Outreach History</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Audit log of all successful communications.</p>
+                    </div>
+                    <button class="btn-secondary" onclick="loadHistory()">
+                        <i data-lucide="rotate-cw" class="w-4 h-4 text-zinc-400"></i> Refresh log
+                    </button>
+                </div>
+                <div class="glass overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-zinc-900/50 text-[10px] uppercase tracking-widest text-zinc-500">
+                            <tr>
+                                <th class="px-6 py-4">Lead</th>
+                                <th class="px-6 py-4">Method</th>
+                                <th class="px-6 py-4">Time</th>
+                                <th class="px-6 py-4">Message Snippet</th>
+                                <th class="px-6 py-4 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-history-tbody" class="divide-y divide-zinc-800">
+                            <!-- History injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: INTEGRATIONS / SETTINGS -->
+            <div class="view" id="view-integrations">
+                <div class="max-w-4xl space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">System Integrations</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Connect your automation stack to external providers.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="integrations-list">
+                        <!-- Integration cards -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="view" id="view-settings">
+                <div class="max-w-4xl space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">System Configuration</h2>
+                        <p class="text-sm text-zinc-500 mt-1">Tweak the engine parameters and outreach DNA.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="glass p-6">
+                            <h4 class="font-bold flex items-center gap-2 mb-6"><i data-lucide="mail"
+                                    class="w-4 h-4 text-indigo-400"></i> Email Operator</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label
+                                        class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">SMTP
+                                        User</label>
+                                    <input type="text" class="input-field text-sm" placeholder="you@example.com">
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">App
+                                        Password</label>
+                                    <input type="password" class="input-field text-sm" placeholder="••••••••">
+                                </div>
+                                <button class="btn-primary w-full">Save Configuration</button>
+                            </div>
+                        </div>
+                        <div class="glass p-6">
+                            <h4 class="font-bold flex items-center gap-2 mb-6"><i data-lucide="brain-circuit"
+                                    class="w-4 h-4 text-emerald-400"></i> AI Preferences</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label
+                                        class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Targeting
+                                        Persona</label>
+                                    <select class="input-field text-sm">
+                                        <option>Pixartual Founder (Authoritative)</option>
+                                        <option>Creative Director (Empathetic)</option>
+                                        <option>Sales Associate (Direct)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Batch
+                                        Size</label>
+                                    <input type="number" class="input-field text-sm" value="10">
+                                </div>
+                                <button class="btn-secondary w-full">Apply Preferences</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 md:p-12">
+        <div class="absolute inset-0 bg-bg-dark/80 backdrop-blur-xl" onclick="closeModal()"></div>
+        <div class="glass w-full max-w-lg relative p-8 shadow-2xl animate-slideUp">
+            <h2 class="text-2xl font-bold text-white mb-2">New Discovery</h2>
+            <p class="text-sm text-zinc-500 mb-8">Define your search parameters to feed the engine.</p>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Search
+                        Query</label>
+                    <input type="text" id="modal-query" class="input-field" placeholder="e.g. Roofers in Austin, TX">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Limit
+                        Prospects</label>
+                    <input type="number" id="modal-limit" class="input-field" value="10">
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button class="flex-1 btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="flex-1 btn-primary" onclick="startPipeline()">
+                        <i data-lucide="zap" class="w-4 h-4 text-bg-dark"></i> Initialize Pipeline
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"
+        class="fixed bottom-8 right-8 z-[200] transform translate-y-24 transition-all duration-300 pointer-events-none">
+        <div class="glass px-6 py-4 flex items-center gap-3 border-primary/20 bg-primary/5">
+            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"
+                id="toast-icon-wrap">
+                <i data-lucide="check-circle" class="w-5 h-5" id="toast-icon"></i>
+            </div>
+            <div class="flex flex-col">
+                <div class="text-[10px] font-bold text-primary uppercase tracking-widest">Notification</div>
+                <div id="toast-msg" class="text-sm font-medium text-white">Action completed successfully</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS LOGIC -->
+    <script>
+        const API = (window.location.port !== '8000') ? 'http://localhost:8000' : '';
+        let allLeads = [];
+        let selectedLead = null;
+        let outreachLead = null;
+
+        // ── INITIALIZATION ──
+        async function init() {
+            lucide.createIcons();
+            await loadData();
+            updateTime();
+            setInterval(updateTime, 10000);
+            setInterval(loadData, 30000); // Polling
+        }
+
+        async function loadData() {
+            await Promise.all([loadStats(), loadLeads(), loadHistory()]);
+        }
+
+        // ── CORE DATA ──
+        async function loadStats() {
+            try {
+                const r = await fetch(`${API}/api/stats`);
+                const d = await r.json();
+                document.getElementById('stat-total').innerText = d.total || 0;
+                document.getElementById('stat-sent').innerText = d.sent || 0;
+                document.getElementById('stat-audited').innerText = d.audited || (d.total - d.pending) || 0;
+                document.getElementById('stat-reminders').innerText = d.reminders || 0;
+            } catch { }
+        }
+
+        async function loadLeads(search = '') {
+            try {
+                const url = search ? `/api/leads?search=${encodeURIComponent(search)}` : `/api/leads`;
+                const r = await fetch(`${API}${url}`);
+                allLeads = await r.json();
+                renderDashboardLeads(allLeads);
+                // Also update discovery if active
+                if (document.getElementById('view-discovery').classList.contains('active')) {
+                    renderDiscoveryDetails(allLeads);
+                }
+            } catch { }
+        }
+
+        function renderDashboardLeads(leads) {
+            const tbody = document.getElementById('leads-tbody');
+            if (!leads.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-zinc-600 text-sm">No leads discovered yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = leads.map(l => `
+                <tr class="hover:bg-zinc-800/30 cursor-pointer group transition-all ${selectedLead?.id === l.id ? 'bg-primary/5' : ''}" onclick="selectLead(${l.id})">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-semibold text-white">${l.name}</div>
+                        <div class="text-[10px] text-zinc-500">${l.business_category || 'Local Business'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                             <div class="badge ${l.score >= 7 ? 'bg-primary/10 border-primary/20 text-primary' : (l.score >= 4 ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-rose-500/10 border-rose-500/20 text-rose-500')}">
+                                ${l.score || 0}
+                             </div>
+                             <div class="flex items-center gap-1 text-[10px] text-zinc-500">
+                                <i data-lucide="star" class="w-3 h-3 text-amber-500 fill-amber-500"></i> ${l.rating || '—'}
+                             </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="chip ${getStatusStyles(l.status)}">
+                            <span class="w-1.5 h-1.5 rounded-full ${getStatusDot(l.status)}"></span>
+                            ${l.status.replace('_', ' ')}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="p-2 hover:bg-zinc-700 rounded-lg text-zinc-400 opacity-0 group-hover:opacity-100 transition-all" onclick="event.stopPropagation();selectLead(${l.id});navigate('outreach')">
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function getStatusStyles(s) {
+            const map = { new: 'bg-zinc-800 border-zinc-700 text-zinc-400', sent: 'bg-primary/10 border-primary/20 text-primary', reminder_sent: 'bg-amber-500/10 border-amber-500/20 text-amber-500', pending_review: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' };
+            return map[s] || map.new;
+        }
+        function getStatusDot(s) {
+            const map = { new: 'bg-zinc-600', sent: 'bg-primary', reminder_sent: 'bg-amber-500', pending_review: 'bg-indigo-500' };
+            return map[s] || map.new;
+        }
+
+        // ── SELECTION & LAB ──
+        function selectLead(id) {
+            selectedLead = allLeads.find(l => l.id === id);
+            if (!selectedLead) return;
+
+            document.getElementById('quick-lab-empty').classList.add('hidden');
+            document.getElementById('quick-lab-active').classList.remove('hidden');
+
+            document.getElementById('lab-lead-name').innerText = selectedLead.name;
+            document.getElementById('lab-lead-score').innerText = `${selectedLead.score || 0}/10`;
+            document.getElementById('lab-lead-reviews').innerText = selectedLead.reviews_count || 0;
+
+            const ta = document.getElementById('lab-textarea');
+            ta.value = selectedLead.audit_summary
+                ? `[Intelligence Report]\n${selectedLead.audit_summary}\n\nClick sparkles to generate proposal...`
+                : "Analyze this lead to generate a high-conversion proposal.";
+
+            document.getElementById('lab-send-email').disabled = !selectedLead.email;
+            document.getElementById('lab-send-wa').disabled = !selectedLead.phone;
+
+            renderDashboardLeads(allLeads); // To show active state
+        }
+
+        async function generateProposalInLab() {
+            if (!selectedLead) return;
+            const ta = document.getElementById('lab-textarea');
+            const originalVal = ta.value;
+            ta.value = "Generating strategic proposal...";
+            ta.classList.add('opacity-50');
+
+            try {
+                const r = await fetch(`${API}/api/outreach/generate`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lead_id: selectedLead.id, channel: 'email' })
+                });
+                const d = await r.json();
+                selectedLead.current_subject = d.subject;
+                selectedLead.current_body = d.body;
+                ta.value = `Subject: ${d.subject}\n\n${d.body}`;
+                toast('AI Proposal Crafted ✦', 'success');
+            } catch {
+                ta.value = originalVal;
+                toast('API Error - Check Backend', 'error');
+            } finally {
+                ta.classList.remove('opacity-50');
+            }
+        }
+
+        async function sendLabOutreach(channel) {
+            if (!selectedLead) return;
+            const content = document.getElementById('lab-textarea').value.trim();
+            if (!content) return toast('Workspace is empty', 'error');
+
+            const btn = document.getElementById(`lab-send-${channel === 'email' ? 'email' : 'wa'}`);
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
+            btn.disabled = true;
+
+            try {
+                // Parse subject/body if default AI format
+                let subject = selectedLead.current_subject || `Enterprise Inquiry: ${selectedLead.name}`;
+                let body = content;
+                if (content.startsWith("Subject:")) {
+                    const parts = content.split("\n\n", 2);
+                    subject = parts[0].replace("Subject:", "").trim();
+                    body = parts[1] || content;
+                }
+
+                const r = await fetch(`${API}/api/outreach/send`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lead_id: selectedLead.id, channel, subject, body })
+                });
+                const d = await r.json();
+                if (d.success) {
+                    toast(`${channel.toUpperCase()} Delivered`, 'success');
+                    await loadData();
+                } else {
+                    toast('Delivery Failed', 'error');
+                }
+            } catch { toast('Server Exception', 'error'); }
+            finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        // ── HISTORY & ACTIVITY ──
+        async function loadHistory() {
+            try {
+                const r = await fetch(`${API}/api/history`);
+                const h = await r.json();
+                renderActivityLog(h.slice(0, 5));
+                renderFullHistory(h);
+            } catch { }
+        }
+
+        function renderActivityLog(items) {
+            const log = document.getElementById('dashboard-activity-log');
+            if (!items.length) { log.innerHTML = '<div class="text-xs text-zinc-600">No recent activity.</div>'; return; }
+            log.innerHTML = items.map(i => `
+                <div class="flex items-start gap-3">
+                    <div class="w-2 h-2 rounded-full mt-1.5 ${i.channel === 'email' ? 'bg-indigo-400' : 'bg-primary'}"></div>
+                    <div>
+                        <div class="text-[11px] text-white font-medium">${i.channel.toUpperCase()} Sent: ${i.lead_name}</div>
+                        <div class="text-[9px] text-zinc-600">${formatRelativeTime(i.sent_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ── ROUTING ──
+        const viewTitles = { dashboard: 'Command Center', discovery: 'Discovery Queue', outreach: 'Outreach Lab', analytics: 'Performance Metrics', history: 'Audited History', integrations: 'Integrations', settings: 'Configuration' };
+
+        function navigate(view) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
+
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+
+            document.getElementById('topbar-title').innerText = viewTitles[view] || 'ColdMailer';
+
+            if (view === 'discovery') loadLeads();
+            if (view === 'outreach') initOutreachView();
+            if (view === 'analytics') loadAnalytics();
+            if (view === 'history') loadHistory();
+
+            closeSidebar();
+        }
+
+        // ── OUTREACH VIEW (LAB) ──
+        function initOutreachView() {
+            renderOutreachList(allLeads);
+            if (selectedLead) selectOutreachLead(selectedLead.id);
+        }
+
+        function renderOutreachList(leads) {
+            const list = document.getElementById('outreach-lead-list');
+            list.innerHTML = leads.map(l => `
+                <div class="px-3 py-2.5 rounded-lg cursor-pointer transition-all ${outreachLead?.id === l.id ? 'bg-primary/10 text-primary border border-primary/20' : 'hover:bg-zinc-800 text-slate-400'}" onclick="selectOutreachLead(${l.id})">
+                    <div class="text-xs font-bold truncate">${l.name}</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-[9px] bg-zinc-900 border border-zinc-700 px-1 rounded">${l.score || 0}</span>
+                        <div class="flex gap-1">
+                            ${l.email ? '<i data-lucide="mail" class="w-2.5 h-2.5"></i>' : ''}
+                            ${l.phone ? '<i data-lucide="message-square" class="w-2.5 h-2.5"></i>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function selectOutreachLead(id) {
+            outreachLead = allLeads.find(l => l.id === id);
+            if (!outreachLead) return;
+
+            document.getElementById('outreach-empty').classList.add('hidden');
+            document.getElementById('outreach-workspace').classList.remove('hidden');
+
+            document.getElementById('ow-name').innerText = outreachLead.name;
+            document.getElementById('ow-meta').innerText = `${outreachLead.business_category || 'Business'} · Score: ${outreachLead.score || 0}`;
+            document.getElementById('ow-textarea').value = outreachLead.audit_summary || "Starting fresh audit flow...";
+
+            // Intel
+            const intelEl = document.getElementById('ow-intel');
+            intelEl.innerHTML = [
+                { icon: 'globe', label: 'Domain', val: outreachLead.website ? outreachLead.website.substring(0, 25) : 'None' },
+                { icon: 'star', label: 'Reputation', val: outreachLead.rating ? `${outreachLead.rating} (${outreachLead.reviews_count})` : 'Unrated' },
+                { icon: 'map-pin', label: 'Location', val: outreachLead.address ? outreachLead.address.split(',')[0] : 'Remote' }
+            ].map(i => `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-zinc-500"><i data-lucide="${i.icon}" class="w-3.5 h-3.5"></i> ${i.label}</div>
+                    <div class="text-white font-medium">${i.val}</div>
+                </div>
+            `).join('');
+
+            // Screenshot
+            const img = document.getElementById('ow-screenshot');
+            const placeholder = document.getElementById('ow-no-screenshot');
+            if (outreachLead.screenshot_path) {
+                img.src = outreachLead.screenshot_path;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+
+            renderOutreachList(allLeads);
+            lucide.createIcons();
+        }
+
+        // ── UTILS ──
+        function toggleSidebar() {
+            const s = document.getElementById('sidebar');
+            const o = document.getElementById('sidebar-overlay');
+            const isOpen = !s.classList.contains('-translate-x-full');
+            if (isOpen) {
+                s.classList.add('-translate-x-full');
+                o.classList.add('hidden');
+            } else {
+                s.classList.remove('-translate-x-full');
+                o.classList.remove('hidden');
+            }
+        }
+        function closeSidebar() { if (window.innerWidth < 768) { document.getElementById('sidebar').classList.add('-translate-x-full'); document.getElementById('sidebar-overlay').classList.add('hidden'); } }
+
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
+
+        function toast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const wrap = document.getElementById('toast-icon-wrap');
+            const msgEl = document.getElementById('toast-msg');
+
+            msgEl.innerText = msg;
+            icon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : 'alert-circle');
+            wrap.className = `w-8 h-8 rounded-full flex items-center justify-center ${type === 'success' ? 'bg-primary/20 text-primary' : 'bg-rose-500/20 text-rose-500'}`;
+
+            t.classList.remove('translate-y-24');
+            lucide.createIcons();
+            setTimeout(() => t.classList.add('translate-y-24'), 3000);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('topbar-time').innerText = now.toLocaleString('en-IN', { timeStyle: 'short', dateStyle: 'medium' });
+        }
+
+        function formatRelativeTime(ts) {
+            const diff = Math.floor((new Date() - new Date(ts)) / 1000);
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return new Date(ts).toLocaleDateString();
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+
+        // ── PIPELINE & API EXPOSE ──
+        async function startPipeline() {
+            const query = document.getElementById('modal-query').value.trim();
+            const limit = parseInt(document.getElementById('modal-limit').value) || 10;
+            if (!query) return toast('Provide a niche/location', 'error');
+            closeModal();
+            try {
+                const r = await fetch(`${API}/api/pipeline/start`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit })
+                });
+                if (r.ok) {
+                    toast('Pipeline Initialized 🚀');
+                    document.getElementById('pipeline-bar').classList.remove('hidden');
+                    pollPipeline();
+                }
+            } catch { toast('Pipeline Start Failed', 'error'); }
+        }
+
+        async function pollPipeline() {
+            try {
+                const r = await fetch(`${API}/api/pipeline/status`);
+                const d = await r.json();
+                document.getElementById('pipeline-msg').innerText = d.message;
+                if (!d.running) {
+                    document.getElementById('pipeline-bar').classList.add('hidden');
+                    await loadData();
+                } else {
+                    setTimeout(pollPipeline, 3000);
+                }
+            } catch { setTimeout(pollPipeline, 5000); }
+        }
+
+    </script>
+</body>
+
+</html>

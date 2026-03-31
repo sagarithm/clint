@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sagarithm-clint"
+version = "1.0.0"
+description = "Clint CLI for AI-powered outreach workflows"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Clint Contributors" }]
+license = "MIT"
+keywords = ["cli", "outreach", "automation", "ai"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent",
+  "Environment :: Console",
+]
+dependencies = [
+  "playwright",
+  "aiosqlite",
+  "rich",
+  "pydantic",
+  "pydantic-settings",
+  "python-dotenv",
+  "httpx",
+  "beautifulsoup4",
+  "aiosmtplib",
+  "fastapi",
+  "uvicorn[standard]",
+  "typer",
+]
+
+[project.urls]
+Homepage = "https://github.com/sagarithm/clint"
+Repository = "https://github.com/sagarithm/clint"
+Issues = "https://github.com/sagarithm/clint/issues"
+
+[project.scripts]
+clint = "clint_cli:run"
+
+[tool.setuptools]
+include-package-data = true
+py-modules = ["clint_cli", "main", "commander", "server"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "engine*", "outreach*", "scrapers*", "cli*"]
