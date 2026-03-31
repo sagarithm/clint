@@ -8,6 +8,7 @@ from core.config import settings
 from core.logger import logger
 from core.database import get_db
 from core.scorer import score_lead
+from core.reliability import log_outreach_event, recently_contacted, send_with_retry
 from core.utils import sanitize_emails
 
 from scrapers.maps import MapsScraper
@@ -103,6 +104,10 @@ class OutreachDirector:
                     if sent_count < send_limit and lead_data['email'] and lead_data['email'] != "N/A":
                         # Only send if score is high enough (e.g. > 5) for autonomous mode
                         if lead_data.get('score', 0) >= 5:
+                            if await recently_contacted(lead_data['id'], 'email'):
+                                logger.info(f"Skipping duplicate outreach for {lead_data['name']} (recently contacted).")
+                                await log_outreach_event(lead_data['id'], 'email', 'skipped_duplicate')
+                                continue
                             progress.update(process_task, description=f"[bold magenta]Sending to: {lead_data['name']}")
                             await self._process_outreach(lead_data)
                             sent_count += 1
@@ -135,7 +140,10 @@ class OutreachDirector:
         
         # Delivery
         to_email = lead_data['email'].split(',')[0]
-        success = await self.email_op.send(to_email, subject, body)
+        success = await send_with_retry(
+            lambda: self.email_op.send(to_email, subject, body),
+            retries=3,
+        )
         
         if success:
             async with get_db() as db:
@@ -144,14 +152,9 @@ class OutreachDirector:
                     WHERE id = ?
                 """, (lead_data['id'],))
                 await db.commit()
-                
-            # Log to History
-            async with get_db() as db:
-                await db.execute("""
-                    INSERT INTO outreach_history (lead_id, channel, content, status)
-                    VALUES (?, 'email', ?, 'sent')
-                """, (lead_data['id'], body[:500]))
-                await db.commit()
+            await log_outreach_event(lead_data['id'], 'email', 'sent', body)
+        else:
+            await log_outreach_event(lead_data['id'], 'email', 'failed', body, 'delivery_failed')
         
         return success
 

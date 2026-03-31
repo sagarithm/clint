@@ -10,3 +10,4 @@ beautifulsoup4
 aiosmtplib
 fastapi
 uvicorn[standard]
+typer

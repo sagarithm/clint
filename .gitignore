@@ -24,6 +24,11 @@ tmp_*.py
 verify_*.py
 # tests/ are now part of the repo for stability
 
+# Packaging artifacts
+build/
+dist/
+*.egg-info/
+
 # Clean up any other OS-specific files
 .DS_Store
 Thumbs.db

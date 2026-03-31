@@ -13,6 +13,7 @@ from rich.align import Align
 from core.config import settings
 from core.database import init_db, get_db
 from core.logger import logger
+from core.reliability import log_outreach_event, recently_contacted, send_with_retry
 from core.scorer import score_lead
 from scrapers.web_crawler import WebCrawler
 from engine.director import OutreachDirector
@@ -188,6 +189,10 @@ class ColdMailerCLI:
         for lead in leads:
             if (channel == 'email' and lead['email'] and lead['email'] != "N/A") or \
                (channel == 'whatsapp' and lead['phone']):
+                if await recently_contacted(lead['id'], channel):
+                    console.print(f"[bold yellow]↺ Skipped duplicate: {lead['name']} already contacted recently on {channel}.[/bold yellow]")
+                    await log_outreach_event(lead['id'], channel, "skipped_duplicate")
+                    continue
                 
                 # Live Status Message
                 console.print(f"[dim]Generating personalized pitch for {lead['name']}...[/dim]")
@@ -203,20 +208,29 @@ class ColdMailerCLI:
                 
                 success = False
                 if channel == 'email':
-                    success = await self.email_op.send(lead['email'].split(',')[0], subject, body)
+                    success = await send_with_retry(
+                        lambda: self.email_op.send(lead['email'].split(',')[0], subject, body),
+                        retries=3,
+                    )
                 else:
-                    success = await self.whatsapp_op.send(lead['phone'], body)
+                    success = await send_with_retry(
+                        lambda: self.whatsapp_op.send(lead['phone'], body),
+                        retries=2,
+                    )
                 
                 if success == True:
                     console.print(f"[bold green]✓ Sent to {lead['name']}[/bold green]")
                     async with get_db() as db:
                         await db.execute("UPDATE leads SET status='sent', last_outreach=datetime('now') WHERE id=?", (lead['id'],))
                         await db.commit()
+                    await log_outreach_event(lead['id'], channel, "sent", body)
                 elif success == "not_found":
                     console.print(f"[bold yellow]⚠ User mapping failed: {lead['name']} not on WhatsApp. Added to Call List.[/bold yellow]")
                     self._add_to_call_list(lead)
+                    await log_outreach_event(lead['id'], channel, "not_found")
                 else:
                     console.print(f"[bold red]✗ Failed reaching {lead['name']}[/bold red]")
+                    await log_outreach_event(lead['id'], channel, "failed", body, "delivery_failed")
         
         if channel == 'whatsapp':
             await self.whatsapp_op.stop()

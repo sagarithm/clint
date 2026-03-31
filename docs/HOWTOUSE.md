@@ -20,26 +20,31 @@ Fill in your details in the `.env` file:
 ## 2. Finding New Leads (Initial Mode)
 1.  Run the outreach script:
     ```powershell
-    python run_outreach.py
+    clint scrape --query "Hotels in London" --target 10
     ```
-2.  Select **Initial** mode.
-3.  Enter a query like `"Hotels in London"` or `"Dentists in Satna"`.
-4.  Specify the number of leads (e.g., `10`).
-5.  **Dry Run**: Select `n` for real outreach or `y` to just test the logic.
+2.  This collects new leads into the pending queue.
+3.  To launch autonomous outreach, use:
+    ```powershell
+    clint run --query "Hotels in London" --target 10 --send-limit 5 --live
+    ```
+4.  By default, `clint run` is dry-run unless `--live` is provided.
 
 ---
 
 ## 3. Resuming a Batch (Resume Mode)
 If your internet cuts out or you manually stop the script (Ctrl+C), do not worry:
-1.  Run `python run_outreach.py` and select **Resume**.
+1.  Run `clint` and choose **REVIEW** from the command center menu.
 2.  The system will skip Google Maps and immediately pick up all leads that were captured but not yet sent to.
-3.  This ensures no duplicates and saves you time!
+3.  This ensures no duplicates and saves you time.
 
 ---
 
 ## 4. Automated Follow-ups (Follow-up Mode)
 The system automatically tracks who you've messaged.
-1.  Run `python run_outreach.py` and select **Follow-up**.
+1.  Run:
+    ```powershell
+    clint followup --days-since-last 3
+    ```
 2.  The system will scan for leads who were messaged more than **3 days ago** and haven't replied.
 3.  AI will generate a context-aware "Step 2" reminder for them.
 
@@ -48,7 +53,7 @@ The system automatically tracks who you've messaged.
 ## 4. Using the Dashboard
 1.  Start the backend server:
     ```powershell
-    python server.py
+    clint dashboard --host 127.0.0.1 --port 8000
     ```
 2.  Visit `http://localhost:8000` in your browser.
 3.  **Lead Scoring**: Look for the color-coded scores:
@@ -60,7 +65,7 @@ The system automatically tracks who you've messaged.
 ---
 
 ## 5. Stealth & Safety Tips
-- **Limits**: Stick to 50-100 emails/day per account to remain under the radar.
+- **Recommended Volume**: Keep outreach around 200 emails/day and 200 WhatsApp/day for better deliverability and lower bot-detection risk.
 - **WhatsApp**: Do not close the Chromium window manually while it's typing; it mimics human patterns to avoid bans.
 - **Dry Run**: Always use Dry Run when testing new prompt changes in `engine/proposer.py`.
 

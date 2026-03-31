@@ -1,0 +1,2 @@
+include dashboard.html
+include .env.example

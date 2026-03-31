@@ -1,5 +1,6 @@
 import asyncio
 from typing import List, Optional, Dict
+from pathlib import Path
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -60,6 +61,8 @@ class PipelineRequest(BaseModel):
 
 # Global state for pipeline tracking (Simple for now)
 pipeline_status = {"running": False, "message": "Idle"}
+
+BASE_DIR = Path(__file__).resolve().parent
 
 # 4. API Endpoints
 @app.get("/api/stats")
@@ -173,11 +176,11 @@ async def run_pipeline_task(query: str, limit: int):
         pipeline_status["running"] = False
 
 # 5. Static Assets & Frontend
-app.mount("/static", StaticFiles(directory="."), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR)), name="static")
 
 @app.get("/")
 async def serve_dashboard():
-    return FileResponse("dashboard.html")
+    return FileResponse(str(BASE_DIR / "dashboard.html"))
 
 if __name__ == "__main__":
     import uvicorn

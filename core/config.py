@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     """
     
     # --- AI & LLM CONFIGURATION ---
-    OPENROUTER_API_KEY: str
+    OPENROUTER_API_KEY: str = ""
     AI_MODEL: str = "google/gemini-2.0-flash-001"
 
     # --- DATABASE CONFIGURATION ---
@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     # --- OUTREACH LIMITS & SAFETY ---
     DAILY_EMAIL_LIMIT: int = 200
-    DAILY_WHATSAPP_LIMIT: int = 100
+    DAILY_WHATSAPP_LIMIT: int = 200
     
     # Safety delays (seconds) between messages
     MIN_DELAY_SECONDS: int = 5

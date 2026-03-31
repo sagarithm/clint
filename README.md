@@ -30,6 +30,12 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
+Or install as a CLI package:
+
+```bash
+pip install .
+```
+
 ### 2. Configuration
 Update your `.env` with:
 - `OPENROUTER_API_KEY`: For AI Audits/Proposals.
@@ -42,13 +48,17 @@ Update your `.env` with:
 
 | Flow | Command |
 | :--- | :--- |
-| **Interactive CLI** | `python run_outreach.py` |
-| **Clint Command Center** | `python server.py` (visit http://localhost:8000) |
+| **Interactive CLI (menu mode)** | `clint` |
+| **Autonomous Run (dry-run default)** | `clint run --query "Dentists in California"` |
+| **Discovery-only scrape** | `clint scrape --query "Hotels in London" --target 20` |
+| **Follow-up queue** | `clint followup --days-since-last 3` |
+| **Dashboard server** | `clint dashboard --host 127.0.0.1 --port 8000` |
+| **Config doctor** | `clint config doctor` |
 
 ---
 
 ## 🛡 Safety & Limits
-- **Daily Limits**: Settable in `.env` (Default: 200 Email, 100 WhatsApp).
+- **Recommended Volume**: For better deliverability and reduced bot-detection risk, keep outreach around **200 emails/day** and **200 WhatsApp messages/day**.
 - **Delays**: Randomized 5-15s intervals between every outreach attempt.
 - **Logs**: Detailed execution history at `logs/outreach.log`.
 
