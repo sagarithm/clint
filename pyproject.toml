@@ -33,9 +33,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sagarithm/agent"
-Repository = "https://github.com/sagarithm/agent"
-Issues = "https://github.com/sagarithm/agent/issues"
+Homepage = "https://github.com/sagarithm/clint"
+Repository = "https://github.com/sagarithm/clint"
+Issues = "https://github.com/sagarithm/clint/issues"
 
 [project.scripts]
 clint = "clint_cli:run"
