@@ -2,6 +2,8 @@
 
 Clint is a production-ready, asynchronous automation suite designed for high-conversion lead generation. It combines advanced stealth scraping, AI-powered audits, and multi-step outreach sequences into a powerful pipeline.
 
+Full documentation is available in `docs/README.md`.
+
 ## 🌟 Premium Features
 
 ### 🛡️ Stealth & Safety (Human Mimicry)
