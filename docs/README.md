@@ -1,6 +1,6 @@
-# Clint Documentation
+﻿# Clint Documentation
 
-This folder contains operational and user documentation for Clint.
+This folder contains user and operational documentation for Clint.
 
 ## Start Here
 
@@ -11,9 +11,11 @@ This folder contains operational and user documentation for Clint.
 5. [HOWTOUSE.md](HOWTOUSE.md)
 6. [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
-## Developer & Library Usage
+## Programmatic Usage
 
-- [LIBRARY.md](../LIBRARY.md) - Use Clint as a Python library in your applications
+- [../LAUNCH.md](../LAUNCH.md): fast launch path for library users
+- [../LIBRARY.md](../LIBRARY.md): complete Engine API reference
+- [../examples/README.md](../examples/README.md): integration examples
 
 ## Full Contents
 

@@ -1,111 +1,112 @@
-# Clint CLI Commands (Beginner + Full Reference)
+﻿# Clint CLI Commands
 
-This is a top-level quick reference for new users and teams preparing for production runs.
+This guide is the command reference for first-time users and production operators.
 
-## 1) First-Time Newbie Setup
+## First-Time Setup
 
-Use this exact flow:
+Install and verify:
 
 ```bash
-pip install -r requirements.txt
+pip install sagarithm-clint
 playwright install chromium
 clint version
+```
+
+Configure and validate:
+
+```bash
 clint init
 clint config doctor
+```
+
+Safe first run (dry-run default):
+
+```bash
 clint run --query "Dentists in California"
 ```
 
-What this does:
-
-1. Installs dependencies.
-2. Installs browser runtime for scraping.
-3. Confirms CLI install.
-4. Saves credentials and sender profile.
-5. Validates environment and access.
-6. Executes safe dry-run campaign.
-
-Go live only after checking dry-run output:
+Go live only after reviewing output:
 
 ```bash
 clint run --query "Dentists in California" --live --target 50 --send-limit 20
 ```
 
-## 2) Command Center
+## Core Commands
 
-### `clint`
+### clint
 
-Open interactive menu mode.
+Interactive command center.
 
 ```bash
 clint
 ```
 
-### `clint version`
+### clint version
 
-Print CLI version.
+Show installed CLI version.
 
 ```bash
 clint version
 ```
 
-### `clint init`
+### clint init
 
-Guided setup.
+Interactive credential and sender setup.
 
 ```bash
 clint init
 ```
 
-Non-interactive setup:
+Non-interactive:
 
 ```bash
-clint init --non-interactive --openrouter-key <KEY> --smtp-user <EMAIL> --smtp-pass <APP_PASSWORD> --sender-name "Sagar" --sender-title "Founder"
+clint init --non-interactive --openrouter-key <KEY> --smtp-user <EMAIL> --smtp-pass <APP_PASSWORD> --sender-name "Your Name" --sender-title "Founder"
 ```
 
-### `clint config show`
+### clint config show
 
-View configuration.
+View current configuration.
 
 ```bash
 clint config show
 clint config show --json
 ```
 
-### `clint config set`
+### clint config set
 
-Set one key.
+Set a single key.
 
 ```bash
-clint config set SENDER_NAME "Sagar"
+clint config set SENDER_NAME "Your Name"
 clint config set SENDER_TITLE "Founder"
 ```
 
-### `clint config doctor`
+### clint config doctor
 
-Readiness and connectivity checks.
+Run readiness checks for API, SMTP, Playwright, and file paths.
 
 ```bash
 clint config doctor
 ```
 
-### `clint run`
+### clint run
 
-End-to-end autonomous campaign.
+Autonomous campaign run.
 
 ```bash
 clint run --query "Dentists in California"
 clint run --query "Dentists in California" --live
 ```
 
-### `clint scrape`
+### clint scrape
 
-Only scrape and queue leads.
+Discovery-only scraping.
 
 ```bash
 clint scrape --query "Hotels in London" --target 20
 ```
 
-### `clint followup`
+### clint followup
 
 Process follow-up queue.
 
@@ -115,9 +116,9 @@ clint followup --days-since-last 3 --channel email
 clint followup --days-since-last 3 --channel whatsapp
 ```
 
-### `clint export`
+### clint export
 
-Export records.
+Export data to CSV.
 
 ```bash
 clint export --table all
@@ -125,56 +126,57 @@ clint export --table leads
 clint export --table outreach_history
 ```
 
-### `clint dashboard`
+### clint dashboard
 
-Run local dashboard API/server.
+Start dashboard server.
 
 ```bash
 clint dashboard --host 127.0.0.1 --port 8000
 ```
 
-## 3) Release Workflow (What To Do)
+## Release Workflow
 
-Run this before release:
+Pre-release checks:
 
 ```bash
 pytest -q
 clint config doctor
 ```
 
-Then release in this order:
+Release steps:
 
 1. Update version in `pyproject.toml`.
 2. Update release notes in `docs/RELEASE.md`.
-3. Re-run tests: `pytest -q`.
-4. Commit: `git add . && git commit -m "release: vX.Y.Z"`.
-5. Tag: `git tag vX.Y.Z`.
-6. Push: `git push && git push --tags`.
-7. If publishing package: `python -m build` then `twine upload dist/*`.
+3. Commit: `git add .` and `git commit -m "release: vX.Y.Z"`.
+4. Tag: `git tag vX.Y.Z`.
+5. Push: `git push origin main --tags`.
 
-## 4) Common Issues
+If publishing manually:
 
-### `clint` command not found (Windows)
+```bash
+python -m build
+python -m twine upload dist/*
+```
 
-Use:
+## Exit Codes
+
+- 0: success
+- 2: usage or validation error
+- 3: configuration error
+- 4: runtime or dependency readiness error
+- 5: network or auth transport error
+- 10: unexpected internal error
+
+## Troubleshooting
+
+If `clint` is not found on Windows:
 
 ```bash
 python -m clint_cli --help
 ```
 
-### Live run fails
-
-Run:
+If live mode fails:
 
 ```bash
 clint config doctor
 ```
-
-### Exit code meaning
-
-- `0`: success
-- `2`: argument or validation error
-- `3`: config error
-- `4`: runtime or dependency issue
-- `5`: auth or network transport issue
-- `10`: unexpected internal error
