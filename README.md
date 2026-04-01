@@ -52,7 +52,56 @@ Update your `.env` with:
 
 ---
 
-## 🚀 Execution
+## � Usage: CLI vs. Library
+
+### CLI Usage (Recommended for Teams)
+
+```bash
+clint version
+clint init
+clint config doctor
+clint run --query "Dentists in California"
+clint run --query "Dentists in California" --live
+```
+
+### Library Usage (Programmatic for Developers)
+
+Use Clint as a Python library to integrate personalization into your own applications:
+
+```python
+from clint import Engine
+
+# Initialize
+engine = Engine(api_key="your_openrouter_key")
+
+# Single lead personalization
+result = engine.personalize({
+    "name": "Jane Doe",
+    "company": "TechCorp",
+    "title": "CTO"
+})
+print(result["body"])  # Generated message
+
+# Batch personalization  
+results = engine.personalize_batch([
+    {"name": "Jane Doe", "company": "TechCorp"},
+    {"name": "John Smith", "company": "DataFlow"}
+])
+
+# Async usage (higher performance)
+import asyncio
+async def batch_personalize():
+    results = await engine.personalize_batch_async(leads)
+    return results
+
+asyncio.run(batch_personalize())
+```
+
+For full library documentation, see [LIBRARY.md](LIBRARY.md).
+
+---
+
+## �🚀 Execution
 
 ### First 5 Commands (Recommended Path)
 

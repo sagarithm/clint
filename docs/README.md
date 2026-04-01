@@ -11,6 +11,10 @@ This folder contains operational and user documentation for Clint.
 5. [HOWTOUSE.md](HOWTOUSE.md)
 6. [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
+## Developer & Library Usage
+
+- [LIBRARY.md](../LIBRARY.md) - Use Clint as a Python library in your applications
+
 ## Full Contents
 
 - [QUICKSTART.md](QUICKSTART.md)
