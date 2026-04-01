@@ -38,6 +38,7 @@ class OutreachDirector:
         Runs a full, end-to-end outreach campaign autonomously with live progress.
         """
         from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+        from rich.console import Console
         
         logger.info(f"[[FOUNDER MODE]] Initializing campaign for: [bold cyan]{query}[/bold cyan]")
         
@@ -46,7 +47,7 @@ class OutreachDirector:
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TaskProgressColumn(),
-            console=logger.console
+            console=Console()
         ) as progress:
             
             # Phase 1: Lead Discovery

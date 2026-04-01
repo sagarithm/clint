@@ -3,12 +3,21 @@ import os
 import sys
 
 # Add project root to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+# Ensure local modules are imported even if similarly named packages were loaded earlier.
+for module_name in ("core", "core.database", "engine", "engine.proposer"):
+    sys.modules.pop(module_name, None)
 
 from engine.proposer import Proposer
+from core.config import settings
 from core.database import init_db
 
-async def test_generation():
+async def _run_generation_test():
+    os.makedirs(os.path.join(PROJECT_ROOT, "data"), exist_ok=True)
+    settings.DB_PATH = os.path.join(PROJECT_ROOT, "data", "test_clint.db")
     await init_db()
     proposer = Proposer()
     
@@ -39,5 +48,10 @@ async def test_generation():
     print("--- WHATSAPP TEST ---")
     print(f"Body:\n{body}")
 
+
+def test_generation():
+    # Keep test runner compatibility without requiring pytest async plugins.
+    asyncio.run(_run_generation_test())
+
 if __name__ == "__main__":
-    asyncio.run(test_generation())
+    asyncio.run(_run_generation_test())
