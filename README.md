@@ -51,7 +51,15 @@ Update your `.env` with:
 - `SENDER_NAME`/`SENDER_TITLE`: Personalized signature info.
 
 ---
+## 📚 Quick Links
 
+**New to Clint?**
+- 👉 **[LAUNCH.md](LAUNCH.md)** - How to use Clint as a library
+- 📖 **[LIBRARY.md](LIBRARY.md)** - Full API reference  
+- 💻 **[examples/](examples/)** - Production-ready code samples
+- 🎯 **[COMMANDS.md](COMMANDS.md)** - CLI command reference
+
+---
 ## � Usage: CLI vs. Library
 
 ### CLI Usage (Recommended for Teams)
@@ -98,7 +106,7 @@ asyncio.run(batch_personalize())
 ```
 
 For full library documentation, see [LIBRARY.md](LIBRARY.md).
-
+**See also:** [examples/](examples/) folder for production-ready code samples.
 ---
 
 ## �🚀 Execution
