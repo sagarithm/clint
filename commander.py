@@ -44,7 +44,7 @@ class ColdMailerCLI:
         os.system('cls' if os.name == 'nt' else 'clear')
         
         console.print(Panel(
-        "[bold cyan]CLINT[/bold cyan] [white]v1.0.0[/white]\n"
+        "[bold cyan]CLINT[/bold cyan] [white]v1.0.2[/white]\n"
         "[dim]Enterprise Intelligence & Outreach Suite[/dim]",
         border_style="bright_blue",
         expand=False
