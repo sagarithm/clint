@@ -11,14 +11,22 @@ from datetime import date
 
 class EmailOperator:
     def __init__(self):
-        load_dotenv() # Ensure .env is loaded into environment
         self.accounts = self._load_accounts()
         self.current_idx = 0
 
     def _load_accounts(self):
-        # Load from .env (Account 1 and 2)
+        # Load Account 1 from central settings
         accounts = []
-        i = 1
+        if settings.SMTP_USER_1 and settings.SMTP_PASS_1:
+            accounts.append({
+                "user": settings.SMTP_USER_1,
+                "pass": settings.SMTP_PASS_1,
+                "host": settings.SMTP_HOST_1,
+                "port": settings.SMTP_PORT_1
+            })
+        
+        # Support for additional accounts via environment (Account 2+)
+        i = 2
         while True:
             user = os.getenv(f"SMTP_USER_{i}")
             pwd = os.getenv(f"SMTP_PASS_{i}")

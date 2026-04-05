@@ -34,7 +34,10 @@ class Settings(BaseSettings):
     FROM_EMAIL: str = "hello@pixartual.studio"
 
     # --- SMTP CONFIGURATION (ROTATION SUPPORT) ---
-    # These are typically loaded from .env mapping to SMTP_USER_{1,2,3} etc.
+    SMTP_USER_1: str = ""
+    SMTP_PASS_1: str = ""
+    SMTP_HOST_1: str = "smtp.gmail.com"
+    SMTP_PORT_1: int = 587
     
     model_config = SettingsConfigDict(
         env_file=".env",
