@@ -1,2 +1,2 @@
-include dashboard.html
+include core/dashboard.html
 include .env.example

@@ -44,6 +44,9 @@ clint = "clint_cli:run"
 include-package-data = true
 py-modules = ["clint_cli", "main", "commander", "server", "clint"]
 
+[tool.setuptools.package-data]
+core = ["*.html", "*.env.example"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["core*", "engine*", "outreach*", "scrapers*", "cli*"]

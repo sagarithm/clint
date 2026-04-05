@@ -1,159 +1,119 @@
 # Clint Commands Reference
 
-This guide covers first-time setup and all primary CLI commands.
+This guide covers every command available in the Clint CLI, including the new scoring overrides and common workflow scenarios.
 
-## First-Time Setup (New User)
+## 🚀 Quick Start (Common Workflows)
 
-Run these in order:
-
+### Situation A: "I want Clint to handle everything (Autonomous)"
+Finds leads, audits their websites, generates AI pitches, and sends them one by one.
 ```bash
-pip install sagarithm-clint
-playwright install chromium
-clint version
-clint init
-clint config doctor
-clint run --query "Dentists in California"
+clint run --query "Dentists in California" --target 20 --live
 ```
 
-Notes:
-
-1. The first `run` is dry-run by default.
-2. Use `--live` only after reviewing dry-run output.
-
-## Core Commands
-
-## `clint version`
-
-Show installed CLI version.
-
+### Situation B: "I want to send to low-score leads too"
+By default, Clint skips leads with a score below 5. Use `--min-score` to lower the bar.
 ```bash
-clint version
+clint run --query "Roofers in Austin" --min-score 1 --live
 ```
 
-## `clint init`
-
-Interactive credential and sender setup.
-
+### Situation C: "I want to find leads now, but send later"
+Scrapes leads and saves them to the database without starting outreach.
 ```bash
-clint init
+clint scrape --query "HVAC in Miami" --target 50
 ```
 
-Non-interactive mode:
-
-```bash
-clint init --non-interactive --openrouter-key <KEY> --smtp-user <EMAIL> --smtp-pass <APP_PASSWORD>
-```
-
-## `clint config show`
-
-Show current config (secrets masked by default).
-
-```bash
-clint config show
-clint config show --json
-```
-
-## `clint config set`
-
-Set a single config key.
-
-```bash
-clint config set SENDER_NAME "Sagar"
-```
-
-## `clint config doctor`
-
-Run environment and connectivity diagnostics.
-
-```bash
-clint config doctor
-```
-
-Checks include:
-
-1. OpenRouter auth
-2. SMTP auth
-3. Playwright runtime
-4. Writable data and log paths
-
-## `clint run`
-
-Autonomous campaign run.
-
-Dry-run (default):
-
-```bash
-clint run --query "Dentists in California"
-```
-
-Live run:
-
-```bash
-clint run --query "Dentists in California" --target 50 --send-limit 20 --live
-```
-
-Useful flags:
-
-- `--dry-run`
-- `--live`
-- `--target <int>`
-- `--send-limit <int>`
-
-## `clint scrape`
-
-Discovery-only scraping and queue fill.
-
-```bash
-clint scrape --query "Hotels in London" --target 20
-```
-
-## `clint followup`
-
-Process follow-up queue for previously contacted leads.
-
-```bash
-clint followup --days-since-last 3
-```
-
-With explicit channel:
-
+### Situation D: "I want to follow up with people from 3 days ago"
+Finds leads who haven't replied and were contacted at least 3 days ago.
 ```bash
 clint followup --days-since-last 3 --channel email
 ```
 
-## `clint export`
+---
 
-Export tables as CSV.
+## 🛠️ Complete Command List
 
+### `clint version`
+Show installed version and runtime environment.
 ```bash
-clint export --table all
-clint export --table leads
-clint export --table outreach_history
+clint version
+clint version --verbose
 ```
 
-## `clint dashboard`
-
-Start local web dashboard.
-
+### `clint init`
+Interactive setup for API keys and SMTP credentials.
 ```bash
-clint dashboard --host 127.0.0.1 --port 8000
+clint init
+# Non-interactive (CI/CD)
+clint init --non-interactive --openrouter-key <KEY> --smtp-user <EMAIL> --smtp-pass <PASS>
 ```
 
-## Exit Codes
-
-- `0`: success
-- `2`: usage and validation error
-- `3`: config error
-- `4`: runtime or dependency readiness error
-- `5`: network or auth transport error
-- `10`: unexpected internal error
-
-## Troubleshooting Notes
-
-1. If `clint` is not found on Windows, try:
-
+### `clint config`
+Manage individual configuration settings.
 ```bash
-python -m clint_cli --help
+clint config show             # Show current settings (masked)
+clint config show --secrets   # Show plain-text secrets
+clint config set <KEY> <VAL>  # Set a specific key (e.g. SENDER_NAME)
+clint config doctor           # Run health checks (SMTP, AI, Browser)
 ```
 
-2. If live mode fails, run `clint config doctor` first.
+### `clint run`
+The primary autonomous outreach engine.
+- `--query`: Search niche (e.g. "Dentists in Dallas").
+- `--target`: Number of leads to find (default 50).
+- `--send-limit`: Max emails to send in this batch (default 20).
+- `--min-score`: Minimum lead score (1-10) to trigger outreach (default 5).
+- `--live`: Switch from dry-run to actual delivery.
+```bash
+clint run --query "Lawyers in NY" --target 10 --min-score 3 --live
+```
+
+### `clint scrape`
+Manual lead discovery.
+- `--target`: Number of leads to collect.
+- `--outreach`: If passed, immediately enters interactive outreach review for the found leads.
+```bash
+clint scrape --query "Gyms in LA" --target 25 --outreach
+```
+
+### `clint followup`
+Sequence management for passive leads.
+- `--days-since-last`: Minimum days since last contact (default 3).
+- `--channel`: Filter by `email` or `whatsapp`.
+```bash
+clint followup --days-since-last 5
+```
+
+### `clint export`
+Export your database to CSV for CRM import.
+- `--table`: Choose `leads`, `outreach_history`, or `all`.
+- `--out-dir`: Where to save the files (default `data/exports`).
+```bash
+clint export --table leads --out-dir ./backups
+```
+
+### `clint upgrade`
+Update Clint CLI to the latest version automatically from PyPI.
+```bash
+clint upgrade
+```
+
+### `clint dashboard`
+Launch the high-end web interface.
+```bash
+clint dashboard --host 127.0.0.1 --port 8000 --reload
+```
+
+---
+
+## 🚦 Exit Codes
+Use these to debug script failures:
+- `0`: Success
+- `2`: Usage Error (Missing flags/args)
+- `3`: Config Error (Missing API keys/SMTP)
+- `4`: Runtime Error (Database/Filesystem)
+- `5`: Network Error (Timeout/Auth Fail)
+- `10`: Internal Error (Crash)
+
+## 💡 Pro Tips
+1. **Always run a dry-run first**: The default behavior of `clint run` is dry-run. It shows you what *would* happen without sending anything.
+2. **Interactive Review**: Simply typing `clint` (with no arguments) opens the **Command Center**, where you can manually review leads and edit AI proposals before they go out.

@@ -103,8 +103,8 @@ class OutreachDirector:
 
                     # 3. Outreach (Multi-Condition Branching)
                     if sent_count < send_limit and lead_data['email'] and lead_data['email'] != "N/A":
-                        # Only send if score is high enough (e.g. > 5) for autonomous mode
-                        if lead_data.get('score', 0) >= 5:
+                        # Only send if score is high enough for autonomous mode
+                        if lead_data.get('score', 0) >= settings.MIN_SCORE_THRESHOLD:
                             if await recently_contacted(lead_data['id'], 'email'):
                                 logger.info(f"Skipping duplicate outreach for {lead_data['name']} (recently contacted).")
                                 await log_outreach_event(lead_data['id'], 'email', 'skipped_duplicate')

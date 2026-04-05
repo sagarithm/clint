@@ -1,5 +1,6 @@
 import asyncio
 import csv
+import subprocess
 import sys
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -220,18 +221,23 @@ def run_cmd(
     query: Optional[str] = typer.Option(None, "--query"),
     target: int = typer.Option(50, "--target"),
     send_limit: int = typer.Option(20, "--send-limit"),
+    min_score: int = typer.Option(None, "--min-score", help="Override minimum score threshold"),
     dry_run: bool = typer.Option(True, "--dry-run/--live"),
 ) -> None:
     query_val = query or typer.prompt("Target niche query")
 
     console.print("Recommendation: keep outreach around 200 emails/day and 200 WhatsApp/day for better deliverability.")
     if dry_run:
-        console.print(f"Dry run preview: query='{query_val}', target={target}, send_limit={send_limit}")
+        console.print(f"Dry run preview: query='{query_val}', target={target}, send_limit={send_limit}, min_score={min_score or settings.MIN_SCORE_THRESHOLD}")
         return
 
     _ensure_live_config()
 
     async def _run_live() -> None:
+        from core.config import settings
+        if min_score is not None:
+            settings.MIN_SCORE_THRESHOLD = min_score
+
         await init_db()
         director = OutreachDirector()
         await director.execute_autonomous_batch(query_val, target_count=target, send_limit=send_limit)
@@ -364,6 +370,21 @@ def dashboard_cmd(
     except Exception as exc:
         console.print(f"Dashboard failed: {exc}")
         raise typer.Exit(code=_map_exception_to_exit(exc))
+
+
+@app.command("upgrade")
+def upgrade_cmd() -> None:
+    """Upgrade Clint CLI to the latest version."""
+    console.print("[bold cyan]➜ Upgrading Clint CLI to the latest version...[/bold cyan]")
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--upgrade", "sagarithm-clint"],
+            check=True
+        )
+        console.print("[bold green]✓ Clint CLI upgraded successfully![/bold green]")
+    except subprocess.CalledProcessError as exc:
+        console.print(f"[bold red]✗ Upgrade failed:[/bold red] {exc}")
+        raise typer.Exit(code=EXIT_RUNTIME)
 
 
 def run() -> None:

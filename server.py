@@ -63,6 +63,8 @@ class PipelineRequest(BaseModel):
 pipeline_status = {"running": False, "message": "Idle"}
 
 BASE_DIR = Path(__file__).resolve().parent
+CORE_DIR = BASE_DIR / "core"
+
 
 # 4. API Endpoints
 @app.get("/api/stats")
@@ -180,7 +182,12 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR)), name="static")
 
 @app.get("/")
 async def serve_dashboard():
-    return FileResponse(str(BASE_DIR / "dashboard.html"))
+    # Attempt to find dashboard.html in core directory (installed or local)
+    path = CORE_DIR / "dashboard.html"
+    if not path.exists():
+        # Fallback for unexpected structures or local dev
+        path = BASE_DIR / "dashboard.html"
+    return FileResponse(str(path))
 
 if __name__ == "__main__":
     import uvicorn

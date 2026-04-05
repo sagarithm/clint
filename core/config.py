@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # --- OUTREACH LIMITS & SAFETY ---
     DAILY_EMAIL_LIMIT: int = 200
     DAILY_WHATSAPP_LIMIT: int = 200
+    MIN_SCORE_THRESHOLD: int = 5
     
     # Safety delays (seconds) between messages
     MIN_DELAY_SECONDS: int = 5
