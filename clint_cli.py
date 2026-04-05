@@ -19,6 +19,7 @@ from core.cli_services import (
     run_doctor_checks,
     write_env,
 )
+from core.config import settings
 from core.database import get_db, init_db
 from engine.director import OutreachDirector
 
@@ -234,7 +235,6 @@ def run_cmd(
     _ensure_live_config()
 
     async def _run_live() -> None:
-        from core.config import settings
         if min_score is not None:
             settings.MIN_SCORE_THRESHOLD = min_score
 

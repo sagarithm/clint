@@ -45,7 +45,7 @@ include-package-data = true
 py-modules = ["clint_cli", "main", "commander", "server", "clint"]
 
 [tool.setuptools.package-data]
-core = ["*.html", "*.env.example"]
+core = ["*.html"]
 
 [tool.setuptools.packages.find]
 where = ["."]
