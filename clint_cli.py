@@ -162,7 +162,7 @@ def config_set(key: str, value: str) -> None:
 @config_app.command("show")
 def config_show(
     as_json: bool = typer.Option(False, "--json", help="Output JSON"),
-    show_secrets: bool = typer.Option(False, "--show-secrets", help="Show secrets in plain text"),
+    show_secrets: bool = typer.Option(False, "--show-secrets", "--secrets", help="Show secrets in plain text"),
 ) -> None:
     values = read_env()
     rendered = {}

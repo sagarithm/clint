@@ -1,6 +1,7 @@
 import asyncio
 from typing import List, Optional, Dict
 from pathlib import Path
+from importlib import resources
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -182,12 +183,30 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR)), name="static")
 
 @app.get("/")
 async def serve_dashboard():
-    # Attempt to find dashboard.html in core directory (installed or local)
-    path = CORE_DIR / "dashboard.html"
-    if not path.exists():
-        # Fallback for unexpected structures or local dev
-        path = BASE_DIR / "dashboard.html"
-    return FileResponse(str(path))
+    # Prefer package resource resolution for installed environments.
+    candidates = [
+        CORE_DIR / "dashboard.html",
+        BASE_DIR / "dashboard.html",
+    ]
+
+    try:
+        resource_path = resources.files("core").joinpath("dashboard.html")
+        if resource_path.is_file():
+            candidates.insert(0, Path(str(resource_path)))
+    except Exception:
+        pass
+
+    for path in candidates:
+        if path.exists() and path.is_file():
+            return FileResponse(str(path))
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "dashboard_missing",
+            "detail": "dashboard.html is not bundled in this installation.",
+        },
+    )
 
 if __name__ == "__main__":
     import uvicorn

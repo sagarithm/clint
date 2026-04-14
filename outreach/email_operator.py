@@ -4,9 +4,10 @@ from email.mime.text import MIMEText
 import asyncio
 import random
 import os
+from pathlib import Path
 from core.config import settings
 from core.logger import logger
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from datetime import date
 
 class EmailOperator:
@@ -14,29 +15,53 @@ class EmailOperator:
         self.accounts = self._load_accounts()
         self.current_idx = 0
 
+    @staticmethod
+    def _clean(value: str | None) -> str:
+        if value is None:
+            return ""
+        value = str(value).strip()
+        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+            return value[1:-1]
+        return value
+
     def _load_accounts(self):
-        # Load Account 1 from central settings
+        # Prefer explicit .env parsing so behavior matches `clint config doctor`.
+        env_file = Path.cwd() / ".env"
+        env_values = dotenv_values(env_file) if env_file.exists() else {}
+
+        def env_or_setting(key: str, default: str = "") -> str:
+            env_value = env_values.get(key)
+            if env_value is not None and str(env_value).strip() != "":
+                return self._clean(str(env_value))
+            setting_value = getattr(settings, key, default)
+            return self._clean(str(setting_value))
+
         accounts = []
-        if settings.SMTP_USER_1 and settings.SMTP_PASS_1:
+        smtp_user_1 = env_or_setting("SMTP_USER_1")
+        smtp_pass_1 = env_or_setting("SMTP_PASS_1")
+        smtp_host_1 = env_or_setting("SMTP_HOST_1", "smtp.gmail.com")
+        smtp_port_1_raw = env_or_setting("SMTP_PORT_1", "587")
+
+        if smtp_user_1 and smtp_pass_1:
             accounts.append({
-                "user": settings.SMTP_USER_1,
-                "pass": settings.SMTP_PASS_1,
-                "host": settings.SMTP_HOST_1,
-                "port": settings.SMTP_PORT_1
+                "user": smtp_user_1,
+                "pass": smtp_pass_1,
+                "host": smtp_host_1 or "smtp.gmail.com",
+                "port": int(smtp_port_1_raw or "587")
             })
         
         # Support for additional accounts via environment (Account 2+)
         i = 2
         while True:
-            user = os.getenv(f"SMTP_USER_{i}")
-            pwd = os.getenv(f"SMTP_PASS_{i}")
+            user = self._clean(os.getenv(f"SMTP_USER_{i}"))
+            pwd = self._clean(os.getenv(f"SMTP_PASS_{i}"))
             if not user or not pwd: break
             
             accounts.append({
                 "user": user,
                 "pass": pwd,
-                "host": os.getenv(f"SMTP_HOST_{i}", "smtp.gmail.com"),
-                "port": int(os.getenv(f"SMTP_PORT_{i}", "587"))
+                "host": self._clean(os.getenv(f"SMTP_HOST_{i}", "smtp.gmail.com")),
+                "port": int(self._clean(os.getenv(f"SMTP_PORT_{i}", "587")) or "587")
             })
             i += 1
         return accounts
@@ -53,6 +78,10 @@ class EmailOperator:
         Returns:
             True if sent successfully, False otherwise.
         """
+        if not self.accounts:
+            # Refresh once in case .env changed after process start.
+            self.accounts = self._load_accounts()
+
         if not self.accounts:
             logger.error("No SMTP accounts configured. Set SMTP_USER_1/SMTP_PASS_1 in .env.")
             return False
