@@ -22,6 +22,6 @@ For full documentation, see: https://github.com/sagarithm/clint
 
 from engine.engine import Engine
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "Clint Contributors"
 __all__ = ["Engine"]

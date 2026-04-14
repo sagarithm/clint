@@ -10,6 +10,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+import clint as clint_module
 from commander import ColdMailerCLI
 from core.cli_services import (
     ALLOWED_CONFIG_KEYS,
@@ -89,9 +90,9 @@ def main(ctx: typer.Context) -> None:
 @app.command("version")
 def version_cmd(verbose: bool = typer.Option(False, "--verbose", help="Show runtime details")) -> None:
     try:
-        cli_ver = version("sagarithm-clint")
+        cli_ver = getattr(clint_module, "__version__", "") or version("sagarithm-clint")
     except PackageNotFoundError:
-        cli_ver = "0.0.0-dev"
+        cli_ver = getattr(clint_module, "__version__", "0.0.0-dev")
 
     console.print(f"clint {cli_ver}")
     if verbose:

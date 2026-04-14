@@ -6,7 +6,7 @@ This guide defines the release process for the production branch.
 
 - Production branch: `main`
 - Version format: `vX.Y.Z` (semantic version tags)
-- Current release line: `v1.0.2`
+- Current release line: `v1.0.3`
 
 ## Prerequisites
 

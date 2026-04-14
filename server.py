@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="# Clint | Enterprise Intelligence Dashboard",
     description="Enterprise-grade backend for the Pixartual Outreach Suite.",
-    version="1.0.2",
+    version="1.0.3",
     lifespan=lifespan
 )
 

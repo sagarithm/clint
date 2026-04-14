@@ -75,4 +75,4 @@ pip install -r requirements.txt
 pytest -q
 ```
 
-Current release line: v1.0.2
+Current release line: v1.0.3
