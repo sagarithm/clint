@@ -12,6 +12,7 @@ from rich.table import Table
 
 import clint as clint_module
 from commander import ColdMailerCLI
+from core.deadletter import list_deadletter_events, replay_deadletter_event
 from core.cli_services import (
     ALLOWED_CONFIG_KEYS,
     SECRET_KEYS,
@@ -23,6 +24,8 @@ from core.cli_services import (
 from core.config import settings
 from core.database import get_db, init_db
 from engine.director import OutreachDirector
+from engine.worker_orchestrator import QueueWorkerOrchestrator
+from core.experiments import decide_experiment
 
 console = Console()
 app = typer.Typer(help="Clint CLI", add_completion=False, no_args_is_help=False)
@@ -370,6 +373,120 @@ def dashboard_cmd(
         uvicorn.run("server:app", host=host, port=port, reload=reload)
     except Exception as exc:
         console.print(f"Dashboard failed: {exc}")
+        raise typer.Exit(code=_map_exception_to_exit(exc))
+
+
+@app.command("worker-reddit")
+def worker_reddit_cmd(
+    query: Optional[str] = typer.Option(None, "--query"),
+    limit: int = typer.Option(20, "--limit"),
+    dry_run: bool = typer.Option(True, "--dry-run/--live"),
+) -> None:
+    query_val = query or typer.prompt("Reddit intent query")
+
+    if not dry_run:
+        _ensure_live_config()
+
+    async def _run_worker() -> None:
+        await init_db()
+        orchestrator = QueueWorkerOrchestrator()
+        result = await orchestrator.run_reddit_pipeline(
+            query=query_val,
+            limit=limit,
+            live_send=not dry_run,
+        )
+        console.print("Worker pipeline completed")
+        console.print(result)
+
+    try:
+        asyncio.run(_run_worker())
+    except Exception as exc:
+        console.print(f"Worker pipeline failed: {exc}")
+        raise typer.Exit(code=_map_exception_to_exit(exc))
+
+
+@app.command("experiments-decide")
+def experiments_decide_cmd(
+    experiment_id: int = typer.Option(..., "--experiment-id"),
+    min_sample_per_variant: int = typer.Option(30, "--min-sample"),
+    min_uplift_pct: float = typer.Option(5.0, "--min-uplift-pct"),
+    max_negative_quality_impact: float = typer.Option(-5.0, "--max-negative-quality-impact"),
+) -> None:
+    async def _decide() -> None:
+        await init_db()
+        async with get_db() as db:
+            result = await decide_experiment(
+                db,
+                experiment_id=experiment_id,
+                min_sample_per_variant=min_sample_per_variant,
+                min_uplift_pct=min_uplift_pct,
+                max_negative_quality_impact=max_negative_quality_impact,
+            )
+            await db.commit()
+        console.print(result)
+
+    try:
+        asyncio.run(_decide())
+    except Exception as exc:
+        console.print(f"Experiment decision failed: {exc}")
+        raise typer.Exit(code=_map_exception_to_exit(exc))
+
+
+@app.command("deadletter-list")
+def deadletter_list_cmd(
+    status: Optional[str] = typer.Option(None, "--status"),
+    limit: int = typer.Option(25, "--limit"),
+) -> None:
+    async def _list() -> None:
+        await init_db()
+        async with get_db() as db:
+            rows = await list_deadletter_events(db, status=status, limit=limit)
+
+        if not rows:
+            console.print("No deadletter events found.")
+            return
+
+        table = Table(title="Deadletter Events")
+        table.add_column("ID", justify="right")
+        table.add_column("Topic")
+        table.add_column("Status")
+        table.add_column("Attempts", justify="right")
+        table.add_column("Created")
+        for row in rows:
+            table.add_row(
+                str(row.get("id")),
+                str(row.get("topic")),
+                str(row.get("replay_status")),
+                str(row.get("replay_attempts", 0)),
+                str(row.get("created_at_utc")),
+            )
+        console.print(table)
+
+    try:
+        asyncio.run(_list())
+    except Exception as exc:
+        console.print(f"Deadletter list failed: {exc}")
+        raise typer.Exit(code=_map_exception_to_exit(exc))
+
+
+@app.command("deadletter-replay")
+def deadletter_replay_cmd(event_id: int = typer.Option(..., "--event-id")) -> None:
+    async def _replay() -> None:
+        await init_db()
+        orchestrator = QueueWorkerOrchestrator()
+        async with get_db() as db:
+            result = await replay_deadletter_event(
+                db,
+                event_id=event_id,
+                replay_handler=orchestrator,
+            )
+            await db.commit()
+        console.print(result)
+
+    try:
+        asyncio.run(_replay())
+    except Exception as exc:
+        console.print(f"Deadletter replay failed: {exc}")
         raise typer.Exit(code=_map_exception_to_exit(exc))
 
 

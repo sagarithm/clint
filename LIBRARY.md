@@ -2,6 +2,9 @@
 
 This guide covers using Clint as a Python library in your own applications.
 
+For V2 API contracts and versioning policy, see
+[docs/v2/12-library-api-spec.md](docs/v2/12-library-api-spec.md).
+
 ## Quick Start
 
 ```python
@@ -29,6 +32,10 @@ pip install sagarithm-clint
 ## Core Concepts
 
 Clint provides an `Engine` class that handles lead personalization and message generation using AI.
+
+Design note:
+- Keep integration code explicit about channel, outreach step, and service hints.
+- Treat generated content as part of a policy-gated workflow before delivery.
 
 ### Engine Class
 
@@ -257,6 +264,12 @@ try:
 except Exception as e:
     print(f"Error: {e}")
 ```
+
+## Production Guidance
+
+- Prefer `personalize_async` and `personalize_batch_async` in server workloads.
+- Add per-call timeout and retry strategy in your integration layer.
+- Log correlation IDs in your app to connect generation and delivery events.
 
 ## Performance Tips
 

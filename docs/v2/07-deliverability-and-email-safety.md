@@ -1,67 +1,41 @@
-# V2 Deliverability and Email Safety
+# V2 Deliverability and Channel Safety
 
-## Goal
-Scale outreach while preserving inbox reputation and reply quality.
+## Objective
+Protect sender reputation while sustaining qualified response quality.
 
-## Sending Ramp Policy
-- New inbox week 1: 15 to 25 emails/day
-- Week 2: 30 to 45/day if bounce and complaint rates remain healthy
-- Week 3+: 50+/day only after sustained health
-- Prefer multiple inboxes over overloading one inbox
+## Core Policy
+- Reputation is a hard safety boundary, not a soft optimization target.
+- No volume increase without health stability.
+- Suppression checks are mandatory before every dispatch.
 
-## Core Health Metrics
-- Bounce rate (daily and 7-day)
-- Complaint rate
-- Unsubscribe rate
-- Domain-level deliverability trend
-- Positive reply rate by inbox
+## Sending Controls
+- Daily caps by inbox identity and domain health profile.
+- Cooldown windows by lead and channel.
+- Timezone-aware send windows with bounded randomness.
+- Auto-throttle when engagement drops.
 
-## Safety Guardrails
-- Auto-pause inbox on bounce spikes
-- Auto-throttle domains with poor engagement
-- Per-domain contact frequency caps
-- Mandatory suppression checks before every send
+## Health Metrics
+- Bounce rate (daily and rolling 7-day).
+- Complaint rate and unsubscribe rate.
+- Positive reply rate per sender identity.
+- Delivery latency and provider error rates.
 
-## Content Safety Rules
-- Avoid spam trigger phrasing and over-promising
-- Limit links and formatting complexity
-- Keep language natural and personalized
-- Ensure subject lines are relevant and specific
+## Safety Automations
+- Auto-pause sender identity on threshold breaches.
+- Auto-route drafts to approval queue under risk conditions.
+- Auto-suppress records on complaint or unsubscribe events.
+- Auto-alert operators on anomalies and breach forecasts.
 
-## Infrastructure Controls
-- SPF, DKIM, and DMARC configured and validated
-- Distinct sending domains/subdomains where needed
-- Gradual warmup sequence for new inboxes
-- Monitor provider feedback and placement indicators
+## Incident Playbook
 
-## Scheduling Standards
-- Local-time delivery for target region
-- Avoid unnatural burst patterns
-- Respect business-hour windows by niche
-- Use randomized but bounded intervals
+### Bounce Spike
+1. Pause affected sender identities.
+2. Inspect recent source-quality cohorts.
+3. Verify technical email authentication posture.
+4. Resume with reduced caps and tighter quality gates.
 
-## Suppression and Compliance
-- Global suppression list across all campaigns
-- Immediate suppression on unsubscribe or complaint
-- Record suppression reason and timestamp
-- Enforce no-contact in all channels
-
-## Incident Response
-
-### If Bounce Rate Spikes
-1. Pause affected inboxes
-2. Audit recent list quality
-3. Verify DNS and authentication health
-4. Resume with lower volume after correction
-
-### If Reply Rate Collapses
-1. Check inbox placement and spam risk
-2. Review targeting and template relevance
-3. Run controlled A/B diagnostics
-4. Re-enable scale only after recovery
-
-## Weekly Deliverability Review
-- Inbox health leaderboard
-- Domain risk summary
-- Template risk summary
-- Corrective actions and owners
+### Reply Collapse
+1. Audit targeting fit and evidence quality.
+2. Audit template relevance and message clarity.
+3. Run constrained experiments.
+4. Scale only after recovery signal stabilizes.

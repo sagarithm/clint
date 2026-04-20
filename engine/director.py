@@ -7,8 +7,27 @@ from typing import List, Dict, Optional
 from core.config import settings
 from core.logger import logger
 from core.database import get_db
-from core.scorer import score_lead
+from core.event_bus import (
+    TOPIC_DISPATCH_COMPLETED,
+    TOPIC_DISPATCH_REQUESTED,
+    TOPIC_DEADLETTER,
+    TOPIC_ENRICHMENT_COMPLETED,
+    TOPIC_MESSAGE_GENERATED,
+    TOPIC_SCORING_COMPLETED,
+    publish_deadletter,
+    publish_event,
+)
+from core.policy import enforce_pre_send_policy
+from core.quality_gate import evaluate_message_quality
+from core.scorer import score_lead, score_lead_v2
 from core.reliability import log_outreach_event, recently_contacted, send_with_retry
+from core.state_machine import transition_lead_state
+from core.v2_store import (
+    log_outreach_event_v2,
+    save_enrichment_snapshot,
+    save_message_draft,
+    save_score_snapshot,
+)
 from core.utils import sanitize_emails
 
 from scrapers.maps import MapsScraper
@@ -88,13 +107,45 @@ class OutreachDirector:
                         about_us = enrichment.get('about_us_info')
                         
                         # Score lead with new intelligence
-                        score = score_lead({**lead_data, 'email': email_str, 'about_us_info': about_us})
+                        score_result = score_lead_v2({**lead_data, 'email': email_str, 'about_us_info': about_us})
+                        score = int(round(score_result['priority_score']))
                         
                         async with get_db() as db:
                             await db.execute("""
                                 UPDATE leads SET email = ?, about_us_info = ?, score = ?
                                 WHERE id = ?
                             """, (email_str, about_us, score, lead_data['id']))
+                            await save_enrichment_snapshot(
+                                db,
+                                lead_id=lead_data['id'],
+                                website_summary=about_us or "",
+                                rating=float(lead_data.get('rating') or 0.0),
+                                reviews_count=int(lead_data.get('reviews_count') or 0),
+                                social_links=enrichment.get('social_links') or {},
+                            )
+                            await publish_event(
+                                db,
+                                topic=TOPIC_ENRICHMENT_COMPLETED,
+                                lead_id=lead_data['id'],
+                                payload={"source": "director.autonomous_batch"},
+                            )
+                            await save_score_snapshot(
+                                db,
+                                lead_id=lead_data['id'],
+                                fit_score=score_result['fit_score'],
+                                intent_score=score_result['intent_score'],
+                                authority_score=score_result['authority_score'],
+                                timing_score=score_result['timing_score'],
+                                risk_score=score_result['risk_score'],
+                                priority_score=score_result['priority_score'],
+                                reason_codes={"source": "director.autonomous_batch", "scorer": "v2", "codes": score_result['reason_codes']},
+                            )
+                            await publish_event(
+                                db,
+                                topic=TOPIC_SCORING_COMPLETED,
+                                lead_id=lead_data['id'],
+                                payload={"priority_score": score_result['priority_score']},
+                            )
                             await db.commit()
                         
                         lead_data['email'] = email_str
@@ -117,6 +168,16 @@ class OutreachDirector:
                     
                 except Exception as e:
                     logger.error(f"Failed to process lead {lead_data['name']}: {e}")
+                    async with get_db() as db:
+                        await publish_deadletter(
+                            db,
+                            topic=TOPIC_DEADLETTER,
+                            lead_id=lead_data.get('id'),
+                            channel='system',
+                            error_message=str(e),
+                            payload={"source": "director.autonomous_batch", "lead_name": lead_data.get('name')},
+                        )
+                        await db.commit()
                 
                 progress.advance(process_task)
                 
@@ -138,6 +199,72 @@ class OutreachDirector:
             lead_data.get('about_us_info'), score=lead_data.get('score', 0.0),
             service=lead_data.get('category')
         )
+
+        quality = evaluate_message_quality(
+            lead_name=lead_data['name'],
+            subject=subject,
+            body=body,
+            channel='email',
+        )
+
+        async with get_db() as db:
+            await save_message_draft(
+                db,
+                lead_id=lead_data['id'],
+                channel='email',
+                subject=subject,
+                body=body,
+                template_id="legacy_proposer",
+                prompt_version="v2-legacy",
+                quality_score=quality['quality_score'],
+                rejection_reason=",".join(quality['reasons']) if not quality['passed'] else None,
+            )
+            await publish_event(
+                db,
+                topic=TOPIC_MESSAGE_GENERATED,
+                lead_id=lead_data['id'],
+                channel='email',
+                payload={"quality_score": quality['quality_score'], "quality_passed": quality['passed']},
+            )
+
+            if not quality['passed']:
+                await log_outreach_event_v2(
+                    db,
+                    lead_id=lead_data['id'],
+                    channel='email',
+                    event_type='quality_gate_rejected',
+                    payload={"reasons": quality['reasons'], "quality_score": quality['quality_score'], "mode": "autonomous"},
+                )
+                await db.commit()
+                return False
+
+            allowed, reason = await enforce_pre_send_policy(db, lead=lead_data, channel='email')
+            if not allowed:
+                await transition_lead_state(
+                    db,
+                    lead_data['id'],
+                    'suppressed',
+                    reason=reason,
+                    actor='director.pre_send_policy',
+                )
+                await log_outreach_event_v2(
+                    db,
+                    lead_id=lead_data['id'],
+                    channel='email',
+                    event_type='policy_blocked',
+                    payload={"reason": reason, "mode": "autonomous"},
+                )
+                await db.commit()
+                return False
+
+            await publish_event(
+                db,
+                topic=TOPIC_DISPATCH_REQUESTED,
+                lead_id=lead_data['id'],
+                channel='email',
+                payload={"source": "director.autonomous_batch"},
+            )
+            await db.commit()
         
         # Delivery
         to_email = lead_data['email'].split(',')[0]
@@ -148,13 +275,46 @@ class OutreachDirector:
         
         if success:
             async with get_db() as db:
-                await db.execute("""
-                    UPDATE leads SET status = 'sent', outreach_step = 1, last_outreach = datetime('now') 
+                await transition_lead_state(
+                    db,
+                    lead_data['id'],
+                    "sent",
+                    reason="autonomous_email_delivery_success",
+                    actor="director.autonomous_batch",
+                )
+                await db.execute(
+                    """
+                    UPDATE leads SET outreach_step = 1, last_outreach = datetime('now')
                     WHERE id = ?
-                """, (lead_data['id'],))
+                    """,
+                    (lead_data['id'],),
+                )
+                await log_outreach_event_v2(
+                    db,
+                    lead_id=lead_data['id'],
+                    channel='email',
+                    event_type='dispatch_success',
+                    payload={"status": "sent", "mode": "autonomous"},
+                )
+                await publish_event(
+                    db,
+                    topic=TOPIC_DISPATCH_COMPLETED,
+                    lead_id=lead_data['id'],
+                    channel='email',
+                    payload={"status": "sent", "mode": "autonomous"},
+                )
                 await db.commit()
             await log_outreach_event(lead_data['id'], 'email', 'sent', body)
         else:
+            async with get_db() as db:
+                await log_outreach_event_v2(
+                    db,
+                    lead_id=lead_data['id'],
+                    channel='email',
+                    event_type='dispatch_failed',
+                    payload={"status": "failed", "error": "delivery_failed", "mode": "autonomous"},
+                )
+                await db.commit()
             await log_outreach_event(lead_data['id'], 'email', 'failed', body, 'delivery_failed')
         
         return success

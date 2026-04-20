@@ -7,6 +7,12 @@ from playwright.async_api import async_playwright, Page, BrowserContext, Element
 from core.logger import logger
 from core.database import get_db, init_db
 from core.config import settings
+from core.connectors import (
+    log_connector_rejection,
+    normalize_connector_record,
+    persist_lead_source,
+    validate_connector_record,
+)
 
 class MapsScraper:
     """
@@ -183,20 +189,61 @@ class MapsScraper:
             "reviews_count": reviews,
             "business_category": biz_cat,
             "source": "Google Maps",
-            "category": category
+            "category": category,
+            "source_platform": "google_maps",
+            "source_url": page.url,
         }
 
     async def save_lead(self, data: Dict) -> None:
-        """Saves a lead to the database, skipping duplicates."""
+        """Saves a lead and source provenance, logging normalized rejections."""
+        normalized_source = normalize_connector_record(data)
+        valid, reason_code = validate_connector_record(normalized_source)
+
         async with get_db() as db:
+            if not valid:
+                await log_connector_rejection(
+                    db,
+                    source_platform=normalized_source.get("source_platform", "unknown_source"),
+                    reason_code=reason_code or "invalid_source_record",
+                    reason_detail="Failed connector record validation before lead write.",
+                    raw_payload=data,
+                )
+                await db.commit()
+                return
+
             async with db.execute("SELECT id FROM leads WHERE name = ?", (data['name'],)) as cursor:
-                if await cursor.fetchone():
+                existing = await cursor.fetchone()
+                if existing:
+                    await persist_lead_source(
+                        db,
+                        lead_id=existing[0],
+                        record=normalized_source,
+                        adapter_version="maps.v2",
+                    )
+                    await log_connector_rejection(
+                        db,
+                        source_platform=normalized_source["source_platform"],
+                        reason_code="duplicate_lead_name",
+                        reason_detail="Lead skipped because name already exists.",
+                        raw_payload=data,
+                    )
+                    await db.commit()
                     return
-            
-            await db.execute("""
+
+            insert_cursor = await db.execute("""
                 INSERT INTO leads (name, website, phone, rating, reviews_count, business_category, source, category)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (data['name'], data['website'], data['phone'], data['rating'], data['reviews_count'], data['business_category'], data['source'], data['category']))
+
+            lead_id = insert_cursor.lastrowid
+            if lead_id is not None:
+                await persist_lead_source(
+                    db,
+                    lead_id=int(lead_id),
+                    record=normalized_source,
+                    adapter_version="maps.v2",
+                )
+
             await db.commit()
 
 if __name__ == "__main__":

@@ -1,168 +1,144 @@
 # V2 Database Schema Specification
 
-## Goals
-- Support multi-source ingestion
-- Preserve explainable lead scoring
-- Track full outreach and reply lifecycle
-- Enforce suppression and compliance controls
+## Design Objectives
+- Preserve complete decision evidence per lead lifecycle.
+- Support deterministic state transitions and replay workflows.
+- Enable high-confidence analytics and attribution.
+- Enforce suppression and compliance at query-time and write-time.
 
-## Recommended Tables
+## Core Tables
 
 ### leads
-Core deduplicated entity.
+Canonical entity profile and lifecycle state.
 - id
-- company_name
-- person_name
-- role_title
-- primary_domain
-- website
-- primary_email
-- primary_phone
-- location_city
-- location_region
+- canonical_name
+- canonical_domain
+- primary_contact_email
+- primary_contact_phone
 - industry
-- niche
-- status
+- geo
+- lifecycle_state
+- confidence_level
 - created_at
 - updated_at
 
 ### lead_sources
-Per-source discovery records.
+Source-specific ingest records with provenance.
 - id
 - lead_id
 - source_platform
+- source_record_id
 - source_url
-- external_id
-- discovered_at
+- discovered_at_utc
 - raw_payload_json
-- connector_version
+- adapter_version
 
-### lead_signals
-Extracted signals and confidence evidence.
+### lead_evidence
+Structured evidence blocks used for reasoning.
 - id
 - lead_id
-- signal_type
-- signal_text
-- signal_value
-- confidence_score
-- captured_at
+- evidence_type
+- evidence_text
+- evidence_value
+- evidence_confidence
+- captured_at_utc
 
-### lead_enrichment
-Snapshot enrichment outputs.
+### lead_enrichment_snapshots
+Versioned enrichment snapshots for replayability.
 - id
 - lead_id
-- crawl_summary
-- review_count
+- snapshot_version
+- website_summary
 - rating
-- social_profiles_json
-- team_size_hint
-- budget_hint
-- enrichment_version
-- enriched_at
+- reviews_count
+- social_links_json
+- contact_confidence
+- enriched_at_utc
 
 ### lead_scores
-Explainable score history.
+Explainable scoring history.
 - id
 - lead_id
 - fit_score
 - intent_score
 - authority_score
 - timing_score
+- risk_score
 - priority_score
-- score_reason_json
-- scored_at
+- reason_codes_json
+- scored_at_utc
 
-### outreach_sequences
-Campaign sequence metadata.
+### message_drafts
+Drafts and quality-evaluation outputs.
 - id
-- campaign_id
 - lead_id
-- current_step
-- next_action_at
-- sequence_status
-- owner
-- updated_at
-
-### outreach_messages
-Stored generated messages and metadata.
-- id
-- sequence_id
 - channel
+- template_id
+- prompt_version
 - subject
 - body
-- template_id
-- personalization_score
-- generated_at
+- quality_score
+- rejection_reason
+- created_at_utc
 
 ### outreach_events
-Delivery and engagement tracking.
+Immutable event stream of send lifecycle.
 - id
-- message_id
+- lead_id
+- channel
 - event_type
-- event_at
-- provider_message_id
-- event_metadata_json
+- event_payload_json
+- correlation_id
+- occurred_at_utc
 
-### inbox_accounts
-Sender infrastructure and health.
-- id
-- email_address
-- domain
-- warmup_stage
-- daily_cap
-- health_status
-- bounce_rate_7d
-- complaint_rate_7d
-- last_used_at
-
-### reply_threads
-Inbound thread state.
+### reply_events
+Inbound reply capture and classification.
 - id
 - lead_id
 - channel
 - thread_ref
-- latest_reply_text
-- reply_class
-- sentiment
-- requires_human
-- updated_at
+- reply_text
+- classifier_label
+- classifier_confidence
+- requires_human_review
+- occurred_at_utc
 
-### suppression_list
-Global no-contact controls.
+### suppression_entries
+Global suppression and policy controls.
 - id
 - contact_key
 - suppression_type
 - reason
 - source
-- created_at
+- created_at_utc
 
-### compliance_audit
-Compliance decision history.
+### compliance_checks
+Decision records for policy evaluation.
 - id
 - lead_id
 - check_name
 - decision
 - reason
-- checked_at
+- checked_at_utc
 
-## Key Indexes
-- leads(primary_domain)
-- leads(status)
-- lead_sources(source_platform, discovered_at)
+## Required Indexes
+- leads(canonical_domain)
+- leads(lifecycle_state)
+- lead_sources(source_platform, discovered_at_utc)
 - lead_scores(priority_score)
-- outreach_sequences(next_action_at, sequence_status)
-- outreach_events(event_type, event_at)
-- suppression_list(contact_key)
+- outreach_events(event_type, occurred_at_utc)
+- reply_events(classifier_label, occurred_at_utc)
+- suppression_entries(contact_key)
 
-## Data Constraints
-- Unique dedupe key on (primary_domain, company_name normalized)
-- Foreign key integrity across lead_id and sequence_id chains
-- Immutable event rows for auditability
-- Soft delete for lead records, hard delete for sensitive PII by policy
+## Constraints and Integrity
+- Unique dedupe key on canonical_domain plus canonical_name.
+- Immutable outreach_events and reply_events rows.
+- Foreign key integrity across all lead-linked records.
+- Soft-delete for profile records and policy-driven PII purge workflow.
 
 ## Migration Strategy
-1. Add new tables in non-breaking mode.
-2. Backfill source and score history from existing records.
-3. Switch writers to new tables behind feature flags.
-4. Run dual-write validation window.
-5. Cut over readers and retire legacy reads.
+1. Introduce v2 tables in additive mode.
+2. Backfill leads, history, and score data with mapping logs.
+3. Dual-write from runtime to v1 and v2 tables.
+4. Validate read parity and anomaly budgets.
+5. Switch readers to v2 and deprecate v1 access paths.

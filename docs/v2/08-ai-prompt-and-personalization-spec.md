@@ -1,71 +1,51 @@
-# V2 AI Prompt and Personalization Specification
+# V2 Prompt and Personalization Spec
 
 ## Objective
-Generate high-relevance outreach messages that feel human, source-aware, and outcome-focused.
+Compile context-aware, proof-backed outreach drafts with measurable quality and
+explicit safety checks.
 
-## Prompt Architecture
+## Prompt Compiler Layers
 
-### System Layer
-- Persona: Founder-level advisor with domain authority
-- Tone: direct, professional, helpful, non-generic
-- Constraint: no placeholders, no fabricated claims
+### Layer 1: System Policy
+- Brand voice and response tone constraints.
+- Non-fabrication and no-placeholder enforcement.
+- Channel-specific structural constraints.
 
-### Campaign Layer
-- Niche context
-- Offer and desired business outcome
-- Proof snippet set from Pixartual assets
-- Channel constraints (email, DM, platform response)
+### Layer 2: Campaign Policy
+- ICP definition and offer framing.
+- Approved proof snippets and claim boundaries.
+- Stage-aware CTA policy.
 
-### Lead Layer
-- Source platform and intent snippet
-- Business context (industry, size hints, maturity)
-- Current friction point from enrichment and audit
-- CTA style based on stage and signal strength
+### Layer 3: Lead Evidence
+- Source context and intent evidence.
+- Enrichment-derived friction hypothesis.
+- Risk flags and confidence indicators.
 
-## Personalization Blocks
-- Block A: specific observation from source signal
-- Block B: relevant proof statement
-- Block C: one clear value proposition
-- Block D: friction-light CTA
+## Draft Composition Blocks
+- Observation block.
+- Outcome/value block.
+- Proof block.
+- CTA block.
 
-## Quality Gate Rules
-A generated message must pass:
-- Relevance score threshold
-- No placeholder tokens
-- No repetition or generic openers
-- Correct channel length and style
-- Claim verification against proof library
+## Quality Gate Scoring
+- relevance_score
+- personalization_score
+- clarity_score
+- claim_safety_score
+- channel_fit_score
 
-## Fallback Strategy
-- If score below threshold, regenerate once with stricter constraints
-- If still low quality, route to human review queue
-- If missing lead context, request enrichment before generation
+A draft is eligible for send only if all mandatory thresholds pass.
 
-## Template Families
-- Intro outreach (high intent)
-- Intro outreach (medium intent)
-- Follow-up reminder
-- Objection response
-- Wrong-person referral ask
-- Final close-loop note
+## Fallback Policy
+1. Regenerate with stricter constraints once.
+2. If still below threshold, route to approval queue.
+3. If context quality is insufficient, request re-enrichment.
 
-## A/B Testing Variables
-- Opening line style
-- Proof placement
-- CTA wording
-- Subject format
-- Length profile
-
-## Logging and Explainability
-Store for each generated message:
-- prompt version
-- template id
-- personalization score
-- selected proof id
-- generation timestamp
-
-## Risk Controls
-- Do not use manipulative or deceptive claims
-- Avoid irrelevant urgency framing
-- Never mention data that is not in lead context
-- Keep tone respectful and non-invasive
+## Logging Requirements
+For every generated draft, store:
+- prompt_version
+- template_id
+- selected_proof_id
+- quality_scores_json
+- rejection_reason_if_any
+- correlation_id

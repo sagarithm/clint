@@ -1,134 +1,68 @@
-# ColdMailer V2: Master Implementation Plan for High-Paying Clients
+# Clint V2 Master Plan: AI Era Execution System
 
-## Objective
-Transform the current outreach automation into a multi-source, intent-driven, ROI-focused growth engine that consistently books meetings with high-paying clients.
+## Mission
+Build a production-grade AI outreach operating system for web solutions using
+Python library and CLI as the first-class product surfaces.
 
-## North Star Metrics
-- Positive reply rate: >= 3%
-- Meeting booking rate: >= 1%
-- Opportunity rate (qualified meeting): >= 60% of booked meetings
-- Cost per qualified meeting: tracked weekly and reduced month over month
-- Source contribution: at least 2 sources generating consistent positive replies
+## Product Scope (Phase Boundaries)
+- Phase A: library and CLI excellence with API runtime support.
+- Phase B: production scaling with reliability controls and observability.
+- Phase C: SaaS control plane once reliability and conversion gates are passed.
 
-## ICP and Offer Strategy
+## North Star Outcomes
+- Positive reply rate >= 3% for qualified segments.
+- Meeting booking rate >= 1% with controlled sending behavior.
+- Qualified meeting ratio >= 60% of booked meetings.
+- Deliverability incidents per month <= agreed threshold.
+- Traceability coverage: 100% of sends tied to decision evidence.
 
-### Primary ICP (Start with one niche for 30 days)
-- Preferred verticals: Dental, Legal, Med Spa, B2B SaaS, High-ticket local services
-- Minimum buying signals:
-  - Established online reputation
-  - Visible revenue indicators (reviews, locations, team size, ad activity)
-  - Decision-maker reachable
+## Strategic Positioning
+- Core offer: web solutions with measurable conversion outcomes.
+- Primary motion: evidence-driven outreach, not volume-first blasting.
+- Core moat: explainable decisioning plus safe autonomous operations.
 
-### Offer Positioning
-- Do not lead with generic "website redesign" messaging.
-- Lead with business outcomes:
-  - More booked consultations
-  - Better lead conversion rate
-  - Lower CAC with better digital funnel
-  - Reduced operational waste through automation
+## System Principles
+1. Evidence before action.
+2. Quality gates before send.
+3. Safety and suppression are non-negotiable.
+4. Every decision is explainable and auditable.
+5. Learning loops update targeting and messaging weekly.
 
-### Proof Positioning
-Use Pixartual proof assets in every sequence:
-- Relevant project snapshot (same or adjacent niche)
-- Measurable outcome statement
-- One concise credibility anchor (experience, process, result)
+## 90-Day Plan
 
-## V2 System Architecture
+### Days 1-15: Backbone
+- Finalize v2 schema, state machine, and event contracts.
+- Lock library API contracts and CLI command behavior.
+- Add structured logs and correlation IDs across pipeline.
 
-### Layer 1: Lead Discovery
-- Multi-source ingestion modules:
-  - Google Maps/Directories
-  - LinkedIn (compliant workflows)
-  - Reddit intent capture
-  - X/Threads intent capture
-  - Upwork/Fiverr demand capture
-- Unified ingestion format for all sources.
+### Days 16-35: Intelligence
+- Implement connector normalization and enrichment policies.
+- Implement fit/intent/authority/timing scoring with reasons.
+- Add prompt compiler and pre-send quality checks.
 
-### Layer 2: Enrichment
-- Website crawl and metadata extraction
-- Contact enrichment (role, email confidence)
-- Business maturity checks (reviews, activity, footprint)
-- Service-fit extraction from source context
+### Days 36-60: Reliable Execution
+- Harden send orchestration, cooldown logic, and suppression.
+- Implement reply classification and next-step routing.
+- Add operational alerts and dead-letter handling.
 
-### Layer 3: Qualification
-- Multi-factor scoring model:
-  - Fit Score (ability to pay + service match)
-  - Intent Score (buying urgency)
-  - Authority Score (decision power)
-  - Timing Score (probability of action now)
-- Outreach threshold and queue priority routing.
+### Days 61-90: Optimization
+- Add experiment framework and promotion rules.
+- Establish weekly performance review and winner rollout policy.
+- Freeze v2.0 library and CLI contracts for production release.
 
-### Layer 4: Message Intelligence
-- Source-specific templates and prompts
-- Dynamic proof insertion from Pixartual assets
-- CTA selector by lead stage and source
-- Quality gate (reject low-relevance drafts)
+## Readiness Gates
 
-### Layer 5: Sending and Deliverability
-- Multi-inbox rotation with ramp policy
-- Timezone-aware scheduling
-- Bounce and complaint guardrails
-- Suppression and unsubscribe enforcement
+### Gate 1: Engineering Readiness
+- Stable schema migrations and rollback path.
+- Deterministic state transitions.
+- Unit and integration coverage for critical flows.
 
-### Layer 6: Reply and Conversion Ops
-- Reply classification (positive, objection, later, wrong person, unsubscribe)
-- Auto-next-step actions
-- Calendar handoff for positive intent
-- CRM stage updates and reporting
+### Gate 2: Operational Readiness
+- Deliverability guardrails proven in staging and pilot.
+- Suppression and compliance checks verified.
+- Incident runbooks tested through simulation.
 
-## 90-Day Execution Roadmap
-
-### Days 1-14: Foundation
-- Finalize niche, offer, and proof stack
-- Upgrade lead schema and event logging
-- Build source connectors for 2 channels first
-- Launch scoring V2 baseline
-
-### Days 15-30: Controlled Launch
-- Launch 1 niche campaign with strict quality filtering
-- Start with low volume and high personalization
-- Measure source-level conversion and kill low performers fast
-
-### Days 31-60: Scale and Optimize
-- Add 2-3 additional sources
-- Add sequence optimization and A/B testing
-- Introduce reply classification automation
-- Increase volume only when health metrics are stable
-
-### Days 61-90: Predictable Pipeline
-- Standardize weekly GTM operating rhythm
-- Build campaign playbooks by source + niche
-- Track closed-won attribution by source and template
-- Double down on top 20% source-template combinations
-
-## Daily and Weekly Operating Rhythm
-
-### Daily
-- Verify source ingestion health
-- Review top leads in qualified queue
-- Monitor sending and deliverability health
-- Process positive replies and handoff quickly
-
-### Weekly
-- Review funnel metrics by source
-- Remove bottom 30% campaigns/sources
-- Adjust scoring weights from outcome data
-- Update templates with best-performing proof hooks
-
-## Risk Controls
-- Policy-aware source handling and legal compliance
-- Hard suppression controls for unsubscribed/bounced leads
-- Quality checks to avoid spam-like personalization
-- Monitoring and alerting for API failures and queue backlog
-
-## Team Ownership
-- Founder/BDM: ICP, offer, proof narrative, deal strategy
-- Automation engineer: ingestion, queue, orchestration, integrations
-- Lead ops: enrichment quality, data hygiene, suppression
-- Growth marketer: messaging tests, conversion optimization
-
-## Exit Criteria for V2 Readiness
-- End-to-end flow stable for at least 2 weeks
-- Reply and booking metrics above baseline targets
-- Clear source-level winner channels identified
-- Team runbook documented and repeatable
+### Gate 3: Commercial Readiness
+- KPI baselines achieved for two consecutive weeks.
+- Playbooks documented and repeatable.
+- Library and CLI docs complete and versioned.

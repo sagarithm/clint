@@ -2,6 +2,9 @@
 
 This guide is the command reference for first-time users and production operators.
 
+For V2 command contracts, policy behavior, and exit-code guarantees, see
+[docs/v2/11-cli-product-spec.md](docs/v2/11-cli-product-spec.md).
+
 ## First-Time Setup
 
 Install and verify:
@@ -98,6 +101,11 @@ clint run --query "Dentists in California"
 clint run --query "Dentists in California" --live
 ```
 
+Operational guidance:
+- Use dry-run before every live launch.
+- Validate readiness with `clint config doctor` before `--live`.
+- Keep small send limits for first production ramp.
+
 ### clint scrape
 
 Discovery-only scraping.
@@ -134,6 +142,72 @@ Start dashboard server.
 clint dashboard --host 127.0.0.1 --port 8000
 ```
 
+## Reliability and Control Commands
+
+### clint worker-reddit
+
+Run the V2 queue-style Reddit worker pipeline (discover -> enrich -> score -> draft -> send).
+
+```bash
+clint worker-reddit --query "dentist website redesign" --limit 20
+clint worker-reddit --query "roofing lead generation" --limit 10 --live
+```
+
+Notes:
+- Defaults to dry-run. Use `--live` only after `clint config doctor` passes.
+- Useful for controlled source-specific runs and debugging worker behavior.
+
+### clint experiments-decide
+
+Apply experiment auto-decision policy to a completed experiment.
+
+```bash
+clint experiments-decide --experiment-id 3
+clint experiments-decide --experiment-id 3 --min-sample 50 --min-uplift-pct 8
+```
+
+Notes:
+- Returns one of: `promote`, `hold`, `rollback`, or `no_winner`.
+- Quality-guard threshold is controlled by `--max-negative-quality-impact`.
+
+### clint deadletter-list
+
+List deadletter events for operational triage and replay planning.
+
+```bash
+clint deadletter-list
+clint deadletter-list --status pending --limit 100
+```
+
+### clint deadletter-replay
+
+Replay a deadletter event through supported recovery handlers.
+
+```bash
+clint deadletter-replay --event-id 42
+```
+
+Notes:
+- Replay updates event replay metadata (`replay_status`, attempts, replay timestamp).
+- Unsupported payload types are marked as unsupported rather than silently dropped.
+
+## API Reliability Endpoints
+
+These are available when running `clint dashboard`:
+
+- `POST /api/workers/reddit/run`
+- `GET /api/workers/reddit/status`
+- `GET /api/deadletter?status=<status>&limit=<n>`
+- `POST /api/deadletter/replay`
+
+Example replay request:
+
+```json
+{
+	"event_id": 42
+}
+```
+
 ## Release Workflow
 
 Pre-release checks:
@@ -166,6 +240,8 @@ python -m twine upload dist/*
 - 4: runtime or dependency readiness error
 - 5: network or auth transport error
 - 10: unexpected internal error
+
+These codes are contractual and should be used by CI/CD and automation jobs.
 
 ## Troubleshooting
 

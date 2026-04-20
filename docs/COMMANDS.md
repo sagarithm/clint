@@ -103,6 +103,43 @@ Launch the high-end web interface.
 clint dashboard --host 127.0.0.1 --port 8000 --reload
 ```
 
+### `clint worker-reddit`
+Run the staged Reddit worker pipeline with safe dry-run defaults.
+- `--query`: Intent keyword for source discovery.
+- `--limit`: Max records to process in this run (default 20).
+- `--dry-run/--live`: Dry-run by default; use `--live` for real sends.
+```bash
+clint worker-reddit --query "dentist website redesign" --limit 20
+clint worker-reddit --query "roofing leads" --limit 10 --live
+```
+
+### `clint experiments-decide`
+Apply auto-decision policy to an experiment.
+- `--experiment-id`: Required experiment identifier.
+- `--min-sample`: Minimum sample size per variant (default 30).
+- `--min-uplift-pct`: Minimum uplift required to promote (default 5.0).
+- `--max-negative-quality-impact`: Maximum allowed quality degradation (default -5.0).
+```bash
+clint experiments-decide --experiment-id 3
+clint experiments-decide --experiment-id 3 --min-sample 50 --min-uplift-pct 8
+```
+
+### `clint deadletter-list`
+List deadletter records for operational triage.
+- `--status`: Optional replay status filter.
+- `--limit`: Maximum rows to return (default 25).
+```bash
+clint deadletter-list
+clint deadletter-list --status pending --limit 100
+```
+
+### `clint deadletter-replay`
+Replay a deadletter record through the supported recovery path.
+- `--event-id`: Required deadletter event ID.
+```bash
+clint deadletter-replay --event-id 42
+```
+
 ---
 
 ## 🚦 Exit Codes

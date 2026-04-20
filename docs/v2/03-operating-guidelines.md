@@ -1,72 +1,72 @@
 # V2 Operating Guidelines
 
-## Guiding Principle
-Volume does not create pipeline quality. Precision targeting, proof-based messaging, and disciplined operations do.
+## Operating Doctrine
+This system is an evidence-led automation engine. Quality, trust, and
+measurable outcomes are prioritized over volume.
 
-## Campaign Setup Standard
-Before launching any campaign, confirm:
-- Niche and offer are explicitly defined
-- Proof assets are mapped to that niche
-- Source connectors are healthy
-- Suppression lists are active
-- Sending caps are configured
+## Scope Policy
+- Primary offer: web solutions.
+- Primary surfaces: Python library and CLI.
+- Autonomy mode: mostly automated with approvals for risky or low-confidence
+  actions.
 
-## Messaging Standards
-- First line must be specific to the lead context
-- Include one relevant proof statement from Pixartual assets
-- Keep CTA low-friction and explicit
-- Avoid generic fluff and vague promises
+## Campaign Readiness Standard
+Before activation, all checks must pass:
+- ICP and offer are explicitly selected.
+- Proof assets mapped to niche and stage.
+- Source adapters healthy and policy-compliant.
+- Suppression and cooldown policies active.
+- Deliverability guardrails configured.
 
-## Sending Safety Policy
-- Start low and ramp gradually
-- Do not increase volume until health metrics are stable
-- Pause campaign automatically if bounce rate spikes
-- Enforce suppression instantly for unsubscribe complaints
+## Decision Pipeline
+1. Discover and normalize source evidence.
+2. Enrich and validate contact confidence.
+3. Score fit, intent, authority, timing, and risk.
+4. Generate message variants and run quality gates.
+5. Route to auto-send or approval queue.
+6. Send with safety checks and event logging.
+7. Classify replies and execute next-best action.
 
-## Quality Gate Before Send
-A message must pass all checks:
-- Relevance score above threshold
-- Contact confidence above threshold
-- No placeholders or malformed personalization
-- Correct source-specific style and length
+## Quality Gates (Mandatory)
+- Relevance and personalization thresholds pass.
+- No unsupported claims or fabricated context.
+- No placeholder tokens.
+- Channel-specific style and length constraints pass.
+- Suppression and legal policy checks pass.
 
-## Reply Handling SLA
-- Positive replies: respond within 1 business hour
-- Clarification replies: respond within 4 business hours
-- Objections: send proof-led response within same business day
-- Wrong person: request referral politely and update records
+## Sending Governance
+- Start at low controlled volume per sender identity.
+- Increase only after stable health over defined windows.
+- Auto-pause on bounce, complaint, or anomaly spikes.
+- Enforce contact frequency limits and cooldown windows.
 
-## Weekly Business Review
-- Compare source-level positive reply rates
-- Compare template-level meeting conversion
-- Remove lowest performing source/template combinations
-- Reallocate effort to top-performing campaigns
+## Reply SLA
+- Positive intent: first response within 1 business hour.
+- Clarification: response within 4 business hours.
+- Objection handling: same business day with proof-backed response.
+- Unsubscribe or complaint: immediate suppression and logged reason.
 
-## KPI Targets
-- Bounce rate: keep low and stable
-- Positive reply rate: trend upward week over week
-- Meeting conversion from positive replies: strong and improving
-- Qualified pipeline value: tracked weekly
+## Weekly Control Review
+- Source ranking by qualified reply and meeting rate.
+- Template ranking by conversion and risk profile.
+- Deliverability health and sender-level risk board.
+- Actions: pause, promote, retrain, or rollback.
 
-## Founder Operating Cadence
-- Monday: strategy and ICP review
-- Tuesday to Thursday: execution and optimization
-- Friday: KPI review and decision cuts
+## Deadletter Incident Loop
+Use deadletter controls as the standard recovery procedure for failed async
+events:
+1. Triage with `clint deadletter-list --status pending`.
+2. Validate payload class and root cause from event metadata.
+3. Replay with `clint deadletter-replay --event-id <id>` for supported types.
+4. Confirm outcome using replay status and replay attempt counters.
+5. Escalate unsupported payload classes into connector/worker backlog.
 
-## Decision Rules
-- If source underperforms for 2 weeks, pause and rework
-- If template underperforms, replace not tweak endlessly
-- If deliverability declines, stop scaling immediately
+Operational API equivalents:
+- `GET /api/deadletter`
+- `POST /api/deadletter/replay`
 
-## Documentation and Change Control
-- Every major change must include:
-  - objective
-  - expected KPI impact
-  - rollback plan
-- Keep experiment logs and results centralized
-
-## Non-Negotiables
-- No outreach without qualification
-- No scaling without deliverability health
-- No campaign without clear offer and proof
-- No ignored replies in active pipeline
+## Change Control Rules
+- No production change without objective and rollback plan.
+- No scaling without two-week KPI stability.
+- No source expansion before baseline quality targets are met.
+- All significant experiments must be logged and versioned.

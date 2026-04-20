@@ -1,89 +1,55 @@
 # V2 Campaign Playbooks
 
 ## Objective
-Create source-native outreach playbooks that convert high-intent leads into booked meetings with minimal waste.
+Deploy source-aware, proof-led campaigns that convert qualified web-solution
+opportunities with minimal reputation risk.
 
-## Common Campaign Rules
-- One niche focus per campaign
-- One clear offer tied to business outcome
-- One proof snippet matched to niche
-- One CTA with low friction
+## Universal Campaign Rules
+- One ICP segment per campaign.
+- One clear commercial offer per sequence.
+- One proof narrative per niche.
+- One primary CTA per step.
 
-## Playbook 1: LinkedIn Intent Campaign
-
-### Trigger Signals
-- Hiring posts for web, growth, or design support
-- Founder posts mentioning conversion or growth bottlenecks
-- Expansion announcements with digital gaps
-
-### First Touch Structure
-- Personalized observation from latest activity
-- Relevant Pixartual proof
-- Outcome-focused offer
-- CTA: quick strategy call
-
-### Follow-Up Cadence
-- Day 3: short proof reinforcement
-- Day 7: final concise close loop
-
-## Playbook 2: Reddit Problem-Solution Campaign
+## Playbook A: Audit-Led Outreach
 
 ### Trigger Signals
-- Operators asking for agency or freelancer recommendations
-- Complaints about low conversion or poor website outcomes
+- Business has weak web presence or conversion friction.
+- Website quality gaps are visible from crawl evidence.
 
-### Message Style
-- Helpful and context-first
-- No hard sell in first touch
-- Include one tactical insight before CTA
+### Sequence Pattern
+- Step 1: precise observation plus one concrete improvement path.
+- Step 2: proof snippet tied to similar business outcomes.
+- Step 3: short close-loop with low-friction CTA.
 
-### Follow-Up
-- Share compact framework or checklist
-- Invite private discussion
-
-## Playbook 3: Upwork/Fiverr Demand Capture
+## Playbook B: Intent-Led Outreach
 
 ### Trigger Signals
-- High-budget projects
-- Clear urgency and outcome language
-- Repeat buyers or long-term opportunities
+- Public request for web/growth/design help.
+- Hiring or expansion messages indicating execution pressure.
 
-### Response Structure
-- Confirm understanding of project objective
-- Show niche-relevant proof and execution plan
-- Ask 2 qualification questions
-- CTA: brief scoping call
+### Sequence Pattern
+- Step 1: validate need with context and concise value path.
+- Step 2: answer likely objection with proof or process clarity.
+- Step 3: propose scoped next step and calendar handoff.
 
-## Playbook 4: X and Threads Real-Time Intent
+## Playbook C: Recovery and Optimization
 
 ### Trigger Signals
-- Public ask for recommendations
-- Friction statements around growth and conversion
+- Existing traffic with poor conversion outcomes.
+- Strong business maturity but weak funnel performance.
 
-### Message Style
-- Very concise
-- Social proof in one line
-- Move quickly to direct channel
+### Sequence Pattern
+- Step 1: conversion loss hypothesis.
+- Step 2: benchmark and focused improvement suggestion.
+- Step 3: compact pilot proposal.
 
-## Offer Mapping Matrix
-- No/weak website + local service: conversion-focused website system
-- Existing traffic + low conversion: CRO and funnel optimization
-- Growing brand + inconsistent identity: brand and UX system
-- High ops load + repetitive work: automation and AI workflow
+## Disqualification Policy
+- No commercial intent signals.
+- No reachable decision path.
+- Out-of-scope industry or geography.
+- Failed trust and compliance checks.
 
-## Disqualification Rules
-- No budget or low commercial intent
-- Non-decision maker with no referral path
-- Outside core service and geography strategy
-
-## KPI Targets by Playbook
-- Positive reply rate
-- Meeting rate
-- Qualified meeting rate
-- Time to first positive reply
-
-## Optimization Loop
-- Weekly win/loss review by source
-- Replace weak opening lines quickly
-- Update proof snippets based on top performers
-- Pause campaigns below thresholds for two consecutive weeks
+## Performance Review Rules
+- Pause any playbook below threshold for two consecutive weeks.
+- Promote top playbooks with controlled volume increases.
+- Refresh proof assets monthly based on latest wins.

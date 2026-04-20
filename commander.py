@@ -12,9 +12,26 @@ from rich.align import Align
 
 from core.config import settings
 from core.database import init_db, get_db
+from core.event_bus import (
+    TOPIC_DISPATCH_COMPLETED,
+    TOPIC_DISPATCH_REQUESTED,
+    TOPIC_ENRICHMENT_COMPLETED,
+    TOPIC_MESSAGE_GENERATED,
+    TOPIC_SCORING_COMPLETED,
+    publish_event,
+)
 from core.logger import logger
+from core.policy import enforce_pre_send_policy
+from core.quality_gate import evaluate_message_quality
 from core.reliability import log_outreach_event, recently_contacted, send_with_retry
-from core.scorer import score_lead
+from core.scorer import score_lead, score_lead_v2
+from core.state_machine import transition_lead_state
+from core.v2_store import (
+    log_outreach_event_v2,
+    save_enrichment_snapshot,
+    save_message_draft,
+    save_score_snapshot,
+)
 from scrapers.web_crawler import WebCrawler
 from engine.director import OutreachDirector
 from engine.auditor import AIAuditor
@@ -107,12 +124,46 @@ class ColdMailerCLI:
             if lead['website']:
                 res = await self.crawler.crawl(lead['website'], lead['name'], query_id=query_id)
                 emails = ",".join(res.get('emails', []))
-                score = score_lead({**lead, 'email': emails, 'about_us_info': res.get('about_us_info')})
+                score_result = score_lead_v2({**lead, 'email': emails, 'about_us_info': res.get('about_us_info')})
+                score = int(round(score_result['priority_score']))
                 
                 async with get_db() as db:
                     await db.execute(
                         "UPDATE leads SET email = ?, about_us_info = ?, score = ? WHERE id = ?",
                         (emails, res.get('about_us_info'), score, lead['id'])
+                    )
+                    await save_enrichment_snapshot(
+                        db,
+                        lead_id=lead['id'],
+                        website_summary=res.get('about_us_info') or "",
+                        rating=float(lead.get('rating') or 0.0),
+                        reviews_count=int(lead.get('reviews_count') or 0),
+                        social_links=res.get('social_links') or {},
+                    )
+                    await publish_event(
+                        db,
+                        topic=TOPIC_ENRICHMENT_COMPLETED,
+                        lead_id=lead['id'],
+                        channel="system",
+                        payload={"source": "cli.discovery"},
+                    )
+                    await save_score_snapshot(
+                        db,
+                        lead_id=lead['id'],
+                        fit_score=score_result['fit_score'],
+                        intent_score=score_result['intent_score'],
+                        authority_score=score_result['authority_score'],
+                        timing_score=score_result['timing_score'],
+                        risk_score=score_result['risk_score'],
+                        priority_score=score_result['priority_score'],
+                        reason_codes={"source": "cli.discovery", "scorer": "v2", "codes": score_result['reason_codes']},
+                    )
+                    await publish_event(
+                        db,
+                        topic=TOPIC_SCORING_COMPLETED,
+                        lead_id=lead['id'],
+                        channel="system",
+                        payload={"priority_score": score_result['priority_score']},
                     )
                     await db.commit()
         
@@ -125,11 +176,24 @@ class ColdMailerCLI:
     async def _handle_follow_up(self) -> None:
         """Processes leads ready for the next step in the sequence."""
         async with get_db() as db:
-            # Mark leads for follow up after 3 days
-            await db.execute("""
-                UPDATE leads SET status = 'follow_up_ready' 
-                WHERE status = 'sent' AND last_outreach < datetime('now', '-3 days')
-            """)
+            # Mark leads for follow-up after 3 days using validated state transitions.
+            async with db.execute(
+                """
+                SELECT id FROM leads
+                WHERE COALESCE(lifecycle_state, status, 'new') = 'sent'
+                  AND last_outreach < datetime('now', '-3 days')
+                """
+            ) as cursor:
+                sent_leads = await cursor.fetchall()
+
+            for row in sent_leads:
+                await transition_lead_state(
+                    db,
+                    row[0],
+                    "follow_up_ready",
+                    reason="cooldown_elapsed",
+                    actor="cli.followup",
+                )
             await db.commit()
         await self._display_and_outreach("Follow-up Queue", status_filter='follow_up_ready')
 
@@ -205,6 +269,74 @@ class ColdMailerCLI:
                     about_us_info=lead.get('about_us_info'), score=lead.get('score', 0.0),
                     service=lead.get('business_category')
                 )
+
+                quality = evaluate_message_quality(
+                    lead_name=lead['name'],
+                    subject=subject if channel == 'email' else None,
+                    body=body,
+                    channel=channel,
+                )
+
+                async with get_db() as db:
+                    await save_message_draft(
+                        db,
+                        lead_id=lead['id'],
+                        channel=channel,
+                        subject=subject if channel == 'email' else None,
+                        body=body,
+                        template_id="legacy_proposer",
+                        prompt_version="v2-legacy",
+                        quality_score=quality['quality_score'],
+                        rejection_reason=",".join(quality['reasons']) if not quality['passed'] else None,
+                    )
+                    await publish_event(
+                        db,
+                        topic=TOPIC_MESSAGE_GENERATED,
+                        lead_id=lead['id'],
+                        channel=channel,
+                        payload={"quality_score": quality['quality_score'], "quality_passed": quality['passed']},
+                    )
+
+                    if not quality['passed']:
+                        await log_outreach_event_v2(
+                            db,
+                            lead_id=lead['id'],
+                            channel=channel,
+                            event_type="quality_gate_rejected",
+                            payload={"reasons": quality['reasons'], "quality_score": quality['quality_score']},
+                        )
+                        await db.commit()
+                        console.print(f"[bold yellow]⚠ Quality gate blocked send for {lead['name']}[/bold yellow]")
+                        continue
+
+                    allowed, reason = await enforce_pre_send_policy(db, lead=lead, channel=channel)
+                    if not allowed:
+                        await transition_lead_state(
+                            db,
+                            lead['id'],
+                            "suppressed",
+                            reason=reason,
+                            actor="cli.pre_send_policy",
+                        )
+                        await log_outreach_event_v2(
+                            db,
+                            lead_id=lead['id'],
+                            channel=channel,
+                            event_type="policy_blocked",
+                            payload={"reason": reason},
+                        )
+                        await db.commit()
+                        console.print(f"[bold yellow]⚠ Policy blocked send for {lead['name']}: {reason}[/bold yellow]")
+                        continue
+
+                    await publish_event(
+                        db,
+                        topic=TOPIC_DISPATCH_REQUESTED,
+                        lead_id=lead['id'],
+                        channel=channel,
+                        payload={"source": "cli.bulk_delivery"},
+                    )
+                    await db.commit()
                 
                 success = False
                 if channel == 'email':
@@ -221,15 +353,54 @@ class ColdMailerCLI:
                 if success == True:
                     console.print(f"[bold green]✓ Sent to {lead['name']}[/bold green]")
                     async with get_db() as db:
-                        await db.execute("UPDATE leads SET status='sent', last_outreach=datetime('now') WHERE id=?", (lead['id'],))
+                        await transition_lead_state(
+                            db,
+                            lead['id'],
+                            "sent",
+                            reason=f"{channel}_delivery_success",
+                            actor="cli.bulk_delivery",
+                        )
+                        await db.execute("UPDATE leads SET last_outreach=datetime('now') WHERE id=?", (lead['id'],))
+                        await log_outreach_event_v2(
+                            db,
+                            lead_id=lead['id'],
+                            channel=channel,
+                            event_type="dispatch_success",
+                            payload={"status": "sent"},
+                        )
+                        await publish_event(
+                            db,
+                            topic=TOPIC_DISPATCH_COMPLETED,
+                            lead_id=lead['id'],
+                            channel=channel,
+                            payload={"status": "sent"},
+                        )
                         await db.commit()
                     await log_outreach_event(lead['id'], channel, "sent", body)
                 elif success == "not_found":
                     console.print(f"[bold yellow]⚠ User mapping failed: {lead['name']} not on WhatsApp. Added to Call List.[/bold yellow]")
                     self._add_to_call_list(lead)
+                    async with get_db() as db:
+                        await log_outreach_event_v2(
+                            db,
+                            lead_id=lead['id'],
+                            channel=channel,
+                            event_type="dispatch_not_found",
+                            payload={"status": "not_found"},
+                        )
+                        await db.commit()
                     await log_outreach_event(lead['id'], channel, "not_found")
                 else:
                     console.print(f"[bold red]✗ Failed reaching {lead['name']}[/bold red]")
+                    async with get_db() as db:
+                        await log_outreach_event_v2(
+                            db,
+                            lead_id=lead['id'],
+                            channel=channel,
+                            event_type="dispatch_failed",
+                            payload={"status": "failed", "error": "delivery_failed"},
+                        )
+                        await db.commit()
                     await log_outreach_event(lead['id'], channel, "failed", body, "delivery_failed")
         
         if channel == 'whatsapp':

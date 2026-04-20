@@ -1,63 +1,71 @@
 # V2 System Architecture
 
-## Design Goal
-Build a modular, failure-tolerant pipeline that can ingest multi-source leads, qualify them with high precision, and convert them through compliant, deliverability-safe outreach.
+## Design Intent
+Ship a modular decision engine that powers both library and CLI surfaces with
+shared contracts, strong safety gates, and full observability.
 
-## Core Services
+## Runtime Surfaces
+- Library surface: deterministic Python APIs for integration workloads.
+- CLI surface: operator and automation workflows with explicit command contracts.
+- API runtime surface: optional orchestration endpoint for remote triggers.
 
-### 1) Ingestion Service
-- Pulls records from each source connector
-- Normalizes records into unified lead schema
-- Emits ingestion events to queue
+## Core Modules
 
-### 2) Enrichment Service
-- Performs website and profile enrichment
-- Adds contact confidence and business maturity signals
-- Stores enrichment snapshots with timestamps
+### 1) Connector Module
+- Executes source adapters.
+- Normalizes raw records into canonical lead inputs.
+- Emits traceable ingestion events.
 
-### 3) Scoring Service
-- Calculates fit, intent, authority, and timing scores
-- Computes priority score and route decision
-- Writes score history for explainability
+### 2) Enrichment Module
+- Crawls and enriches business context.
+- Produces structured evidence blocks.
+- Calculates contact confidence inputs.
 
-### 4) Message Intelligence Service
-- Selects template by source, niche, and stage
-- Injects relevant proof snippets from Pixartual assets
-- Validates output quality before queueing for send
+### 3) Scoring Module
+- Computes fit, intent, authority, timing, and risk.
+- Returns score and reason codes.
+- Routes lead to next state.
 
-### 5) Outreach Scheduler
-- Applies per-inbox limits and sending windows
-- Handles timezone-aware and domain-aware pacing
-- Writes send audit events and state transitions
+### 4) Message Compiler Module
+- Assembles channel-aware prompts using evidence and proof assets.
+- Generates drafts and evaluates quality metrics.
+- Rejects low-confidence outputs with explicit reasons.
 
-### 6) Reply Processor
-- Ingests inbound replies
-- Classifies intent
-- Triggers next action (book, follow-up, disqualify, suppress)
+### 5) Dispatch Module
+- Applies caps, cooldown, and sender health policies.
+- Sends through channel operators.
+- Records immutable outreach events.
 
-### 7) Analytics Service
-- Aggregates source and campaign KPIs
-- Tracks funnel health and trend lines
-- Feeds weekly optimization reports
+### 6) Reply Intelligence Module
+- Classifies inbound responses.
+- Maps intent to next-best-action.
+- Routes uncertain replies to human review queue.
 
-## Queue Topology
-- queue.ingestion.raw
-- queue.enrichment.pending
-- queue.scoring.pending
-- queue.messaging.pending
-- queue.sending.pending
-- queue.reply.pending
-- queue.deadletter
+### 7) Observability Module
+- Collects metrics, traces, and structured logs.
+- Emits SLO alerts and anomaly events.
+- Supports replay and incident diagnostics.
 
-## State Machine (Lead Lifecycle)
+## Event Topology
+- events.connector.raw
+- events.connector.normalized
+- events.enrichment.completed
+- events.scoring.completed
+- events.message.generated
+- events.dispatch.requested
+- events.dispatch.completed
+- events.reply.received
+- events.reply.classified
+- events.deadletter
+
+## State Machine
 - discovered
 - normalized
 - enriched
 - scored
-- queued_for_outreach
-- sent_step_1
-- sent_step_2
-- sent_step_3
+- queued_for_review
+- queued_for_send
+- sent
 - replied_positive
 - replied_neutral
 - replied_negative
@@ -65,28 +73,14 @@ Build a modular, failure-tolerant pipeline that can ingest multi-source leads, q
 - disqualified
 - suppressed
 
-## Reliability Patterns
-- Idempotent processors by lead fingerprint
-- Exponential backoff retries for external sources
-- Dead-letter queue with operator replay tools
-- Circuit breakers for failing external APIs
-- Health probes per service and per source connector
+## Reliability and Safety Patterns
+- Idempotent writes by deterministic lead fingerprint.
+- Retry with exponential backoff for transient failures.
+- Dead-letter queue and replay utilities.
+- Circuit breakers for degraded providers.
+- Mandatory suppression check at pre-send boundary.
 
-## Deployment Guidance
-- Keep connectors isolated by source to reduce blast radius
-- Separate scheduler and sender workers for precise throttling
-- Run reply processing as high-priority workers
-- Use structured logs with campaign and lead correlation IDs
-
-## Security and Access
-- Secrets from secure environment store only
-- Principle of least privilege for source credentials
-- PII access control and audit trails
-- Data retention and deletion tasks by policy
-
-## Operational Alerts
-- Connector outage alerts
-- Queue backlog alerts
-- Bounce spike alerts
-- Reply processing delay alerts
-- API budget consumption alerts
+## Deployment Notes
+- Isolate connector workers from dispatch workers.
+- Prioritize reply-intelligence workers for faster response SLA.
+- Keep state machine transitions in a single shared module.

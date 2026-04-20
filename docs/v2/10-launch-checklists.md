@@ -1,54 +1,46 @@
 # V2 Launch Checklists
 
-## Pre-Launch Checklist
-- [ ] ICP, offer, and proof assets approved
-- [ ] Connector health checks passing
-- [ ] Scoring thresholds configured and reviewed
-- [ ] Suppression and compliance checks active
-- [ ] Sending limits and warmup profiles configured
-- [ ] Reply handling workflows tested
-- [ ] Dashboards and alerts live
+## Pre-Launch Readiness
+- [ ] ICP and offer locked for launch cycle.
+- [ ] Library and CLI version targets finalized.
+- [ ] Connector policy checks passing.
+- [ ] Scoring and quality-gate thresholds approved.
+- [ ] Suppression and compliance controls active.
 
-## Technical Readiness Checklist
-- [ ] Migrations applied in staging and validated
-- [ ] Queue retries and dead-letter handling tested
-- [ ] API failure scenarios simulated
-- [ ] Rate-limit and backoff logic verified
-- [ ] Structured logs and correlation IDs confirmed
+## Engineering Readiness
+- [ ] Schema migrations validated with rollback tests.
+- [ ] State machine transitions validated by integration tests.
+- [ ] Retry and dead-letter workflows tested.
+- [ ] Correlation IDs and structured logs verified.
+- [ ] Critical runbooks tested in simulation.
 
-## Messaging Readiness Checklist
-- [ ] Source-specific templates loaded
-- [ ] Proof snippets mapped to niche
-- [ ] Quality gate thresholds validated
-- [ ] Human review path active for low-quality drafts
+## Messaging Readiness
+- [ ] Prompt compiler version pinned.
+- [ ] Proof asset mapping approved.
+- [ ] Draft quality pass-rate above minimum threshold.
+- [ ] Approval queue path active for low-confidence drafts.
 
-## Launch Day Checklist
-- [ ] Start with controlled send volume
-- [ ] Monitor ingestion, send, and reply pipelines hourly
-- [ ] Verify suppression and unsubscribe actions in real time
-- [ ] Keep rollback switch ready for each major module
+## Launch Day Operations
+- [ ] Start with constrained send caps.
+- [ ] Monitor connector, scoring, dispatch, and reply health hourly.
+- [ ] Validate suppression actions in real time.
+- [ ] Keep rollback commands and owners on active duty.
 
-## First 72 Hours Checklist
-- [ ] Daily quality review of first-touch messages
-- [ ] Source-by-source lead quality validation
-- [ ] Deliverability health review and cap adjustment
-- [ ] Fast iteration on weak opening lines
+## First 7 Days
+- [ ] Daily source quality review.
+- [ ] Daily deliverability and sender-risk review.
+- [ ] Daily prompt and template review against outcomes.
+- [ ] Controlled tuning only, no major architecture changes.
 
-## Week 1 Optimization Checklist
-- [ ] Remove bottom-performing source and template combinations
-- [ ] Increase volume only for healthy inboxes
-- [ ] Recalibrate scoring with real reply outcomes
-- [ ] Review positive replies for offer-message fit
-
-## Rollback Checklist
-- [ ] Disable failing connector
-- [ ] Route leads to safe fallback queues
-- [ ] Pause affected inboxes
-- [ ] Notify owners and document incident
-- [ ] Restore after root-cause verification
+## Rollback Protocol
+- [ ] Disable failing module via feature flag.
+- [ ] Route in-flight jobs to safe queue states.
+- [ ] Pause impacted sender identities.
+- [ ] Log incident timeline and remediation actions.
+- [ ] Re-enable only after root-cause closure.
 
 ## Sign-Off Criteria
-- [ ] Positive reply rate above baseline
-- [ ] No critical deliverability incidents
-- [ ] Stable connector uptime
-- [ ] Team follows runbook without blockers
+- [ ] KPI floor met for two consecutive weeks.
+- [ ] No critical safety incidents.
+- [ ] No unresolved high-severity defects.
+- [ ] Documentation reflects exact shipped behavior.

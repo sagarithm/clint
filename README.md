@@ -1,6 +1,12 @@
-﻿# Clint: AI-Driven Enterprise Outreach
+﻿# Clint: AI Era Outreach Operating System
 
-Clint is a production-ready automation suite for lead generation, audit-based personalization, and multi-step outreach.
+Clint is a Python library and CLI for production-grade lead discovery,
+evidence-based personalization, and safe outreach automation.
+
+Primary product scope for V2:
+- Python package and CLI runtime first.
+- Web-solution offer focus (web design, UX, CRO, automation).
+- Safety-first execution with explainable decisions.
 
 Documentation index: [docs/README.md](docs/README.md)
 
@@ -34,18 +40,19 @@ print(result["body"])
 
 ## Core Capabilities
 
-- End-to-end autonomous campaigns (discover, enrich, personalize, outreach)
-- AI-based audit and proposal generation
-- Multi-step follow-up workflow
-- Email and WhatsApp channels
-- Local dashboard and export tools
-- Production-safe dry-run mode
+- Evidence-led discovery and enrichment
+- Explainable scoring and decision routing
+- AI message generation with quality gates
+- Email and WhatsApp execution with safety controls
+- CLI operations with deterministic exit codes
+- Python API for integration and orchestration
 
 ## Docs Map
 
 - [COMMANDS.md](COMMANDS.md): beginner and advanced CLI commands
-- [LAUNCH.md](LAUNCH.md): how to launch and use the library
-- [LIBRARY.md](LIBRARY.md): full programmatic API reference
+- [LAUNCH.md](LAUNCH.md): library quickstart and integration launch paths
+- [LIBRARY.md](LIBRARY.md): Python API usage reference
+- [docs/v2/README.md](docs/v2/README.md): V2 architecture and production specs
 - [examples/README.md](examples/README.md): working integration examples
 - [docs/README.md](docs/README.md): full documentation index
 - [docs/RELEASE.md](docs/RELEASE.md): release and publish process
@@ -64,8 +71,8 @@ clint dashboard --host 127.0.0.1 --port 8000
 ## Safety Defaults
 
 - Dry-run is default for campaign runs
-- Recommended daily volume: ~200 emails and ~200 WhatsApp messages
-- Randomized send delays help reduce detection risk
+- Suppression and cooldown checks gate outbound actions
+- Bounded retries and randomized delays reduce delivery risk
 - Activity logs are written to `logs/outreach.log`
 
 ## Development
@@ -75,4 +82,4 @@ pip install -r requirements.txt
 pytest -q
 ```
 
-Current release line: v1.0.3
+Current release line: v1.0.3 (transitioning to V2 architecture)
