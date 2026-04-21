@@ -31,7 +31,8 @@ Map V2 documentation requirements to current code modules and execution order.
 - Current coverage: partial
 - Existing modules: scrapers/maps.py, scrapers/connectors/*.py, core/connectors.py
 - Remaining work:
-  - production fetch implementations for non-Reddit connectors
+  - production fetch implementations for LinkedIn, X/Threads, and Fiverr connectors
+  - broaden worker orchestration beyond Reddit-specific pipeline entrypoint
 
 ### docs/v2/08-ai-prompt-and-personalization-spec.md
 - Current coverage: partial

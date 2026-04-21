@@ -27,6 +27,12 @@ offers. Connector output must be normalized, scored, and auditable.
 2. LinkedIn compliant capture via explicit policy-safe flows.
 3. Additional intent sources behind feature flags after baseline stability.
 
+## Current Implementation Status
+- Production fetch connectors: Reddit, Upwork (RSS demand ingestion).
+- SDK-normalized stubs pending production fetch paths: LinkedIn, X/Threads, Fiverr.
+- All connector outputs are normalized through shared adapter contracts and
+	can be persisted with rejection reason tracking.
+
 ## Normalization Rules
 - Canonical domain normalization and duplicate fingerprinting.
 - Timestamp all source records in UTC.
