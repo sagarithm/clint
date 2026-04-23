@@ -113,6 +113,46 @@ clint worker-reddit --query "dentist website redesign" --limit 20
 clint worker-reddit --query "roofing leads" --limit 10 --live
 ```
 
+### `clint worker-upwork`
+Run the staged Upwork worker pipeline with safe dry-run defaults.
+- `--query`: Intent keyword for source discovery.
+- `--limit`: Max records to process in this run (default 20).
+- `--dry-run/--live`: Dry-run by default; use `--live` for real sends.
+```bash
+clint worker-upwork --query "website redesign" --limit 20
+clint worker-upwork --query "landing page optimization" --limit 10 --live
+```
+
+### `clint worker-fiverr`
+Run the staged Fiverr worker pipeline with safe dry-run defaults.
+- `--query`: Intent keyword for source discovery.
+- `--limit`: Max records to process in this run (default 20).
+- `--dry-run/--live`: Dry-run by default; use `--live` for real sends.
+```bash
+clint worker-fiverr --query "website design" --limit 20
+clint worker-fiverr --query "landing page optimization" --limit 10 --live
+```
+
+### `clint worker-linkedin`
+Run the staged LinkedIn worker pipeline with safe dry-run defaults.
+- `--query`: Intent keyword for source discovery.
+- `--limit`: Max records to process in this run (default 20).
+- `--dry-run/--live`: Dry-run by default; use `--live` for real sends.
+```bash
+clint worker-linkedin --query "frontend web jobs" --limit 20
+clint worker-linkedin --query "website redesign" --limit 10 --live
+```
+
+### `clint worker-x-threads`
+Run the staged X/Threads worker pipeline with safe dry-run defaults.
+- `--query`: Intent keyword for source discovery.
+- `--limit`: Max records to process in this run (default 20).
+- `--dry-run/--live`: Dry-run by default; use `--live` for real sends.
+```bash
+clint worker-x-threads --query "need website help" --limit 20
+clint worker-x-threads --query "landing page redesign" --limit 10 --live
+```
+
 ### `clint experiments-decide`
 Apply auto-decision policy to an experiment.
 - `--experiment-id`: Required experiment identifier.

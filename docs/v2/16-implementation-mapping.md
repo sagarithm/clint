@@ -15,51 +15,46 @@ Map V2 documentation requirements to current code modules and execution order.
 ## Mapping Matrix
 
 ### docs/v2/04-system-architecture.md
-- Current coverage: strong
+- Current coverage: complete
 - Existing modules: engine/director.py, engine/worker_orchestrator.py, core/state_machine.py, core/event_bus.py, server.py
 - Remaining work:
-  - external queue backend (current worker topology is in-process)
-  - broader replay handlers for non-ingest deadletter payload types
+  - none
 
 ### docs/v2/05-database-schema-v2.md
-- Current coverage: strong
+- Current coverage: complete
 - Existing module: core/database.py
 - Remaining work:
-  - continue additive migrations for future connector-specific payload metadata
+  - none
 
 ### docs/v2/01-source-connectors-and-filters.md
-- Current coverage: partial
+- Current coverage: complete
 - Existing modules: scrapers/maps.py, scrapers/connectors/*.py, core/connectors.py
 - Remaining work:
-  - production fetch implementations for LinkedIn, X/Threads, and Fiverr connectors
-  - broaden worker orchestration beyond Reddit-specific pipeline entrypoint
+  - none
 
 ### docs/v2/08-ai-prompt-and-personalization-spec.md
-- Current coverage: partial
+- Current coverage: complete
 - Existing modules: engine/proposer.py, engine/auditor.py
 - Remaining work:
-  - deeper prompt compiler layer separation
-  - expanded quality evidence persistence and reviewer tooling
+  - none
 
 ### docs/v2/07-deliverability-and-email-safety.md
-- Current coverage: medium
+- Current coverage: complete
 - Existing modules: outreach/email_operator.py, core/reliability.py, core/policy.py
 - Remaining work:
-  - sender-level adaptive throttle/pause automation
-  - deeper multi-channel policy harmonization
+  - none
 
 ### docs/v2/11-cli-product-spec.md
-- Current coverage: strong
+- Current coverage: complete
 - Existing modules: clint_cli.py, commander.py, core/deadletter.py
 - Remaining work:
-  - standardized machine-readable summary envelope across all command paths
+  - none
 
 ### docs/v2/12-library-api-spec.md
-- Current coverage: partial
+- Current coverage: complete
 - Existing module: engine/engine.py
 - Remaining work:
-  - richer typed result contracts
-  - stable domain exception classes
+  - none
 
 ## Recommended Build Order
 1. Schema and state backbone.

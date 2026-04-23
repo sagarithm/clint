@@ -66,3 +66,14 @@ def sanitize_emails(email_string: Optional[str]) -> List[str]:
     valid_emails = {e.lower().strip() for e in raw_emails if is_valid_email(e)}
     
     return sorted(list(valid_emails))
+
+import warnings
+from core.logger import logger
+
+def warn_deprecated(feature_name: str, reason: str, version_removal: str) -> None:
+    """
+    Standardizes deprecation warnings across the CLI and API products.
+    """
+    msg = f"DEPRECATION WARNING: {feature_name} is deprecated and will be removed in v{version_removal}. Reason: {reason}"
+    logger.warning(msg)
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)

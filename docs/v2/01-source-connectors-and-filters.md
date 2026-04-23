@@ -28,8 +28,8 @@ offers. Connector output must be normalized, scored, and auditable.
 3. Additional intent sources behind feature flags after baseline stability.
 
 ## Current Implementation Status
-- Production fetch connectors: Reddit, Upwork (RSS demand ingestion).
-- SDK-normalized stubs pending production fetch paths: LinkedIn, X/Threads, Fiverr.
+- Production fetch connectors: Reddit, Upwork (RSS demand ingestion), Fiverr, LinkedIn, X/Threads.
+- SDK adapter coverage: all listed connectors implement fetch, normalize, and validate.
 - All connector outputs are normalized through shared adapter contracts and
 	can be persisted with rejection reason tracking.
 

@@ -1,5 +1,6 @@
 import asyncio
 import csv
+import json
 import subprocess
 import sys
 from importlib.metadata import PackageNotFoundError, version
@@ -38,6 +39,16 @@ EXIT_CONFIG = 3
 EXIT_RUNTIME = 4
 EXIT_NETWORK = 5
 EXIT_INTERNAL = 10
+
+
+def _emit_command_result(command: str, status: str = "ok", exit_code: int = EXIT_OK, **data: object) -> None:
+    payload = {
+        "command": command,
+        "status": status,
+        "exit_code": exit_code,
+        **data,
+    }
+    console.print(json.dumps(payload, default=str))
 
 
 def _map_exception_to_exit(exc: Exception, default: int = EXIT_INTERNAL) -> int:
@@ -101,6 +112,7 @@ def version_cmd(verbose: bool = typer.Option(False, "--verbose", help="Show runt
     if verbose:
         console.print(f"python {sys.version.split()[0]}")
         console.print(f"platform {sys.platform}")
+    _emit_command_result("version", version=cli_ver, verbose=verbose)
 
 
 @app.command("init")
@@ -147,6 +159,7 @@ def init_cmd(
     console.print(f"OPENROUTER_API_KEY={mask(current.get('OPENROUTER_API_KEY', ''))}")
     console.print(f"SMTP_USER_1={current.get('SMTP_USER_1', '')}")
     console.print(f"SMTP_PASS_1={mask(current.get('SMTP_PASS_1', ''))}")
+    _emit_command_result("init", saved=True)
 
 
 @config_app.command("set")
@@ -161,6 +174,7 @@ def config_set(key: str, value: str) -> None:
 
     out_value = mask(value) if key in SECRET_KEYS else value
     console.print(f"Set {key}={out_value}")
+    _emit_command_result("config.set", key=key)
 
 
 @config_app.command("show")
@@ -177,9 +191,8 @@ def config_show(
             rendered[key] = value
 
     if as_json:
-        import json
-
         console.print(json.dumps(rendered, indent=2))
+        _emit_command_result("config.show", as_json=True, keys=len(rendered))
         return
 
     table = Table(title="Clint Config")
@@ -188,6 +201,7 @@ def config_show(
     for key in sorted(rendered.keys()):
         table.add_row(key, rendered[key])
     console.print(table)
+    _emit_command_result("config.show", as_json=False, keys=len(rendered))
 
 
 @config_app.command("doctor")
@@ -215,10 +229,14 @@ def config_doctor() -> None:
     console.print(table)
     if failures:
         if config_fail:
+            _emit_command_result("config.doctor", status="error", exit_code=EXIT_CONFIG, failures=failures)
             raise typer.Exit(code=EXIT_CONFIG)
         if network_fail:
+            _emit_command_result("config.doctor", status="error", exit_code=EXIT_NETWORK, failures=failures)
             raise typer.Exit(code=EXIT_NETWORK)
+        _emit_command_result("config.doctor", status="error", exit_code=EXIT_RUNTIME, failures=failures)
         raise typer.Exit(code=EXIT_RUNTIME)
+    _emit_command_result("config.doctor", failures=0)
 
 
 @app.command("run")
@@ -234,6 +252,14 @@ def run_cmd(
     console.print("Recommendation: keep outreach around 200 emails/day and 200 WhatsApp/day for better deliverability.")
     if dry_run:
         console.print(f"Dry run preview: query='{query_val}', target={target}, send_limit={send_limit}, min_score={min_score or settings.MIN_SCORE_THRESHOLD}")
+        _emit_command_result(
+            "run",
+            mode="dry_run",
+            query=query_val,
+            target=target,
+            send_limit=send_limit,
+            min_score=min_score or settings.MIN_SCORE_THRESHOLD,
+        )
         return
 
     _ensure_live_config()
@@ -248,9 +274,12 @@ def run_cmd(
 
     try:
         asyncio.run(_run_live())
+        _emit_command_result("run", mode="live", query=query_val, target=target, send_limit=send_limit)
     except Exception as exc:
         console.print(f"Run failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("run", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("scrape")
@@ -275,9 +304,12 @@ def scrape_cmd(
 
     try:
         asyncio.run(_scrape())
+        _emit_command_result("scrape", query=query_val, target=target, outreach=outreach)
     except Exception as exc:
         console.print(f"Scrape failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("scrape", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("followup")
@@ -319,9 +351,12 @@ def followup_cmd(
 
     try:
         asyncio.run(_followup())
+        _emit_command_result("followup", days_since_last=days_since_last, channel=channel_value or "all")
     except Exception as exc:
         console.print(f"Follow-up failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("followup", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("export")
@@ -356,9 +391,12 @@ def export_cmd(
 
     try:
         asyncio.run(_export())
+        _emit_command_result("export", table=table_value, out_dir=out_dir)
     except Exception as exc:
         console.print(f"Export failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("export", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("dashboard")
@@ -370,10 +408,13 @@ def dashboard_cmd(
     try:
         import uvicorn
 
+        _emit_command_result("dashboard", host=host, port=port, reload=reload, status="started")
         uvicorn.run("server:app", host=host, port=port, reload=reload)
     except Exception as exc:
         console.print(f"Dashboard failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("dashboard", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("worker-reddit")
@@ -400,9 +441,140 @@ def worker_reddit_cmd(
 
     try:
         asyncio.run(_run_worker())
+        _emit_command_result("worker-reddit", query=query_val, limit=limit, live=not dry_run)
     except Exception as exc:
         console.print(f"Worker pipeline failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("worker-reddit", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
+
+
+@app.command("worker-upwork")
+def worker_upwork_cmd(
+    query: Optional[str] = typer.Option(None, "--query"),
+    limit: int = typer.Option(20, "--limit"),
+    dry_run: bool = typer.Option(True, "--dry-run/--live"),
+) -> None:
+    query_val = query or typer.prompt("Upwork intent query")
+
+    if not dry_run:
+        _ensure_live_config()
+
+    async def _run_worker() -> None:
+        await init_db()
+        orchestrator = QueueWorkerOrchestrator()
+        result = await orchestrator.run_upwork_pipeline(
+            query=query_val,
+            limit=limit,
+            live_send=not dry_run,
+        )
+        console.print("Worker pipeline completed")
+        console.print(result)
+
+    try:
+        asyncio.run(_run_worker())
+        _emit_command_result("worker-upwork", query=query_val, limit=limit, live=not dry_run)
+    except Exception as exc:
+        console.print(f"Worker pipeline failed: {exc}")
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("worker-upwork", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
+
+
+@app.command("worker-fiverr")
+def worker_fiverr_cmd(
+    query: Optional[str] = typer.Option(None, "--query"),
+    limit: int = typer.Option(20, "--limit"),
+    dry_run: bool = typer.Option(True, "--dry-run/--live"),
+) -> None:
+    query_val = query or typer.prompt("Fiverr intent query")
+
+    if not dry_run:
+        _ensure_live_config()
+
+    async def _run_worker() -> None:
+        await init_db()
+        orchestrator = QueueWorkerOrchestrator()
+        result = await orchestrator.run_fiverr_pipeline(
+            query=query_val,
+            limit=limit,
+            live_send=not dry_run,
+        )
+        console.print("Worker pipeline completed")
+        console.print(result)
+
+    try:
+        asyncio.run(_run_worker())
+        _emit_command_result("worker-fiverr", query=query_val, limit=limit, live=not dry_run)
+    except Exception as exc:
+        console.print(f"Worker pipeline failed: {exc}")
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("worker-fiverr", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
+
+
+@app.command("worker-linkedin")
+def worker_linkedin_cmd(
+    query: Optional[str] = typer.Option(None, "--query"),
+    limit: int = typer.Option(20, "--limit"),
+    dry_run: bool = typer.Option(True, "--dry-run/--live"),
+) -> None:
+    query_val = query or typer.prompt("LinkedIn intent query")
+
+    if not dry_run:
+        _ensure_live_config()
+
+    async def _run_worker() -> None:
+        await init_db()
+        orchestrator = QueueWorkerOrchestrator()
+        result = await orchestrator.run_linkedin_pipeline(
+            query=query_val,
+            limit=limit,
+            live_send=not dry_run,
+        )
+        console.print("Worker pipeline completed")
+        console.print(result)
+
+    try:
+        asyncio.run(_run_worker())
+        _emit_command_result("worker-linkedin", query=query_val, limit=limit, live=not dry_run)
+    except Exception as exc:
+        console.print(f"Worker pipeline failed: {exc}")
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("worker-linkedin", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
+
+
+@app.command("worker-x-threads")
+def worker_x_threads_cmd(
+    query: Optional[str] = typer.Option(None, "--query"),
+    limit: int = typer.Option(20, "--limit"),
+    dry_run: bool = typer.Option(True, "--dry-run/--live"),
+) -> None:
+    query_val = query or typer.prompt("X/Threads intent query")
+
+    if not dry_run:
+        _ensure_live_config()
+
+    async def _run_worker() -> None:
+        await init_db()
+        orchestrator = QueueWorkerOrchestrator()
+        result = await orchestrator.run_x_threads_pipeline(
+            query=query_val,
+            limit=limit,
+            live_send=not dry_run,
+        )
+        console.print("Worker pipeline completed")
+        console.print(result)
+
+    try:
+        asyncio.run(_run_worker())
+        _emit_command_result("worker-x-threads", query=query_val, limit=limit, live=not dry_run)
+    except Exception as exc:
+        console.print(f"Worker pipeline failed: {exc}")
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("worker-x-threads", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("experiments-decide")
@@ -427,9 +599,12 @@ def experiments_decide_cmd(
 
     try:
         asyncio.run(_decide())
+        _emit_command_result("experiments-decide", experiment_id=experiment_id)
     except Exception as exc:
         console.print(f"Experiment decision failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("experiments-decide", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("deadletter-list")
@@ -464,9 +639,12 @@ def deadletter_list_cmd(
 
     try:
         asyncio.run(_list())
+        _emit_command_result("deadletter-list", status_filter=status or "all", limit=limit)
     except Exception as exc:
         console.print(f"Deadletter list failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("deadletter-list", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("deadletter-replay")
@@ -485,9 +663,12 @@ def deadletter_replay_cmd(event_id: int = typer.Option(..., "--event-id")) -> No
 
     try:
         asyncio.run(_replay())
+        _emit_command_result("deadletter-replay", event_id=event_id)
     except Exception as exc:
         console.print(f"Deadletter replay failed: {exc}")
-        raise typer.Exit(code=_map_exception_to_exit(exc))
+        code = _map_exception_to_exit(exc)
+        _emit_command_result("deadletter-replay", status="error", exit_code=code, error=str(exc))
+        raise typer.Exit(code=code)
 
 
 @app.command("upgrade")
@@ -500,8 +681,10 @@ def upgrade_cmd() -> None:
             check=True
         )
         console.print("[bold green]✓ Clint CLI upgraded successfully![/bold green]")
+        _emit_command_result("upgrade")
     except subprocess.CalledProcessError as exc:
         console.print(f"[bold red]✗ Upgrade failed:[/bold red] {exc}")
+        _emit_command_result("upgrade", status="error", exit_code=EXIT_RUNTIME, error=str(exc))
         raise typer.Exit(code=EXIT_RUNTIME)
 
 

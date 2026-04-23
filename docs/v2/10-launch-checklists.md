@@ -1,5 +1,8 @@
 # V2 Launch Checklists
 
+Status: Operational checklist template. Items are intentionally left unchecked and
+are meant to be completed per launch cycle.
+
 ## Pre-Launch Readiness
 - [ ] ICP and offer locked for launch cycle.
 - [ ] Library and CLI version targets finalized.

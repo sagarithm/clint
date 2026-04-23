@@ -24,6 +24,12 @@ runtime workflows.
 - Exceptions are stable, documented, and domain-specific.
 - Batch APIs expose bounded-concurrency controls.
 
+## Current Implementation Notes
+- Typed result contract: `PersonalizationResult` object with dict-style compatibility.
+- Stable exception hierarchy: `EngineError`, `EngineValidationError`, `EngineProviderError`.
+- Batch bounded concurrency: `max_concurrency` control in sync and async batch APIs.
+- Correlation support: each result carries `correlation_id` for eventful tracing.
+
 ## Reliability Requirements
 - Idempotent operations where side effects can repeat.
 - Retry-safe integration calls with clear max-attempt behavior.

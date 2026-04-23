@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     MIN_DELAY_SECONDS: int = 5
     MAX_DELAY_SECONDS: int = 15
 
+    # --- SLAs & INCIDENT RECOVERY ---
+    SLA_BREACH_HOURS: int = 24
+    ALERT_EMAIL: str = "hello@pixartual.studio"
+    FALLBACK_TEMPLATE_ENABLED: bool = True
+
     # --- SENDER PERSONALIZATION (PIXARTUAL STUDIO) ---
     SENDER_NAME: str = "Sagar Kewat"
     SENDER_TITLE: str = "Founder | Pixartual"

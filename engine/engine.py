@@ -1,24 +1,44 @@
-"""
-Clint Library API: Programmatic interface for lead personalization and outreach.
-
-Usage:
-    import clint
-    
-    engine = clint.Engine(api_key="your_openrouter_key")
-    result = engine.personalize({
-        "name": "Jane Doe",
-        "company": "TechCorp",
-        "title": "CTO"
-    })
-    print(result["generated_hook"])
-"""
+"""Clint library API for typed outreach personalization workflows."""
 
 import asyncio
-from typing import Dict, Any, Optional
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, Optional
+from uuid import uuid4
 
-from engine.proposer import Proposer
 from core.config import settings
 from core.logger import logger
+from engine.proposer import Proposer
+
+
+class EngineError(Exception):
+    """Base class for stable library domain errors."""
+
+
+class EngineValidationError(EngineError):
+    """Raised when user input fails deterministic validation rules."""
+
+
+class EngineProviderError(EngineError):
+    """Raised when upstream AI/provider generation fails."""
+
+
+@dataclass
+class PersonalizationResult:
+    """Typed result contract for personalization operations."""
+
+    subject: Optional[str]
+    body: str
+    channel: str
+    lead_name: str
+    correlation_id: str
+    reason_code: str = "generated"
+
+    # Backward-compatible dict-style access for existing callers.
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 
 class Engine:
@@ -49,7 +69,7 @@ class Engine:
         channel: str = "email",
         outreach_step: int = 1,
         service: str = None
-    ) -> Dict[str, str]:
+    ) -> PersonalizationResult:
         """
         Generate a personalized message for a lead (synchronous wrapper).
         
@@ -78,7 +98,7 @@ class Engine:
         channel: str = "email",
         outreach_step: int = 1,
         service: str = None
-    ) -> Dict[str, str]:
+    ) -> PersonalizationResult:
         """
         Generate a personalized message for a lead (async).
         
@@ -91,9 +111,15 @@ class Engine:
         Returns:
             Dictionary with keys: "subject" (email only), "body", "channel"
         """
-        lead_name = lead.get("name", "there")
+        if channel not in {"email", "whatsapp"}:
+            raise EngineValidationError("channel must be 'email' or 'whatsapp'")
+        if outreach_step not in {1, 2, 3}:
+            raise EngineValidationError("outreach_step must be 1, 2, or 3")
+
+        lead_name = str(lead.get("name") or "there")
         business_category = lead.get("category") or lead.get("business_category")
         audit_summary = lead.get("audit_summary") or f"Professional in {business_category or 'their industry'}"
+        correlation_id = str(lead.get("correlation_id") or uuid4())
         
         subject, body = await self.proposer.generate_proposal(
             lead_name=lead_name,
@@ -108,21 +134,27 @@ class Engine:
             reviews_count=lead.get("reviews_count", 0),
             about_us_info=lead.get("about_us_info")
         )
-        
-        return {
-            "subject": subject if channel == "email" else None,
-            "body": body,
-            "channel": channel,
-            "lead_name": lead_name
-        }
+
+        if body == "Generation failed.":
+            raise EngineProviderError("proposal_generation_failed")
+
+        return PersonalizationResult(
+            subject=subject if channel == "email" else None,
+            body=body,
+            channel=channel,
+            lead_name=lead_name,
+            correlation_id=correlation_id,
+            reason_code="generated",
+        )
 
     def personalize_batch(
         self,
         leads: list[Dict[str, Any]],
         channel: str = "email",
         outreach_step: int = 1,
-        service: str = None
-    ) -> list[Dict[str, str]]:
+        service: str = None,
+        max_concurrency: int = 5,
+    ) -> list[PersonalizationResult]:
         """
         Generate personalized messages for multiple leads (synchronous batch).
         
@@ -141,25 +173,44 @@ class Engine:
                 {"name": "John", "company": "DataFlow"}
             ])
         """
-        return asyncio.run(self.personalize_batch_async(leads, channel, outreach_step, service))
+        return asyncio.run(
+            self.personalize_batch_async(
+                leads,
+                channel,
+                outreach_step,
+                service,
+                max_concurrency=max_concurrency,
+            )
+        )
 
     async def personalize_batch_async(
         self,
         leads: list[Dict[str, Any]],
         channel: str = "email",
         outreach_step: int = 1,
-        service: str = None
-    ) -> list[Dict[str, str]]:
+        service: str = None,
+        max_concurrency: int = 5,
+    ) -> list[PersonalizationResult]:
         """
         Generate personalized messages for multiple leads (async batch).
         
         Processes all leads concurrently for better performance.
         """
-        tasks = [
-            self.personalize_async(lead, channel, outreach_step, service)
-            for lead in leads
-        ]
+        bounded = max(1, int(max_concurrency))
+        semaphore = asyncio.Semaphore(bounded)
+
+        async def _run_one(lead: Dict[str, Any]) -> PersonalizationResult:
+            async with semaphore:
+                return await self.personalize_async(lead, channel, outreach_step, service)
+
+        tasks = [_run_one(lead) for lead in leads]
         return await asyncio.gather(*tasks)
 
 
-__all__ = ["Engine"]
+__all__ = [
+    "Engine",
+    "EngineError",
+    "EngineValidationError",
+    "EngineProviderError",
+    "PersonalizationResult",
+]

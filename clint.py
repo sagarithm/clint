@@ -20,8 +20,20 @@ CLI Usage:
 For full documentation, see: https://github.com/sagarithm/clint
 """
 
-from engine.engine import Engine
+from engine.engine import (
+    Engine,
+    EngineError,
+    EngineProviderError,
+    EngineValidationError,
+    PersonalizationResult,
+)
 
 __version__ = "1.0.3"
 __author__ = "Clint Contributors"
-__all__ = ["Engine"]
+__all__ = [
+    "Engine",
+    "EngineError",
+    "EngineValidationError",
+    "EngineProviderError",
+    "PersonalizationResult",
+]

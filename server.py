@@ -32,13 +32,17 @@ from engine.proposer import Proposer
 from engine.worker_orchestrator import QueueWorkerOrchestrator
 from outreach.email_operator import EmailOperator
 from outreach.whatsapp_operator import WhatsAppOperator
+from core.sla_monitor import sla_monitor_loop
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Initialize Database
     await init_db()
+    # Startup: SLA Monitor background loop
+    monitor_task = asyncio.create_task(sla_monitor_loop())
     yield
-    # Shutdown logic (if any) can go here
+    # Shutdown logic
+    monitor_task.cancel()
 
 app = FastAPI(
     title="# Clint | Enterprise Intelligence Dashboard",
@@ -127,6 +131,10 @@ class DeadletterReplayRequest(BaseModel):
 # Global state for pipeline tracking (Simple for now)
 pipeline_status = {"running": False, "message": "Idle"}
 worker_status = {"running": False, "message": "Idle", "last_result": None}
+upwork_worker_status = {"running": False, "message": "Idle", "last_result": None}
+fiverr_worker_status = {"running": False, "message": "Idle", "last_result": None}
+linkedin_worker_status = {"running": False, "message": "Idle", "last_result": None}
+x_threads_worker_status = {"running": False, "message": "Idle", "last_result": None}
 
 BASE_DIR = Path(__file__).resolve().parent
 CORE_DIR = BASE_DIR / "core"
@@ -449,6 +457,62 @@ async def get_reddit_worker_status():
     return worker_status
 
 
+@app.post("/api/workers/upwork/run")
+async def run_upwork_worker(req: WorkerRunRequest, background_tasks: BackgroundTasks):
+    if upwork_worker_status["running"]:
+        raise HTTPException(status_code=400, detail="Upwork worker pipeline already running")
+
+    background_tasks.add_task(_run_upwork_worker_task, req.query, req.limit, req.live_send)
+    return {"status": "started", "query": req.query, "limit": req.limit, "live_send": req.live_send}
+
+
+@app.get("/api/workers/upwork/status")
+async def get_upwork_worker_status():
+    return upwork_worker_status
+
+
+@app.post("/api/workers/fiverr/run")
+async def run_fiverr_worker(req: WorkerRunRequest, background_tasks: BackgroundTasks):
+    if fiverr_worker_status["running"]:
+        raise HTTPException(status_code=400, detail="Fiverr worker pipeline already running")
+
+    background_tasks.add_task(_run_fiverr_worker_task, req.query, req.limit, req.live_send)
+    return {"status": "started", "query": req.query, "limit": req.limit, "live_send": req.live_send}
+
+
+@app.get("/api/workers/fiverr/status")
+async def get_fiverr_worker_status():
+    return fiverr_worker_status
+
+
+@app.post("/api/workers/linkedin/run")
+async def run_linkedin_worker(req: WorkerRunRequest, background_tasks: BackgroundTasks):
+    if linkedin_worker_status["running"]:
+        raise HTTPException(status_code=400, detail="LinkedIn worker pipeline already running")
+
+    background_tasks.add_task(_run_linkedin_worker_task, req.query, req.limit, req.live_send)
+    return {"status": "started", "query": req.query, "limit": req.limit, "live_send": req.live_send}
+
+
+@app.get("/api/workers/linkedin/status")
+async def get_linkedin_worker_status():
+    return linkedin_worker_status
+
+
+@app.post("/api/workers/x-threads/run")
+async def run_x_threads_worker(req: WorkerRunRequest, background_tasks: BackgroundTasks):
+    if x_threads_worker_status["running"]:
+        raise HTTPException(status_code=400, detail="X/Threads worker pipeline already running")
+
+    background_tasks.add_task(_run_x_threads_worker_task, req.query, req.limit, req.live_send)
+    return {"status": "started", "query": req.query, "limit": req.limit, "live_send": req.live_send}
+
+
+@app.get("/api/workers/x-threads/status")
+async def get_x_threads_worker_status():
+    return x_threads_worker_status
+
+
 @app.get("/api/deadletter")
 async def deadletter_list(status: Optional[str] = None, limit: int = 50):
     async with get_db() as db:
@@ -483,6 +547,78 @@ async def _run_reddit_worker_task(query: str, limit: int, live_send: bool):
         worker_status["message"] = f"Worker run failed: {str(e)}"
     finally:
         worker_status["running"] = False
+
+
+async def _run_upwork_worker_task(query: str, limit: int, live_send: bool):
+    upwork_worker_status["running"] = True
+    upwork_worker_status["message"] = f"Running upwork queue worker for '{query}'"
+    upwork_worker_status["last_result"] = None
+    try:
+        result = await worker_orchestrator.run_upwork_pipeline(
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+        upwork_worker_status["last_result"] = result
+        upwork_worker_status["message"] = "Worker run completed"
+    except Exception as e:
+        upwork_worker_status["message"] = f"Worker run failed: {str(e)}"
+    finally:
+        upwork_worker_status["running"] = False
+
+
+async def _run_fiverr_worker_task(query: str, limit: int, live_send: bool):
+    fiverr_worker_status["running"] = True
+    fiverr_worker_status["message"] = f"Running fiverr queue worker for '{query}'"
+    fiverr_worker_status["last_result"] = None
+    try:
+        result = await worker_orchestrator.run_fiverr_pipeline(
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+        fiverr_worker_status["last_result"] = result
+        fiverr_worker_status["message"] = "Worker run completed"
+    except Exception as e:
+        fiverr_worker_status["message"] = f"Worker run failed: {str(e)}"
+    finally:
+        fiverr_worker_status["running"] = False
+
+
+async def _run_linkedin_worker_task(query: str, limit: int, live_send: bool):
+    linkedin_worker_status["running"] = True
+    linkedin_worker_status["message"] = f"Running linkedin queue worker for '{query}'"
+    linkedin_worker_status["last_result"] = None
+    try:
+        result = await worker_orchestrator.run_linkedin_pipeline(
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+        linkedin_worker_status["last_result"] = result
+        linkedin_worker_status["message"] = "Worker run completed"
+    except Exception as e:
+        linkedin_worker_status["message"] = f"Worker run failed: {str(e)}"
+    finally:
+        linkedin_worker_status["running"] = False
+
+
+async def _run_x_threads_worker_task(query: str, limit: int, live_send: bool):
+    x_threads_worker_status["running"] = True
+    x_threads_worker_status["message"] = f"Running x_threads queue worker for '{query}'"
+    x_threads_worker_status["last_result"] = None
+    try:
+        result = await worker_orchestrator.run_x_threads_pipeline(
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+        x_threads_worker_status["last_result"] = result
+        x_threads_worker_status["message"] = "Worker run completed"
+    except Exception as e:
+        x_threads_worker_status["message"] = f"Worker run failed: {str(e)}"
+    finally:
+        x_threads_worker_status["running"] = False
 
 # 5. Static Assets & Frontend
 app.mount("/static", StaticFiles(directory=str(BASE_DIR)), name="static")

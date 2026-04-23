@@ -2,6 +2,7 @@ import asyncio
 import httpx
 from core.config import settings
 from core.logger import logger
+from core.prompt_compiler import PromptContext, compile_outreach_prompt
 from typing import Dict, List
 
 class Proposer:
@@ -33,77 +34,25 @@ class Proposer:
         if not self.api_key:
             return ("Outreach", f"Draft: Hi {lead_name}, Following up on my previous message regarding your {'website' if has_website else 'digital presence'}...")
 
-        channel_context = "Keep it concise (150 words max), professional, and conversational." if channel == "email" else "Keep it very short (50 words max), friendly, and direct for WhatsApp."
-        
-        deep_knowledge = ""
-        if business_category: deep_knowledge += f"Industry: {business_category}\n"
-        if rating > 0: deep_knowledge += f"Public Rating: {rating}/5 stars\n"
-        if reviews_count > 0: deep_knowledge += f"Reviews: {reviews_count} reviews\n"
-        if about_us_info: deep_knowledge += f"Company Background (Crawl): {about_us_info[:500]}\n"
-
-        if outreach_step == 1:
-            if has_website:
-                goal = "Pitch a Website Redesign by highlighting issues found in the audit."
-                specific_task = "- Refer specifically to the audit findings and suggest how a redesign will fix them."
-            else:
-                goal = "Pitch a New Website Development since the lead has no online presence."
-                specific_task = "- Focus on the benefits of having a digital platform for trust and visibility."
-        elif outreach_step == 2:
-            goal = "Soft Follow-up: Check if they saw the previous email/audit. Keep it helpful, not pushy."
-            specific_task = "- Mention you shared some thoughts a few days ago and wanted to ensure they reached the right person. Re-emphasize you are here to help."
-        else:
-            goal = "Final Re-engagement: Offer a quick value-add or a very short 5-min chat. Last attempt."
-            specific_task = "- Keep it extremely brief. Ask if they are still the right person to talk to about digital strategy."
-
-        # Multi-Condition Messaging Adaptation
-        if score >= 8:
-            if rating < 3.5:
-                tone_strategy = "RESCUE: The business is struggling online. Be empathetic but firm about the risks of inaction."
-            else:
-                tone_strategy = "SCALE: The business is doing well but missing digital leverage. Be ambitious and focus on market dominance."
-        else:
-            tone_strategy = "STANDARD: Professional, curious, and value-focused."
-
         # Service Inference
         if not service:
             service = "Website Redesign" if has_website else "Website Development"
 
-        prompt = f"""
-        [ROLE] {settings.SENDER_NAME}, Founder at Pixartual.
-        [GOAL] {goal}
-        [SERVICE] {service}
-        [STRATEGY] {tone_strategy}
-        [DNA] {settings.SENDER_TAGLINE}
-        [TASK] {specific_task}
-
-        [CONTEXT]
-        - Target Business: {lead_name}
-        - Industry: {business_category or 'Local Business'}
-        - Social Proof: {rating}/5 Stars ({reviews_count} Reviews)
-        - Site Crawl: {about_us_info[:300] if about_us_info else 'No crawl data'}
-        - Audit Findings: {audit_summary}
-
-        [SYSTEM INSTRUCTIONS]
-        1. SALUTATION: Start exactly with "Dear {lead_name}," (or "Dear {lead_name} Team," if it's a generic entity).
-        2. SERVICE MENTION: Explicitly mention that you are reaching out regarding "[SERVICE]".
-        3. PERSUASIVE HOOK: Immediately follow with a specific, direct observation about their {business_category or 'business'} or 'Audit Finding'.
-        4. NO FLUFF: Avoid "I hope this email finds you well" or "My name is...".
-        5. FOUNDER TONE: Be authoritative, slightly provocative, but professional. You are an expert peer.
-        6. CHANNEL ADAPTATION: {'[EMAIL] Subject: [Hook] | Body: [Salutation] [3 Paras Max]' if channel == 'email' else '[WHATSAPP] [Salutation] [3 Sentences Max].'}
-
-        [CONSTRAINTS]
-        - NO PLACEHOLDERS.
-        - NO MARKDOWN (Bold/Italic).
-        - PLAIN TEXT ONLY.
-        - SIGNATURE (EMAIL ONLY): Use exactly this signature at the end if channel is EMAIL:
-          Warm regards,
-
-          {settings.SENDER_NAME}
-          Founder | Pixartual
-          🌐 https://www.pixartual.studio
-          ✨ Where Brands Evolve Into Power.
-        - NO SIGNATURE for WHATSAPP.
-        """
+        prompt = compile_outreach_prompt(
+            PromptContext(
+                lead_name=lead_name,
+                channel=channel,
+                outreach_step=outreach_step,
+                service=service,
+                business_category=business_category,
+                has_website=has_website,
+                rating=rating,
+                reviews_count=reviews_count,
+                about_us_info=about_us_info,
+                audit_summary=audit_summary,
+                score=score,
+            )
+        )
 
         try:
             async with httpx.AsyncClient(timeout=45.0) as client:
@@ -159,11 +108,24 @@ class Proposer:
                     return subject, body
                 else:
                     logger.error(f"Proposer API Error ({response.status_code}): {response.text}")
-                    return "Important Note", "Generation failed."
+                    return self._fallback_template(lead_name, has_website, channel)
 
         except Exception as e:
             logger.error(f"Proposer Exception for {lead_name}: {e}")
+            return self._fallback_template(lead_name, has_website, channel)
+
+    def _fallback_template(self, lead_name: str, has_website: bool, channel: str) -> tuple:
+        if not settings.FALLBACK_TEMPLATE_ENABLED:
             return "Important Note", "Generation failed."
+            
+        logger.warning(f"Using deterministic fallback template for {lead_name}")
+        subject = f"Connecting regarding your {'website' if has_website else 'digital presence'}"
+        body = f"Dear {lead_name},\n\nI was reviewing your business and noticed opportunities to enhance your digital presence and conversion rate. Would you be open to a brief chat to discuss how we can help you capture more leads?\n"
+        
+        if channel == "email":
+            body += f"\nWarm regards,\n\n{settings.SENDER_NAME}\n{settings.SENDER_TITLE}\n🌐 {settings.SENDER_SITE}\n✨ {settings.SENDER_TAGLINE}"
+            
+        return subject, body
 
 if __name__ == "__main__":
     proposer = Proposer()

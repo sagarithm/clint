@@ -61,6 +61,11 @@ events:
 4. Confirm outcome using replay status and replay attempt counters.
 5. Escalate unsupported payload classes into connector/worker backlog.
 
+Current supported replay classes:
+- Raw source payload replay for Reddit and Upwork ingestion paths.
+- Stage-level replay for `enrich`, `draft`, and `dispatch` deadletter events.
+- Dispatch replay runs in dry-run mode by default for safety.
+
 Operational API equivalents:
 - `GET /api/deadletter`
 - `POST /api/deadletter/replay`

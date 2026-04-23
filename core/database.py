@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 from core.config import settings
 from core.logger import logger
+from core.migrations import run_migrations
 
 
 async def _column_exists(db: aiosqlite.Connection, table: str, column: str) -> bool:
@@ -346,6 +347,10 @@ async def init_db() -> None:
         await db.execute("CREATE INDEX IF NOT EXISTS idx_deadletter_events_replay_status ON deadletter_events (replay_status, created_at_utc)")
 
         await db.commit()
+        
+        # Run advanced deterministic migrations
+        await run_migrations(db)
+        
     logger.info("Database initialization successful.")
 
 if __name__ == "__main__":

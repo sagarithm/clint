@@ -20,7 +20,7 @@ with deterministic behavior and clear safety guarantees.
 
 ## Implemented V2 Command Surface (Current)
 - Core operations: `run`, `scrape`, `followup`, `export`, `dashboard`.
-- Worker controls: `worker-reddit`.
+- Worker controls: `worker-reddit`, `worker-upwork`, `worker-fiverr`, `worker-linkedin`, `worker-x-threads`.
 - Experiment controls: `experiments-decide`.
 - Incident recovery controls: `deadletter-list`, `deadletter-replay`.
 
@@ -28,6 +28,18 @@ with deterministic behavior and clear safety guarantees.
 - `worker-reddit`:
 	- Inputs: `--query`, `--limit`, `--dry-run/--live`.
 	- Behavior: executes staged Reddit worker pipeline with bounded batch size.
+- `worker-upwork`:
+	- Inputs: `--query`, `--limit`, `--dry-run/--live`.
+	- Behavior: executes staged Upwork worker pipeline with bounded batch size.
+- `worker-fiverr`:
+	- Inputs: `--query`, `--limit`, `--dry-run/--live`.
+	- Behavior: executes staged Fiverr worker pipeline with bounded batch size.
+- `worker-linkedin`:
+	- Inputs: `--query`, `--limit`, `--dry-run/--live`.
+	- Behavior: executes staged LinkedIn worker pipeline with bounded batch size.
+- `worker-x-threads`:
+	- Inputs: `--query`, `--limit`, `--dry-run/--live`.
+	- Behavior: executes staged X/Threads worker pipeline with bounded batch size.
 - `experiments-decide`:
 	- Inputs: `--experiment-id`, thresholds for sample/uplift/quality impact.
 	- Behavior: returns deterministic decision (`promote|hold|rollback|no_winner`).
@@ -67,6 +79,14 @@ Reliability commands are mirrored by API endpoints for dashboard or external
 automation surfaces:
 - `POST /api/workers/reddit/run`
 - `GET /api/workers/reddit/status`
+- `POST /api/workers/upwork/run`
+- `GET /api/workers/upwork/status`
+- `POST /api/workers/fiverr/run`
+- `GET /api/workers/fiverr/status`
+- `POST /api/workers/linkedin/run`
+- `GET /api/workers/linkedin/status`
+- `POST /api/workers/x-threads/run`
+- `GET /api/workers/x-threads/status`
 - `GET /api/deadletter`
 - `POST /api/deadletter/replay`
 

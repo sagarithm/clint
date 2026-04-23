@@ -107,6 +107,30 @@ async def enforce_pre_send_policy(
             )
             return False, reason
 
+    # Adaptive sender-health pause: block sends when recent dispatch failures spike.
+    async with db.execute(
+        """
+        SELECT COUNT(*)
+        FROM outreach_events
+        WHERE channel = ?
+          AND event_type = 'dispatch_failed'
+          AND occurred_at_utc >= datetime('now', '-60 minutes')
+        """,
+        (channel,),
+    ) as cursor:
+        failure_count = int((await cursor.fetchone())[0])
+
+    if failure_count >= 5:
+        reason = "sender_health_paused"
+        await write_compliance_check(
+            db,
+            lead_id=lead_id,
+            check_name="sender_health_check",
+            decision="blocked",
+            reason=reason,
+        )
+        return False, reason
+
     await write_compliance_check(
         db,
         lead_id=lead_id,

@@ -108,6 +108,66 @@ def test_worker_reddit_dry_run_success(monkeypatch):
     assert "Worker pipeline completed" in result.stdout
 
 
+def test_worker_upwork_dry_run_success(monkeypatch):
+    async def _noop_init_db():
+        return None
+
+    async def _run_pipeline(self, **_kwargs):
+        return {"result": {"discovered": 1, "sent": 0}}
+
+    monkeypatch.setattr(clint_cli, "init_db", _noop_init_db)
+    monkeypatch.setattr(clint_cli.QueueWorkerOrchestrator, "run_upwork_pipeline", _run_pipeline)
+
+    result = runner.invoke(app, ["worker-upwork", "--query", "website redesign"])
+    assert result.exit_code == 0
+    assert "Worker pipeline completed" in result.stdout
+
+
+def test_worker_fiverr_dry_run_success(monkeypatch):
+    async def _noop_init_db():
+        return None
+
+    async def _run_pipeline(self, **_kwargs):
+        return {"result": {"discovered": 1, "sent": 0}}
+
+    monkeypatch.setattr(clint_cli, "init_db", _noop_init_db)
+    monkeypatch.setattr(clint_cli.QueueWorkerOrchestrator, "run_fiverr_pipeline", _run_pipeline)
+
+    result = runner.invoke(app, ["worker-fiverr", "--query", "website design"])
+    assert result.exit_code == 0
+    assert "Worker pipeline completed" in result.stdout
+
+
+def test_worker_linkedin_dry_run_success(monkeypatch):
+    async def _noop_init_db():
+        return None
+
+    async def _run_pipeline(self, **_kwargs):
+        return {"result": {"discovered": 1, "sent": 0}}
+
+    monkeypatch.setattr(clint_cli, "init_db", _noop_init_db)
+    monkeypatch.setattr(clint_cli.QueueWorkerOrchestrator, "run_linkedin_pipeline", _run_pipeline)
+
+    result = runner.invoke(app, ["worker-linkedin", "--query", "web design jobs"])
+    assert result.exit_code == 0
+    assert "Worker pipeline completed" in result.stdout
+
+
+def test_worker_x_threads_dry_run_success(monkeypatch):
+    async def _noop_init_db():
+        return None
+
+    async def _run_pipeline(self, **_kwargs):
+        return {"result": {"discovered": 1, "sent": 0}}
+
+    monkeypatch.setattr(clint_cli, "init_db", _noop_init_db)
+    monkeypatch.setattr(clint_cli.QueueWorkerOrchestrator, "run_x_threads_pipeline", _run_pipeline)
+
+    result = runner.invoke(app, ["worker-x-threads", "--query", "need website help"])
+    assert result.exit_code == 0
+    assert "Worker pipeline completed" in result.stdout
+
+
 def test_experiments_decide_success(monkeypatch):
     async def _noop_init_db():
         return None

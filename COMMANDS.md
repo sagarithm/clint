@@ -157,6 +157,50 @@ Notes:
 - Defaults to dry-run. Use `--live` only after `clint config doctor` passes.
 - Useful for controlled source-specific runs and debugging worker behavior.
 
+### clint worker-upwork
+
+Run the V2 queue-style Upwork worker pipeline (discover -> enrich -> score -> draft -> send).
+
+```bash
+clint worker-upwork --query "website redesign" --limit 20
+clint worker-upwork --query "landing page optimization" --limit 10 --live
+```
+
+Notes:
+- Defaults to dry-run. Use `--live` only after `clint config doctor` passes.
+- Uses Upwork demand signals via connector ingestion and the same quality/policy gates.
+
+### clint worker-fiverr
+
+Run the V2 queue-style Fiverr worker pipeline (discover -> enrich -> score -> draft -> send).
+
+```bash
+clint worker-fiverr --query "website design" --limit 20
+clint worker-fiverr --query "landing page optimization" --limit 10 --live
+```
+
+Notes:
+- Defaults to dry-run. Use `--live` only after `clint config doctor` passes.
+- Uses Fiverr demand signals via connector ingestion and the same quality/policy gates.
+
+### clint worker-linkedin
+
+Run the V2 queue-style LinkedIn worker pipeline (discover -> enrich -> score -> draft -> send).
+
+```bash
+clint worker-linkedin --query "frontend web jobs" --limit 20
+clint worker-linkedin --query "website redesign" --limit 10 --live
+```
+
+### clint worker-x-threads
+
+Run the V2 queue-style X/Threads worker pipeline (discover -> enrich -> score -> draft -> send).
+
+```bash
+clint worker-x-threads --query "need website help" --limit 20
+clint worker-x-threads --query "landing page redesign" --limit 10 --live
+```
+
 ### clint experiments-decide
 
 Apply experiment auto-decision policy to a completed experiment.
@@ -189,6 +233,8 @@ clint deadletter-replay --event-id 42
 
 Notes:
 - Replay updates event replay metadata (`replay_status`, attempts, replay timestamp).
+- Supported replay types include source raw-ingest (Reddit and Upwork) and stage-level
+	retries for `enrich`, `draft`, and `dispatch` failures.
 - Unsupported payload types are marked as unsupported rather than silently dropped.
 
 ## API Reliability Endpoints
@@ -197,6 +243,14 @@ These are available when running `clint dashboard`:
 
 - `POST /api/workers/reddit/run`
 - `GET /api/workers/reddit/status`
+- `POST /api/workers/upwork/run`
+- `GET /api/workers/upwork/status`
+- `POST /api/workers/fiverr/run`
+- `GET /api/workers/fiverr/status`
+- `POST /api/workers/linkedin/run`
+- `GET /api/workers/linkedin/status`
+- `POST /api/workers/x-threads/run`
+- `GET /api/workers/x-threads/status`
 - `GET /api/deadletter?status=<status>&limit=<n>`
 - `POST /api/deadletter/replay`
 

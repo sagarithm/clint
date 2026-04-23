@@ -34,7 +34,11 @@ from core.v2_store import (
 )
 from engine.proposer import Proposer
 from outreach.email_operator import EmailOperator
+from scrapers.connectors.fiverr_connector import FiverrConnector
+from scrapers.connectors.linkedin_connector import LinkedInConnector
 from scrapers.connectors.reddit_connector import RedditConnector
+from scrapers.connectors.upwork_connector import UpworkConnector
+from scrapers.connectors.x_threads_connector import XThreadsConnector
 from scrapers.web_crawler import WebCrawler
 
 
@@ -55,7 +59,11 @@ class QueueWorkerOrchestrator:
     """Queue-driven staged pipeline for connector ingestion and outreach processing."""
 
     def __init__(self) -> None:
+        self.fiverr = FiverrConnector()
+        self.linkedin = LinkedInConnector()
         self.reddit = RedditConnector()
+        self.upwork = UpworkConnector()
+        self.x_threads = XThreadsConnector()
         self.crawler = WebCrawler()
         self.proposer = Proposer()
         self.email = EmailOperator()
@@ -67,6 +75,101 @@ class QueueWorkerOrchestrator:
         limit: int = 20,
         live_send: bool = False,
     ) -> Dict[str, Any]:
+        return await self._run_pipeline(
+            connector=self.reddit,
+            source_platform="reddit",
+            source_label="Reddit",
+            adapter_version="reddit.v2",
+            pipeline_key="reddit_pipeline",
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+
+    async def run_upwork_pipeline(
+        self,
+        *,
+        query: str,
+        limit: int = 20,
+        live_send: bool = False,
+    ) -> Dict[str, Any]:
+        return await self._run_pipeline(
+            connector=self.upwork,
+            source_platform="upwork",
+            source_label="Upwork",
+            adapter_version="upwork.v2",
+            pipeline_key="upwork_pipeline",
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+
+    async def run_fiverr_pipeline(
+        self,
+        *,
+        query: str,
+        limit: int = 20,
+        live_send: bool = False,
+    ) -> Dict[str, Any]:
+        return await self._run_pipeline(
+            connector=self.fiverr,
+            source_platform="fiverr",
+            source_label="Fiverr",
+            adapter_version="fiverr.v2",
+            pipeline_key="fiverr_pipeline",
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+
+    async def run_linkedin_pipeline(
+        self,
+        *,
+        query: str,
+        limit: int = 20,
+        live_send: bool = False,
+    ) -> Dict[str, Any]:
+        return await self._run_pipeline(
+            connector=self.linkedin,
+            source_platform="linkedin",
+            source_label="LinkedIn",
+            adapter_version="linkedin.v2",
+            pipeline_key="linkedin_pipeline",
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+
+    async def run_x_threads_pipeline(
+        self,
+        *,
+        query: str,
+        limit: int = 20,
+        live_send: bool = False,
+    ) -> Dict[str, Any]:
+        return await self._run_pipeline(
+            connector=self.x_threads,
+            source_platform="x_threads",
+            source_label="XThreads",
+            adapter_version="x_threads.v2",
+            pipeline_key="x_threads_pipeline",
+            query=query,
+            limit=limit,
+            live_send=live_send,
+        )
+
+    async def _run_pipeline(
+        self,
+        *,
+        connector: Any,
+        source_platform: str,
+        source_label: str,
+        adapter_version: str,
+        pipeline_key: str,
+        query: str,
+        limit: int,
+        live_send: bool,
+    ) -> Dict[str, Any]:
         raw_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
         enrich_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
         score_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
@@ -75,19 +178,33 @@ class QueueWorkerOrchestrator:
 
         result = WorkerResult()
 
-        raw_records = await self.reddit.fetch({"query": query, "limit": limit})
+        raw_records = await connector.fetch({"query": query, "limit": limit})
         result.discovered = len(raw_records)
         for record in raw_records:
             await raw_queue.put(record)
 
-        await self._ingest_worker(raw_queue, enrich_queue, result)
-        await self._enrich_worker(enrich_queue, score_queue, result)
-        await self._score_worker(score_queue, draft_queue, result)
-        await self._draft_worker(draft_queue, dispatch_queue, result)
-        await self._dispatch_worker(dispatch_queue, result, live_send=live_send)
+        await self._ingest_worker(
+            raw_queue,
+            enrich_queue,
+            result,
+            connector=connector,
+            source_platform=source_platform,
+            source_label=source_label,
+            adapter_version=adapter_version,
+        )
+        await self._enrich_worker(enrich_queue, score_queue, result, pipeline_key=pipeline_key)
+        await self._score_worker(score_queue, draft_queue, result, pipeline_key=pipeline_key)
+        await self._draft_worker(draft_queue, dispatch_queue, result, pipeline_key=pipeline_key)
+        await self._dispatch_worker(
+            dispatch_queue,
+            result,
+            live_send=live_send,
+            pipeline_key=pipeline_key,
+        )
 
         return {
             "query": query,
+            "source": source_platform,
             "live_send": live_send,
             "result": result.__dict__,
         }
@@ -98,7 +215,11 @@ class QueueWorkerOrchestrator:
         if not valid:
             raise ValueError(reason or "invalid_record")
 
-        lead_id = await self._upsert_lead_from_record(raw_record)
+        lead_id = await self._upsert_lead_from_record(
+            raw_record,
+            source_label="Reddit",
+            default_category="Reddit",
+        )
         async with get_db() as db:
             await persist_lead_source(
                 db,
@@ -116,24 +237,218 @@ class QueueWorkerOrchestrator:
 
         return {"lead_id": lead_id, "source_record_id": normalized.get("source_record_id")}
 
+    async def replay_upwork_raw_record(self, raw_record: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = self.upwork.normalize(raw_record)
+        valid, reason = self.upwork.validate(normalized)
+        if not valid:
+            raise ValueError(reason or "invalid_record")
+
+        lead_id = await self._upsert_lead_from_record(
+            raw_record,
+            source_label="Upwork",
+            default_category="Upwork",
+        )
+        async with get_db() as db:
+            await persist_lead_source(
+                db,
+                lead_id=lead_id,
+                record=normalized,
+                adapter_version="upwork.v2.replay",
+            )
+            await publish_event(
+                db,
+                topic=TOPIC_CONNECTOR_NORMALIZED,
+                lead_id=lead_id,
+                payload={"source": "upwork", "replay": True},
+            )
+            await db.commit()
+
+        return {"lead_id": lead_id, "source_record_id": normalized.get("source_record_id")}
+
+    async def replay_fiverr_raw_record(self, raw_record: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = self.fiverr.normalize(raw_record)
+        valid, reason = self.fiverr.validate(normalized)
+        if not valid:
+            raise ValueError(reason or "invalid_record")
+
+        lead_id = await self._upsert_lead_from_record(
+            raw_record,
+            source_label="Fiverr",
+            default_category="Fiverr",
+        )
+        async with get_db() as db:
+            await persist_lead_source(
+                db,
+                lead_id=lead_id,
+                record=normalized,
+                adapter_version="fiverr.v2.replay",
+            )
+            await publish_event(
+                db,
+                topic=TOPIC_CONNECTOR_NORMALIZED,
+                lead_id=lead_id,
+                payload={"source": "fiverr", "replay": True},
+            )
+            await db.commit()
+
+        return {"lead_id": lead_id, "source_record_id": normalized.get("source_record_id")}
+
+    async def replay_linkedin_raw_record(self, raw_record: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = self.linkedin.normalize(raw_record)
+        valid, reason = self.linkedin.validate(normalized)
+        if not valid:
+            raise ValueError(reason or "invalid_record")
+
+        lead_id = await self._upsert_lead_from_record(
+            raw_record,
+            source_label="LinkedIn",
+            default_category="LinkedIn",
+        )
+        async with get_db() as db:
+            await persist_lead_source(
+                db,
+                lead_id=lead_id,
+                record=normalized,
+                adapter_version="linkedin.v2.replay",
+            )
+            await publish_event(
+                db,
+                topic=TOPIC_CONNECTOR_NORMALIZED,
+                lead_id=lead_id,
+                payload={"source": "linkedin", "replay": True},
+            )
+            await db.commit()
+
+        return {"lead_id": lead_id, "source_record_id": normalized.get("source_record_id")}
+
+    async def replay_x_threads_raw_record(self, raw_record: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = self.x_threads.normalize(raw_record)
+        valid, reason = self.x_threads.validate(normalized)
+        if not valid:
+            raise ValueError(reason or "invalid_record")
+
+        lead_id = await self._upsert_lead_from_record(
+            raw_record,
+            source_label="XThreads",
+            default_category="XThreads",
+        )
+        async with get_db() as db:
+            await persist_lead_source(
+                db,
+                lead_id=lead_id,
+                record=normalized,
+                adapter_version="x_threads.v2.replay",
+            )
+            await publish_event(
+                db,
+                topic=TOPIC_CONNECTOR_NORMALIZED,
+                lead_id=lead_id,
+                payload={"source": "x_threads", "replay": True},
+            )
+            await db.commit()
+
+        return {"lead_id": lead_id, "source_record_id": normalized.get("source_record_id")}
+
+    async def replay_enrich_stage(self, *, lead_id: int, source: str = "") -> Dict[str, Any]:
+        lead = await self._get_lead(lead_id)
+        if lead is None:
+            raise ValueError(f"lead_not_found:{lead_id}")
+
+        pipeline_key = self._pipeline_key_from_source(source)
+        result = WorkerResult()
+        enrich_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+        score_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+        draft_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+        dispatch_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+
+        await enrich_queue.put(lead)
+        await self._enrich_worker(enrich_queue, score_queue, result, pipeline_key=pipeline_key)
+        await self._score_worker(score_queue, draft_queue, result, pipeline_key=pipeline_key)
+        await self._draft_worker(draft_queue, dispatch_queue, result, pipeline_key=pipeline_key)
+        await self._dispatch_worker(
+            dispatch_queue,
+            result,
+            live_send=False,
+            pipeline_key=pipeline_key,
+        )
+        return {"lead_id": lead_id, "stage": "enrich", "pipeline_key": pipeline_key, "result": result.__dict__}
+
+    async def replay_draft_stage(self, *, lead_id: int, source: str = "") -> Dict[str, Any]:
+        lead = await self._get_lead(lead_id)
+        if lead is None:
+            raise ValueError(f"lead_not_found:{lead_id}")
+
+        pipeline_key = self._pipeline_key_from_source(source)
+        result = WorkerResult()
+        draft_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+        dispatch_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+
+        await draft_queue.put(lead)
+        await self._draft_worker(draft_queue, dispatch_queue, result, pipeline_key=pipeline_key)
+        await self._dispatch_worker(
+            dispatch_queue,
+            result,
+            live_send=False,
+            pipeline_key=pipeline_key,
+        )
+        return {"lead_id": lead_id, "stage": "draft", "pipeline_key": pipeline_key, "result": result.__dict__}
+
+    async def replay_dispatch_stage(self, *, lead_id: int, source: str = "", live_send: bool = False) -> Dict[str, Any]:
+        lead = await self._get_lead(lead_id)
+        if lead is None:
+            raise ValueError(f"lead_not_found:{lead_id}")
+
+        latest_draft = await self._get_latest_message_draft(lead_id, channel="email")
+        if latest_draft is None:
+            raise ValueError(f"no_message_draft:{lead_id}")
+
+        pipeline_key = self._pipeline_key_from_source(source)
+        result = WorkerResult()
+        dispatch_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+        await dispatch_queue.put(
+            {
+                "lead": lead,
+                "subject": str(latest_draft.get("subject") or ""),
+                "body": str(latest_draft.get("body") or ""),
+            }
+        )
+        await self._dispatch_worker(
+            dispatch_queue,
+            result,
+            live_send=live_send,
+            pipeline_key=pipeline_key,
+        )
+        return {
+            "lead_id": lead_id,
+            "stage": "dispatch",
+            "pipeline_key": pipeline_key,
+            "live_send": live_send,
+            "result": result.__dict__,
+        }
+
     async def _ingest_worker(
         self,
         raw_queue: asyncio.Queue[Dict[str, Any]],
         enrich_queue: asyncio.Queue[Dict[str, Any]],
         result: WorkerResult,
+        *,
+        connector: Any,
+        source_platform: str,
+        source_label: str,
+        adapter_version: str,
     ) -> None:
         while not raw_queue.empty():
             raw = await raw_queue.get()
             try:
-                normalized = self.reddit.normalize(raw)
-                valid, reason = self.reddit.validate(normalized)
+                normalized = connector.normalize(raw)
+                valid, reason = connector.validate(normalized)
                 if not valid:
                     async with get_db() as db:
                         await log_connector_rejection(
                             db,
-                            source_platform="reddit",
+                            source_platform=source_platform,
                             reason_code=reason or "invalid_record",
-                            reason_detail="reddit ingestion validation failed",
+                            reason_detail=f"{source_platform} ingestion validation failed",
                             raw_payload=raw,
                         )
                         await publish_deadletter(
@@ -146,25 +461,29 @@ class QueueWorkerOrchestrator:
                         await db.commit()
                     continue
 
-                lead_id = await self._upsert_lead_from_record(raw)
+                lead_id = await self._upsert_lead_from_record(
+                    raw,
+                    source_label=source_label,
+                    default_category=source_label,
+                )
                 async with get_db() as db:
                     await persist_lead_source(
                         db,
                         lead_id=lead_id,
                         record=normalized,
-                        adapter_version="reddit.v2",
+                        adapter_version=adapter_version,
                     )
                     await publish_event(
                         db,
                         topic=TOPIC_CONNECTOR_RAW,
                         lead_id=lead_id,
-                        payload={"source": "reddit"},
+                        payload={"source": source_platform},
                     )
                     await publish_event(
                         db,
                         topic=TOPIC_CONNECTOR_NORMALIZED,
                         lead_id=lead_id,
-                        payload={"source": "reddit", "source_url": normalized.get("source_url")},
+                        payload={"source": source_platform, "source_url": normalized.get("source_url")},
                     )
                     await db.commit()
 
@@ -188,6 +507,8 @@ class QueueWorkerOrchestrator:
         enrich_queue: asyncio.Queue[Dict[str, Any]],
         score_queue: asyncio.Queue[Dict[str, Any]],
         result: WorkerResult,
+        *,
+        pipeline_key: str,
     ) -> None:
         while not enrich_queue.empty():
             lead = await enrich_queue.get()
@@ -195,7 +516,11 @@ class QueueWorkerOrchestrator:
                 website = str(lead.get("website") or "").strip()
                 crawl_data: Dict[str, Any] = {}
                 if website:
-                    crawl_data = await self.crawler.crawl(website, lead.get("name", "unknown"), query_id="REDDIT_PIPE")
+                    crawl_data = await self.crawler.crawl(
+                        website,
+                        lead.get("name", "unknown"),
+                        query_id=pipeline_key.upper()[:32],
+                    )
 
                 emails = ",".join(crawl_data.get("emails", [])) or (lead.get("email") or "N/A")
                 about = crawl_data.get("about_us_info") or lead.get("about_us_info") or ""
@@ -217,7 +542,7 @@ class QueueWorkerOrchestrator:
                         db,
                         topic=TOPIC_ENRICHMENT_COMPLETED,
                         lead_id=lead["id"],
-                        payload={"source": "reddit_pipeline"},
+                        payload={"source": pipeline_key},
                     )
                     await db.commit()
 
@@ -241,6 +566,8 @@ class QueueWorkerOrchestrator:
         score_queue: asyncio.Queue[Dict[str, Any]],
         draft_queue: asyncio.Queue[Dict[str, Any]],
         result: WorkerResult,
+        *,
+        pipeline_key: str,
     ) -> None:
         while not score_queue.empty():
             lead = await score_queue.get()
@@ -254,7 +581,7 @@ class QueueWorkerOrchestrator:
                         db,
                         lead["id"],
                         "scored",
-                        reason="reddit_pipeline_scored",
+                        reason=f"{pipeline_key}_scored",
                         actor="worker.score",
                     )
                 except ValueError:
@@ -268,7 +595,7 @@ class QueueWorkerOrchestrator:
                     timing_score=score_data["timing_score"],
                     risk_score=score_data["risk_score"],
                     priority_score=score_data["priority_score"],
-                    reason_codes={"source": "reddit_pipeline", "codes": score_data["reason_codes"]},
+                    reason_codes={"source": pipeline_key, "codes": score_data["reason_codes"]},
                 )
                 await publish_event(
                     db,
@@ -288,6 +615,8 @@ class QueueWorkerOrchestrator:
         draft_queue: asyncio.Queue[Dict[str, Any]],
         dispatch_queue: asyncio.Queue[Dict[str, Any]],
         result: WorkerResult,
+        *,
+        pipeline_key: str,
     ) -> None:
         while not draft_queue.empty():
             lead = await draft_queue.get()
@@ -319,7 +648,7 @@ class QueueWorkerOrchestrator:
                         channel="email",
                         subject=subject,
                         body=body,
-                        template_id="reddit_pipeline",
+                        template_id=pipeline_key,
                         prompt_version="v2-worker",
                         quality_score=quality["quality_score"],
                         rejection_reason=",".join(quality["reasons"]) if not quality["passed"] else None,
@@ -346,7 +675,7 @@ class QueueWorkerOrchestrator:
                         topic=TOPIC_DEADLETTER,
                         lead_id=lead.get("id"),
                         error_message=str(e),
-                        payload={"stage": "draft"},
+                        payload={"stage": "draft", "source": pipeline_key},
                     )
                     await db.commit()
 
@@ -356,6 +685,7 @@ class QueueWorkerOrchestrator:
         result: WorkerResult,
         *,
         live_send: bool,
+        pipeline_key: str,
     ) -> None:
         while not dispatch_queue.empty():
             item = await dispatch_queue.get()
@@ -381,7 +711,7 @@ class QueueWorkerOrchestrator:
                         lead_id=lead["id"],
                         channel="email",
                         event_type="policy_blocked",
-                        payload={"reason": reason, "source": "reddit_pipeline"},
+                        payload={"reason": reason, "source": pipeline_key},
                     )
                     await db.commit()
                     result.blocked += 1
@@ -392,7 +722,7 @@ class QueueWorkerOrchestrator:
                         db,
                         lead["id"],
                         "queued_for_send",
-                        reason="reddit_pipeline_dispatch_ready",
+                        reason=f"{pipeline_key}_dispatch_ready",
                         actor="worker.dispatch",
                     )
                 except ValueError:
@@ -436,7 +766,7 @@ class QueueWorkerOrchestrator:
                             db,
                             lead["id"],
                             "sent",
-                            reason="reddit_pipeline_dispatch_success",
+                            reason=f"{pipeline_key}_dispatch_success",
                             actor="worker.dispatch",
                         )
                     except ValueError:
@@ -447,7 +777,7 @@ class QueueWorkerOrchestrator:
                         lead_id=lead["id"],
                         channel="email",
                         event_type="dispatch_success",
-                        payload={"status": "sent", "source": "reddit_pipeline"},
+                        payload={"status": "sent", "source": pipeline_key},
                     )
                     await publish_event(
                         db,
@@ -465,7 +795,7 @@ class QueueWorkerOrchestrator:
                         lead_id=lead["id"],
                         channel="email",
                         event_type="dispatch_failed",
-                        payload={"status": "failed", "source": "reddit_pipeline"},
+                        payload={"status": "failed", "source": pipeline_key},
                     )
                     await publish_deadletter(
                         db,
@@ -473,15 +803,21 @@ class QueueWorkerOrchestrator:
                         lead_id=lead["id"],
                         channel="email",
                         error_message="dispatch_failed",
-                        payload={"stage": "dispatch", "source": "reddit_pipeline"},
+                        payload={"stage": "dispatch", "source": pipeline_key},
                     )
                     await db.commit()
                 result.failed += 1
 
-    async def _upsert_lead_from_record(self, record: Dict[str, Any]) -> int:
+    async def _upsert_lead_from_record(
+        self,
+        record: Dict[str, Any],
+        *,
+        source_label: str,
+        default_category: str,
+    ) -> int:
         name = str(record.get("name") or "Unnamed Lead")[:255]
         website = record.get("website")
-        category = record.get("category") or "Reddit"
+        category = record.get("category") or default_category
         business_category = record.get("business_category") or "Web Solutions"
 
         async with get_db() as db:
@@ -500,7 +836,7 @@ class QueueWorkerOrchestrator:
                     website,
                     record.get("phone"),
                     business_category,
-                    "Reddit",
+                    source_label,
                     category,
                 ),
             )
@@ -514,3 +850,35 @@ class QueueWorkerOrchestrator:
                 if row is None:
                     return None
                 return dict(row)
+
+    async def _get_latest_message_draft(self, lead_id: int, *, channel: str = "email") -> Optional[Dict[str, Any]]:
+        async with get_db() as db:
+            async with db.execute(
+                """
+                SELECT *
+                FROM message_drafts
+                WHERE lead_id = ? AND channel = ?
+                ORDER BY created_at_utc DESC, id DESC
+                LIMIT 1
+                """,
+                (lead_id, channel),
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row is None:
+                    return None
+                return dict(row)
+
+    @staticmethod
+    def _pipeline_key_from_source(source: str) -> str:
+        source_l = str(source or "").lower()
+        if "linkedin" in source_l:
+            return "linkedin_pipeline"
+        if "x_threads" in source_l or "xthreads" in source_l or "nitter" in source_l:
+            return "x_threads_pipeline"
+        if "fiverr" in source_l:
+            return "fiverr_pipeline"
+        if "upwork" in source_l:
+            return "upwork_pipeline"
+        if "reddit" in source_l:
+            return "reddit_pipeline"
+        return "reddit_pipeline"
