@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     
     # --- AI & LLM CONFIGURATION ---
     OPENROUTER_API_KEY: str = ""
-    AI_MODEL: str = "google/gemini-2.0-flash-001"
+    AI_MODEL: str = "google/gemini-2.5-flash"
 
     # --- DATABASE CONFIGURATION ---
     DB_PATH: str = "data/clint.db"
