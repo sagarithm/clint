@@ -1,4 +1,4 @@
-﻿# Clint: AI-Driven Enterprise Outreach
+# Clint: AI-Driven Enterprise Outreach
 
 Clint is a production-ready automation suite for lead generation, audit-based personalization, and multi-step outreach.
 
@@ -75,4 +75,4 @@ pip install -r requirements.txt
 pytest -q
 ```
 
-Current release line: v1.0.3
+Current release line: v1.0.4

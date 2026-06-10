@@ -1,4 +1,4 @@
-﻿# Clint Release Guide
+# Clint Release Guide
 
 This guide defines the release process for the production branch.
 
@@ -6,7 +6,7 @@ This guide defines the release process for the production branch.
 
 - Production branch: `main`
 - Version format: `vX.Y.Z` (semantic version tags)
-- Current release line: `v1.0.3`
+- Current release line: `v1.0.4`
 
 ## Prerequisites
 
