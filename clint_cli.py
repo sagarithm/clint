@@ -104,6 +104,7 @@ def version_cmd(verbose: bool = typer.Option(False, "--verbose", help="Show runt
 def init_cmd(
     non_interactive: bool = typer.Option(False, "--non-interactive", help="Disable prompts"),
     openrouter_key: Optional[str] = typer.Option(None, "--openrouter-key"),
+    model: Optional[str] = typer.Option(None, "--model"),
     smtp_user: Optional[str] = typer.Option(None, "--smtp-user"),
     smtp_pass: Optional[str] = typer.Option(None, "--smtp-pass"),
     sender_name: Optional[str] = typer.Option(None, "--sender-name"),
@@ -128,6 +129,7 @@ def init_cmd(
     try:
         values = {
             "OPENROUTER_API_KEY": _require_tty_or_value(openrouter_key, "OpenRouter API key") if not non_interactive or openrouter_key else current.get("OPENROUTER_API_KEY", ""),
+            "AI_MODEL": model or current.get("AI_MODEL") or (typer.prompt("OpenRouter Model", default="google/gemini-2.5-flash") if not non_interactive and sys.stdin.isatty() else "google/gemini-2.5-flash"),
             "SMTP_USER_1": _require_tty_or_value(smtp_user, "SMTP user (gmail)") if not non_interactive or smtp_user else current.get("SMTP_USER_1", ""),
             "SMTP_PASS_1": _require_tty_or_value(smtp_pass, "SMTP app password", hide=True) if not non_interactive or smtp_pass else current.get("SMTP_PASS_1", ""),
             "SENDER_NAME": sender_name or current.get("SENDER_NAME") or (typer.prompt("Sender name") if not non_interactive and sys.stdin.isatty() else ""),
@@ -142,6 +144,7 @@ def init_cmd(
 
     console.print("Saved configuration to .env")
     console.print(f"OPENROUTER_API_KEY={mask(current.get('OPENROUTER_API_KEY', ''))}")
+    console.print(f"AI_MODEL={current.get('AI_MODEL', '')}")
     console.print(f"SMTP_USER_1={current.get('SMTP_USER_1', '')}")
     console.print(f"SMTP_PASS_1={mask(current.get('SMTP_PASS_1', ''))}")
 

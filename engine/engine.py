@@ -28,18 +28,21 @@ class Engine:
     Provides both sync and async methods for generating personalized email/WhatsApp messages.
     """
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         """
         Initialize the Clint Engine.
         
         Args:
             api_key: OpenRouter API key. If not provided, uses OPENROUTER_API_KEY from env.
+            model: OpenRouter model identifier (e.g. 'meta-llama/llama-3-8b-instruct').
         
         Example:
-            engine = Engine(api_key="sk_...")
+            engine = Engine(api_key="sk_...", model="openai/gpt-4o-mini")
         """
         if api_key:
             settings.OPENROUTER_API_KEY = api_key
+        if model:
+            settings.AI_MODEL = model
         self.proposer = Proposer()
         logger.info("Clint Engine initialized.")
 
